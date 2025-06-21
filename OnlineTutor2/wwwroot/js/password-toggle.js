@@ -23,16 +23,6 @@ function setupPasswordField(passwordField) {
 
     const container = passwordField.parent();
 
-    // Добавляем кнопку показа/скрытия пароля
-    if (container.find('.password-toggle-btn').length === 0) {
-        const toggleBtn = $(`
-            <button type="button" class="password-toggle-btn" data-target="${fieldId}" title="Показать пароль">
-                <i class="fas fa-eye"></i>
-            </button>
-        `);
-        container.append(toggleBtn);
-    }
-
     // Добавляем кнопку копирования если это поле с генерацией
     if (passwordField.hasClass('generated-password') && container.find('.password-copy-btn').length === 0) {
         const copyBtn = $(`
@@ -52,25 +42,6 @@ function setupPasswordField(passwordField) {
     }
 }
 
-// Обработчик показа/скрытия пароля
-$(document).on('click', '.password-toggle-btn', function () {
-    const targetId = $(this).data('target');
-    const passwordField = $(`#${targetId}`);
-    const icon = $(this).find('i');
-
-    if (passwordField.attr('type') === 'password') {
-        passwordField.attr('type', 'text');
-        icon.removeClass('fa-eye').addClass('fa-eye-slash');
-        $(this).attr('title', 'Скрыть пароль');
-        $(this).addClass('active');
-    } else {
-        passwordField.attr('type', 'password');
-        icon.removeClass('fa-eye-slash').addClass('fa-eye');
-        $(this).attr('title', 'Показать пароль');
-        $(this).removeClass('active');
-    }
-});
-
 // Обработчик копирования пароля
 $(document).on('click', '.password-copy-btn', function () {
     const targetId = $(this).data('target');
@@ -79,13 +50,6 @@ $(document).on('click', '.password-copy-btn', function () {
     if (passwordField.val()) {
         copyToClipboard(passwordField.val());
         showPasswordNotification('Пароль скопирован в буфер обмена', 'success');
-
-        // Анимация кнопки
-        const icon = $(this).find('i');
-        icon.removeClass('fa-copy').addClass('fa-check');
-        setTimeout(() => {
-            icon.removeClass('fa-check').addClass('fa-copy');
-        }, 1500);
     }
 });
 
