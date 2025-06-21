@@ -22,18 +22,18 @@ function handleNavbarScroll() {
     });
 }
 
-// Динамическая корректировка отступов
-function adjustBodyPadding() {
-    const navbarHeight = $('.navbar-fixed').outerHeight();
-    const footerHeight = $('.footer-fixed').outerHeight();
+// динамическая корректировка отступов
+function adjustbodypadding() {
+    const navbarheight = $('.navbar-fixed').outerheight();
+    const footerheight = $('.footer-fixed').outerheight();
 
     $('body').css({
-        'padding-top': navbarHeight + 'px',
-        'padding-bottom': footerHeight + 'px'
+        'padding-top': navbarheight + 'px',
+        'padding-bottom': footerheight + 'px'
     });
 
     $('.main-content').css({
-        'min-height': 'calc(100vh - ' + (navbarHeight + footerHeight + 40) + 'px)'
+        'min-height': 'calc(100vh - ' + (navbarheight + footerheight + 40) + 'px)'
     });
 }
 
