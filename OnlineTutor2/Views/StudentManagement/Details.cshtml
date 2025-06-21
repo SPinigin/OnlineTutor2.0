@@ -1,0 +1,377 @@
+﻿@model OnlineTutor2.Models.Student
+@{
+    ViewData["Title"] = $"Ученик: {Model.User.FullName}";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>
+            <i class="fas fa-user-graduate text-primary"></i> @Model.User.FullName
+            @if (!string.IsNullOrEmpty(Model.StudentNumber))
+            {
+                <small class="text-muted">№ @Model.StudentNumber</small>
+            }
+        </h2>
+        <p class="text-muted mb-0">Возраст: @Model.User.Age лет</p>
+    </div>
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Редактировать
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Назад к списку
+        </a>
+    </div>
+</div>
+
+<div class="row">
+
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle"></i> Основная информация
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">
+                                <i class="fas fa-user text-muted"></i> Имя:
+                            </dt>
+                            <dd class="col-sm-8">@Model.User.FirstName</dd>
+
+                            <dt class="col-sm-4">
+                                <i class="fas fa-user text-muted"></i> Фамилия:
+                            </dt>
+                            <dd class="col-sm-8">@Model.User.LastName</dd>
+
+                            <dt class="col-sm-4">
+                                <i class="fas fa-calendar text-muted"></i> Дата рождения:
+                            </dt>
+                            <dd class="col-sm-8">@Model.User.DateOfBirth.ToString("dd.MM.yyyy")</dd>
+
+                            <dt class="col-sm-4">
+                                <i class="fas fa-id-card text-muted"></i> Номер ученика:
+                            </dt>
+                            <dd class="col-sm-8">
+                                @if (!string.IsNullOrEmpty(Model.StudentNumber))
+                                {
+                                    <span>@Model.StudentNumber</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic">Не присвоен</span>
+                                }
+                            </dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">
+                                <i class="fas fa-envelope text-muted"></i> Email:
+                            </dt>
+                            <dd class="col-sm-8">
+                                <a href="mailto:@Model.User.Email">@Model.User.Email</a>
+                            </dd>
+
+                            <dt class="col-sm-4">
+                                <i class="fas fa-phone text-muted"></i> Телефон:
+                            </dt>
+                            <dd class="col-sm-8">
+                                @if (!string.IsNullOrEmpty(Model.User.PhoneNumber))
+                                {
+                                    <a href="tel:@Model.User.PhoneNumber">@Model.User.PhoneNumber</a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic">Не указан</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">
+                                <i class="fas fa-school text-muted"></i> Школа:
+                            </dt>
+                            <dd class="col-sm-8">
+                                @if (!string.IsNullOrEmpty(Model.School))
+                                {
+                                    <span>@Model.School</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic">Не указана</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">
+                                <i class="fas fa-layer-group text-muted"></i> Класс в школе:
+                            </dt>
+                            <dd class="col-sm-8">
+                                @if (Model.Grade.HasValue)
+                                {
+                                    <span>@Model.Grade класс</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic">Не указан</span>
+                                }
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line"></i> Академическая успеваемость
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <div class="border-end">
+                            <h4 class="text-primary">@Model.TestResults.Count</h4>
+                            <small class="text-muted">Тестов пройдено</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border-end">
+                            <h4 class="text-success">
+                                @if (Model.TestResults.Any())
+                                {
+                                    @Model.TestResults.Where(tr => tr.IsCompleted).Average(tr => tr.Percentage).ToString("F1")
+                                }
+                                else
+                                {
+                                    <span>0.0</span>
+                                }
+%
+                            </h4>
+                            <small class="text-muted">Средний балл</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <h4 class="text-info">@Model.Grades.Count</h4>
+                        <small class="text-muted">Оценок получено</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        @if (Model.TestResults.Any())
+        {
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tasks"></i> Последние тесты
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Тест</th>
+                                    <th>Дата</th>
+                                    <th>Результат</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var result in Model.TestResults.OrderByDescending(tr => tr.StartedAt).Take(5))
+                                {
+                                    <tr>
+                                        <td>@result.Test.Title</td>
+                                        <td>@result.StartedAt.ToString("dd.MM.yyyy")</td>
+                                        <td>
+                                            @if (result.IsCompleted)
+                                            {
+                                                <span class="badge bg-@(result.Percentage >= 80 ? "success" : result.Percentage >= 60 ? "warning" : "danger")">
+                                                    @result.Score/@result.MaxScore (@result.Percentage.ToString("F1")%)
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (result.IsCompleted)
+                                            {
+                                                <i class="fas fa-check-circle text-success">Завершен</i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-clock text-warning">В процессе</i>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+
+    <div class="col-md-4">
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-users"></i> Назначение в класс
+                </h6>
+            </div>
+            <div class="card-body">
+                @if (Model.Class != null)
+                {
+                    <div class="d-flex align-items-center">
+                        <div class="bg-success rounded-circle d-flex align-items-center justify-content-center me-3"
+                             style="width: 40px; height: 40px;">
+                            <i class="fas fa-graduation-cap text-white"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">@Model.Class.Name</h6>
+                            <small class="text-muted">
+                                Учеников в классе: @Model.Class.Students.Count
+                            </small>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.Class.Description))
+                    {
+                        <p class="text-muted mt-2 mb-0">@Model.Class.Description</p>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-3">
+                        <i class="fas fa-exclamation-triangle text-warning mb-2" style="font-size: 2rem;"></i>
+                        <p class="text-muted mb-0">Ученик не назначен ни в один класс</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-cog"></i> Системная информация
+                </h6>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-6">Регистрация:</dt>
+                    <dd class="col-6">@Model.User.CreatedAt.ToString("dd.MM.yyyy")</dd>
+
+                    <dt class="col-6">Добавлен:</dt>
+                    <dd class="col-6">@Model.EnrollmentDate.ToString("dd.MM.yyyy")</dd>
+
+                    <dt class="col-6">Последний вход:</dt>
+                    <dd class="col-6">
+                        @if (Model.User.LastLoginAt.HasValue)
+                        {
+                            @Model.User.LastLoginAt.Value.ToString("dd.MM.yyyy HH:mm")
+                        }
+                        else
+                        {
+                            <span class="text-muted">Никогда</span>
+                        }
+                    </dd>
+
+                    <dt class="col-6">Статус:</dt>
+                    <dd class="col-6">
+                        @if (Model.User.IsActive)
+                        {
+                            <span class="badge bg-success">Активен</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Заблокирован</span>
+                        }
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-tools"></i> Действия
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Редактировать
+                    </a>
+
+                    <button type="button" class="btn btn-outline-info"
+                            onclick="showAssignClassModal(@Model.Id, '@Model.User.FullName', @(Model.ClassId?.ToString() ?? "null"))">
+                        <i class="fas fa-users"></i> Изменить класс
+                    </button>
+
+                    <hr class="my-2">
+
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger">
+                        <i class="fas fa-trash"></i> Удалить ученика
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="assignClassModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-users"></i> Изменить назначение в класс
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" asp-action="AssignToClass">
+                <div class="modal-body">
+                    <input type="hidden" name="studentId" id="modalStudentId" />
+                    <p>Ученик: <strong id="modalStudentName"></strong></p>
+                    <div class="mb-3">
+                        <label for="modalClassId" class="form-label">Выберите класс:</label>
+                        <select class="form-select" name="classId" id="modalClassId">
+                            <option value="">Исключить из всех классов</option>
+
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Изменить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showAssignClassModal(studentId, studentName, currentClassId) {
+            document.getElementById('modalStudentId').value = studentId;
+            document.getElementById('modalStudentName').textContent = studentName;
+
+            const classSelect = document.getElementById('modalClassId');
+            classSelect.value = currentClassId || '';
+
+            const modal = new bootstrap.Modal(document.getElementById('assignClassModal'));
+            modal.show();
+        }
+    </script>
+}

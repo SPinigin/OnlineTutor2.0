@@ -1,0 +1,198 @@
+﻿@model OnlineTutor2.Models.Class
+@{
+    ViewData["Title"] = $"Класс: {Model.Name}";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>
+            <i class="fas fa-graduation-cap text-primary"></i> @Model.Name
+            <span class="badge bg-@(Model.IsActive ? "success" : "secondary") ms-2">
+                @(Model.IsActive ? "Активный" : "Неактивный")
+            </span>
+        </h2>
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <p class="text-muted">@Model.Description</p>
+        }
+    </div>
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Редактировать
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Назад к списку
+        </a>
+    </div>
+</div>
+
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-users text-primary" style="font-size: 2rem;"></i>
+                <h4 class="mt-2">@Model.Students.Count</h4>
+                <p class="text-muted mb-0">Учеников</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-tasks text-info" style="font-size: 2rem;"></i>
+                <h4 class="mt-2">@Model.Tests.Count</h4>
+                <p class="text-muted mb-0">Тестов</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-book text-warning" style="font-size: 2rem;"></i>
+                <h4 class="mt-2">@Model.Materials.Count</h4>
+                <p class="text-muted mb-0">Материалов</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-calendar text-success" style="font-size: 2rem;"></i>
+                <h4 class="mt-2">@((DateTime.Now - Model.CreatedAt).Days)</h4>
+                <p class="text-muted mb-0">Дней существует</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<ul class="nav nav-tabs" id="classDetailsTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" type="button" role="tab">
+            <i class="fas fa-users"></i> Ученики (@Model.Students.Count)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tests-tab" data-bs-toggle="tab" data-bs-target="#tests" type="button" role="tab">
+            <i class="fas fa-tasks"></i> Тесты (@Model.Tests.Count)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="materials-tab" data-bs-toggle="tab" data-bs-target="#materials" type="button" role="tab">
+            <i class="fas fa-book"></i> Материалы (@Model.Materials.Count)
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="classDetailsTabsContent">
+
+    <div class="tab-pane fade show active" id="students" role="tabpanel">
+        <div class="card border-0">
+            <div class="card-body">
+                @if (Model.Students.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Ученик</th>
+                                    <th>Email</th>
+                                    <th>Школа</th>
+                                    <th>Дата добавления</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var student in Model.Students.OrderBy(s => s.User.LastName))
+                                {
+                                    <tr>
+                                        <td>
+                                            <i class="fas fa-user-graduate text-muted me-2"></i>
+                                            @student.User.FullName
+                                        </td>
+                                        <td>@student.User.Email</td>
+                                        <td>@(student.School ?? "Не указана")</td>
+                                        <td>@student.EnrollmentDate.ToString("dd.MM.yyyy")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-user-plus text-muted" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 text-muted">В классе пока нет учеников</h5>
+                        <p class="text-muted">Добавьте учеников через раздел "Управление учениками"</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+
+    <div class="tab-pane fade" id="tests" role="tabpanel">
+        <div class="card border-0">
+            <div class="card-body">
+                @if (Model.Tests.Any())
+                {
+                    <div class="row">
+                        @foreach (var test in Model.Tests.OrderByDescending(t => t.CreatedAt))
+                        {
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title">@test.Title</h6>
+                                        <p class="card-text text-muted">@test.Description</p>
+                                        <small class="text-muted">Создан: @test.CreatedAt.ToString("dd.MM.yyyy")</small>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-tasks text-muted" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 text-muted">Тестов пока нет</h5>
+                        <p class="text-muted">Создайте первый тест для этого класса</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+
+    <div class="tab-pane fade" id="materials" role="tabpanel">
+        <div class="card border-0">
+            <div class="card-body">
+                @if (Model.Materials.Any())
+                {
+                    <div class="list-group">
+                        @foreach (var material in Model.Materials.OrderByDescending(m => m.UploadedAt))
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">@material.Title</h6>
+                                    <small>@material.UploadedAt.ToString("dd.MM.yyyy")</small>
+                                </div>
+                                <p class="mb-1">@material.Description</p>
+                                <small>Тип: @material.Type</small>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-book text-muted" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 text-muted">Материалов пока нет</h5>
+                        <p class="text-muted">Загрузите учебные материалы для этого класса</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

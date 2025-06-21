@@ -1,0 +1,212 @@
+﻿@model OnlineTutor2.ViewModels.RegisterViewModel
+@{
+    ViewData["Title"] = "Регистрация";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card registration-card shadow">
+            <div class="card-header text-white text-center">
+                <h4><i class="fas fa-user-plus"></i> Регистрация в системе</h4>
+            </div>
+            <div class="card-body">
+                <form asp-action="Register" method="post" id="registrationForm">
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="FirstName" class="form-label">
+                                <i class="fas fa-user"></i> Имя <span class="required">*</span>
+                            </label>
+                            <input asp-for="FirstName" class="form-control" placeholder="Ваше имя" required />
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="LastName" class="form-label">
+                                <i class="fas fa-user"></i> Фамилия <span class="required">*</span>
+                            </label>
+                            <input asp-for="LastName" class="form-control" placeholder="Ваша фамилия" required />
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Email" class="form-label">
+                                <i class="fas fa-envelope"></i> Email <span class="required">*</span>
+                            </label>
+                            <input asp-for="Email" class="form-control" placeholder="example@email.com" type="email" required />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="PhoneNumber" class="form-label">
+                                <i class="fas fa-phone"></i> Телефон <span class="required">*</span>
+                            </label>
+                            <input asp-for="PhoneNumber" class="form-control" placeholder="+7 (999) 999-99-99" type="tel" required />
+                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="DateOfBirth" class="form-label">
+                            <i class="fas fa-calendar"></i> Дата рождения <span class="required">*</span>
+                        </label>
+                        <input asp-for="DateOfBirth" class="form-control" type="date" required />
+                        <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                    </div>
+
+
+                    <div class="mb-4">
+                        <label asp-for="Role" class="form-label">
+                            <i class="fas fa-user-tag"></i> Я регистрируюсь как <span class="required">*</span>
+                        </label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card role-card">
+                                    <div class="card-body text-center">
+                                        <input type="radio" asp-for="Role" value="Student" id="roleStudent" class="form-check-input role-radio" />
+                                        <label for="roleStudent" class="form-check-label w-100">
+                                            <i class="fas fa-user-graduate text-primary" style="font-size: 2rem;"></i>
+                                            <h6 class="mt-2">Ученик</h6>
+@*                                             <small class="text-muted">Изучаю материалы, прохожу тесты</small> *@
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card role-card">
+                                    <div class="card-body text-center">
+                                        <input type="radio" asp-for="Role" value="Teacher" id="roleTeacher" class="form-check-input role-radio" />
+                                        <label for="roleTeacher" class="form-check-label w-100">
+                                            <i class="fas fa-chalkboard-teacher text-success" style="font-size: 2rem;"></i>
+                                            <h6 class="mt-2">Учитель</h6>
+@*                                             <small class="text-muted">Создаю тесты, веду классы</small> *@
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <span asp-validation-for="Role" class="text-danger"></span>
+                    </div>
+
+
+                    <div id="studentFields" class="role-specific-fields" style="display: none;">
+                        <div class="alert alert-role-info student-alert">
+                            <i class="fas fa-info-circle"></i> Дополнительная информация для ученика
+                        </div>
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label asp-for="School" class="form-label">
+                                    <i class="fas fa-school"></i> Школа
+                                </label>
+                                <input asp-for="School" class="form-control" placeholder="Название школы" />
+                                <span asp-validation-for="School" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Grade" class="form-label">
+                                    <i class="fas fa-layer-group"></i> Класс
+                                </label>
+                                <select asp-for="Grade" class="form-select">
+                                    <option value="">Выберите класс</option>
+                                    @for (int i = 1; i <= 11; i++)
+                                    {
+                                        <option value="@i">@i класс</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="Grade" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div id="teacherFields" class="role-specific-fields teacher-fields" style="display: none;">
+                        <div class="alert alert-role-info teacher-alert">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Аккаунт учителя требует модерации администратором перед активацией.
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Subject" class="form-label">
+                                <i class="fas fa-book"></i> Предмет преподавания
+                            </label>
+                            <input asp-for="Subject" class="form-control" placeholder="Например: Математика, Русский язык" />
+                            <span asp-validation-for="Subject" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Education" class="form-label">
+                                <i class="fas fa-graduation-cap"></i> Образование
+                            </label>
+                            <textarea asp-for="Education" class="form-control" rows="3" placeholder="Укажите ваше образование, квалификацию"></textarea>
+                            <span asp-validation-for="Education" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Experience" class="form-label">
+                                <i class="fas fa-clock"></i> Опыт работы (лет)
+                            </label>
+                            <input asp-for="Experience" class="form-control" type="number" min="0" max="50" placeholder="0" />
+                            <span asp-validation-for="Experience" class="text-danger"></span>
+                        </div>
+                    </div>
+
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Password" class="form-label">
+                                <i class="fas fa-lock"></i> Пароль <span class="required">*</span>
+                            </label>
+                            <input asp-for="Password" class="form-control generated-password check-strength" placeholder="Минимум 6 символов" type="password" required />
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="ConfirmPassword" class="form-label">
+                                <i class="fas fa-lock"></i> Подтверждение пароля <span class="required">*</span>
+                            </label>
+                            <input asp-for="ConfirmPassword" class="form-control" placeholder="Повторите пароль" type="password" required />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-text mb-3">
+                        <i class="fas fa-info-circle"></i>
+                        Поля отмеченные <span class="required">*</span> обязательны для заполнения
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg btn-register">
+                            <i class="fas fa-user-plus"></i> Зарегистрироваться
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center">
+                <p class="mb-0">
+                    Уже есть аккаунт?
+                    <a asp-action="Login" class="text-decoration-none">
+                        <i class="fas fa-sign-in-alt"></i> Войти
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/registration.js" asp-append-version="true"></script>
+    <script src="~/js/password-toggle.js" asp-append-version="true"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Добавляем генератор пароля
+            PasswordUtils.addPasswordGenerator('registerPassword', 'Сгенерировать безопасный пароль');
+
+            // Инициализируем поле подтверждения пароля
+            PasswordUtils.setupPasswordField($('#confirmPassword'));
+        });
+    </script>
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/registration.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/password-toggle.css" asp-append-version="true" />
+}

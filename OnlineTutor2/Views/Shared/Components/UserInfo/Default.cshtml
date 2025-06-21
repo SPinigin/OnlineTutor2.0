@@ -1,0 +1,74 @@
+﻿@model OnlineTutor2.Models.ApplicationUser
+
+@if (Model != null)
+{
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle text-dark d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-user-circle me-1"></i>
+            <span class="d-none d-sm-inline">
+                Привет, @Model.FullName!
+            </span>
+            <span class="d-sm-none">Профиль</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+                <h6 class="dropdown-header">
+                    <i class="fas fa-user"></i> @Model.FullName
+                </h6>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <a class="dropdown-item" href="#">
+                    <i class="fas fa-user-edit"></i> Мой профиль
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" href="#">
+                    <i class="fas fa-cog"></i> Настройки
+                </a>
+            </li>
+            @if (User.IsInRole("Student"))
+            {
+                <li>
+                    <a class="dropdown-item" href="#">
+                        <i class="fas fa-book-reader"></i> Мои курсы
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#">
+                        <i class="fas fa-star"></i> Мои оценки
+                    </a>
+                </li>
+            }
+            @if (User.IsInRole("Teacher"))
+            {
+                <li>
+                    <a class="dropdown-item" href="#">
+                        <i class="fas fa-chart-bar"></i> Статистика
+                    </a>
+                </li>
+            }
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                    <button type="submit" class="dropdown-item text-danger">
+                        <i class="fas fa-sign-out-alt"></i> Выйти
+                    </button>
+                </form>
+            </li>
+        </ul>
+    </li>
+}
+else
+{
+    <li class="nav-item">
+        <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">
+            <i class="fas fa-sign-in-alt"></i> Вход
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-primary fw-bold" asp-controller="Account" asp-action="Register">
+            <i class="fas fa-user-plus"></i> Регистрация
+        </a>
+    </li>
+}

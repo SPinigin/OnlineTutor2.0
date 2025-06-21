@@ -1,0 +1,184 @@
+﻿@model OnlineTutor2.Models.Student
+@{
+    ViewData["Title"] = "Удаление ученика";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-exclamation-triangle"></i> Подтверждение удаления
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-warning"></i>
+                    <strong>Внимание!</strong> Вы собираетесь удалить ученика и всю связанную с ним информацию.
+                    Это действие нельзя отменить.
+                </div>
+
+                <h5>Вы действительно хотите удалить этого ученика?</h5>
+
+
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2"
+                                     style="width: 60px; height: 60px;">
+                                    <i class="fas fa-user-graduate text-white" style="font-size: 1.5rem;"></i>
+                                </div>
+                                @if (!string.IsNullOrEmpty(Model.StudentNumber))
+                                {
+                                    <small class="text-muted">№ @Model.StudentNumber</small>
+                                }
+                            </div>
+                            <div class="col-md-9">
+                                <h6 class="card-title">@Model.User.FullName</h6>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-envelope"></i> @Model.User.Email
+                                        </small>
+                                        @if (!string.IsNullOrEmpty(Model.User.PhoneNumber))
+                                        {
+                                            <small class="text-muted d-block">
+                                                <i class="fas fa-phone"></i> @Model.User.PhoneNumber
+                                            </small>
+                                        }
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-calendar"></i> @Model.User.Age лет
+                                        </small>
+                                    </div>
+                                    <div class="col-6">
+                                        @if (!string.IsNullOrEmpty(Model.School))
+                                        {
+                                            <small class="text-muted d-block">
+                                                <i class="fas fa-school"></i> @Model.School
+                                            </small>
+                                        }
+                                        @if (Model.Grade.HasValue)
+                                        {
+                                            <small class="text-muted d-block">
+                                                <i class="fas fa-layer-group"></i> @Model.Grade класс
+                                            </small>
+                                        }
+                                        @if (Model.Class != null)
+                                        {
+                                            <small class="text-muted d-block">
+                                                <i class="fas fa-users"></i> Класс: @Model.Class.Name
+                                            </small>
+                                        }
+                                    </div>
+                                </div>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock"></i> Добавлен: @Model.EnrollmentDate.ToString("dd.MM.yyyy")
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h5 class="text-danger">@Model.TestResults.Count</h5>
+                            <small class="text-muted">Результатов тестов</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h5 class="text-danger">@Model.Grades.Count</h5>
+                            <small class="text-muted">Оценок</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h5 class="text-danger">1</h5>
+                            <small class="text-muted">Учетная запись</small>
+                        </div>
+                    </div>
+                </div>
+
+                @if (Model.TestResults.Any() || Model.Grades.Any())
+                {
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Будет удалено:</strong>
+                        <ul class="mb-0 mt-2">
+                            @if (Model.TestResults.Any())
+                            {
+                                <li>Все результаты тестов (@Model.TestResults.Count шт.)</li>
+                            }
+                            @if (Model.Grades.Any())
+                            {
+                                <li>Все оценки (@Model.Grades.Count шт.)</li>
+                            }
+                            <li>Учетная запись пользователя</li>
+                            <li>Профиль ученика</li>
+                        </ul>
+                    </div>
+                }
+
+
+                <div class="mt-4">
+                    <label for="confirmationText" class="form-label">
+                        <strong>Для подтверждения введите фамилию ученика:</strong>
+                    </label>
+                    <input type="text" id="confirmationText" class="form-control"
+                           placeholder="@Model.User.LastName" autocomplete="off" />
+                    <div class="form-text">
+                        Введите: <strong>@Model.User.LastName</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <form asp-action="Delete" method="post" class="d-inline" id="deleteForm">
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info">
+                            <i class="fas fa-eye"></i> Просмотр
+                        </a>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Отмена
+                        </a>
+                        <button type="submit" class="btn btn-danger" id="deleteButton" disabled>
+                            <i class="fas fa-trash"></i> Да, удалить ученика
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const confirmationText = document.getElementById('confirmationText');
+            const deleteButton = document.getElementById('deleteButton');
+            const expectedText = '@Model.User.LastName';
+
+            confirmationText.addEventListener('input', function() {
+                if (this.value.trim() === expectedText) {
+                    deleteButton.disabled = false;
+                    deleteButton.classList.remove('btn-outline-danger');
+                    deleteButton.classList.add('btn-danger');
+                } else {
+                    deleteButton.disabled = true;
+                    deleteButton.classList.remove('btn-danger');
+                    deleteButton.classList.add('btn-outline-danger');
+                }
+            });
+
+            // Предотвращаем случайную отправку формы
+            document.getElementById('deleteForm').addEventListener('submit', function(e) {
+                if (confirmationText.value.trim() !== expectedText) {
+                    e.preventDefault();
+                    alert('Введите фамилию ученика для подтверждения удаления');
+                }
+            });
+        });
+    </script>
+}

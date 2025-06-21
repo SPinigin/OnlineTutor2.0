@@ -1,0 +1,75 @@
+﻿@model OnlineTutor2.Models.Class
+@{
+    ViewData["Title"] = "Удаление класса";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-exclamation-triangle"></i> Подтверждение удаления
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-warning"></i>
+                    <strong>Внимание!</strong> Вы собираетесь удалить класс. Это действие нельзя отменить.
+                </div>
+
+                <h5>Вы действительно хотите удалить этот класс?</h5>
+
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="fas fa-graduation-cap"></i> @Model.Name
+                        </h6>
+                        @if (!string.IsNullOrEmpty(Model.Description))
+                        {
+                            <p class="card-text">@Model.Description</p>
+                        }
+                        <div class="row text-center">
+                            <div class="col">
+                                <strong>@Model.Students.Count</strong><br>
+                                <small class="text-muted">учеников</small>
+                            </div>
+                            <div class="col">
+                                <strong>@Model.Tests.Count</strong><br>
+                                <small class="text-muted">тестов</small>
+                            </div>
+                            <div class="col">
+                                <strong>@Model.Materials.Count</strong><br>
+                                <small class="text-muted">материалов</small>
+                            </div>
+                        </div>
+                        <small class="text-muted">Создан: @Model.CreatedAt.ToString("dd.MM.yyyy")</small>
+                    </div>
+                </div>
+
+                @if (Model.Students.Any())
+                {
+                    <div class="alert alert-danger mt-3">
+                        <i class="fas fa-ban"></i>
+                        <strong>Удаление невозможно!</strong> В классе есть ученики.
+                        Сначала переместите их в другой класс или удалите.
+                    </div>
+                }
+            </div>
+            <div class="card-footer">
+                <form asp-action="Delete" method="post" class="d-inline">
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Отмена
+                        </a>
+                        @if (!Model.Students.Any())
+                        {
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Да, удалить класс
+                            </button>
+                        }
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

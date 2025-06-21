@@ -1,0 +1,160 @@
+﻿@model OnlineTutor2.ViewModels.ImportStudentsViewModel
+@{
+    ViewData["Title"] = "Импорт учеников из Excel";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-file-excel"></i> Импорт учеников из Excel
+                </h4>
+            </div>
+            <div class="card-body">
+
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle"></i> Инструкция по импорту:</h6>
+                    <ol class="mb-0">
+                        <li>Скачайте шаблон Excel файла</li>
+                        <li>Заполните данные учеников согласно образцу</li>
+                        <li>Загрузите заполненный файл</li>
+                        <li>Проверьте данные и подтвердите импорт</li>
+                    </ol>
+                </div>
+
+
+                <div class="text-center mb-4">
+                    <a asp-action="DownloadTemplate" class="btn btn-success btn-lg">
+                        <i class="fas fa-download"></i> Скачать шаблон Excel
+                    </a>
+                    <div class="form-text mt-2">
+                        <i class="fas fa-lightbulb"></i> Рекомендуется сначала скачать и изучить шаблон
+                    </div>
+                </div>
+
+                <hr>
+
+
+                <form asp-action="Import" method="post" enctype="multipart/form-data">
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-primary border-bottom pb-1 mb-3">
+                            <i class="fas fa-file-upload"></i> Загрузка файла
+                        </legend>
+
+                        <div class="mb-3">
+                            <label asp-for="ExcelFile" class="form-label">
+                                <i class="fas fa-file-excel"></i> Excel файл <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="ExcelFile" class="form-control" type="file" accept=".xlsx,.xls" />
+                            <span asp-validation-for="ExcelFile" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i> Поддерживаются файлы .xlsx и .xls (максимум 10 МБ)
+                            </div>
+                        </div>
+                    </fieldset>
+
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-primary border-bottom pb-1 mb-3">
+                            <i class="fas fa-cogs"></i> Настройки импорта
+                        </legend>
+
+                        <div class="mb-3">
+                            <label asp-for="ClassId" class="form-label">
+                                <i class="fas fa-users"></i> Назначить всех в класс
+                            </label>
+                            <select asp-for="ClassId" asp-items="@ViewBag.Classes" class="form-select">
+                                <option value="">Без назначения в класс</option>
+                            </select>
+                            <span asp-validation-for="ClassId" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="fas fa-lightbulb"></i> Можно назначить позже индивидуально
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input asp-for="AutoGeneratePasswords" class="form-check-input" id="autoGenerate" />
+                                <label asp-for="AutoGeneratePasswords" class="form-check-label">
+                                    <i class="fas fa-random"></i> Генерировать пароли автоматически
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                <i class="fas fa-shield-alt"></i> Если отключено, будет использован пароль по умолчанию
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="defaultPasswordGroup">
+                            <label asp-for="DefaultPassword" class="form-label">
+                                <i class="fas fa-key"></i> Пароль по умолчанию
+                            </label>
+                            <input asp-for="DefaultPassword" class="form-control" />
+                            <span asp-validation-for="DefaultPassword" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="fas fa-warning text-warning"></i> Используется только если не включена автогенерация
+                            </div>
+                        </div>
+                    </fieldset>
+
+
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle"></i> Важная информация:</h6>
+                        <ul class="mb-0">
+                            <li>Все ученики получат роль "Студент"</li>
+                            <li>Email должен быть уникальным для каждого ученика</li>
+                            <li>Пароли будут отправлены ученикам (функция в разработке)</li>
+                            <li>Перед импортом будет показан предварительный просмотр</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Назад к списку
+                        </a>
+                        <button type="submit" class="btn btn-info">
+                            <i class="fas fa-upload"></i> Загрузить и проверить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const autoGenerateCheckbox = document.getElementById('autoGenerate');
+            const defaultPasswordGroup = document.getElementById('defaultPasswordGroup');
+
+            function togglePasswordField() {
+                if (autoGenerateCheckbox.checked) {
+                    defaultPasswordGroup.style.display = 'none';
+                } else {
+                    defaultPasswordGroup.style.display = 'block';
+                }
+            }
+
+            autoGenerateCheckbox.addEventListener('change', togglePasswordField);
+            togglePasswordField(); // Инициализация
+
+            // Проверка размера файла
+            document.querySelector('input[type="file"]').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const maxSize = 10 * 1024 * 1024; // 10 МБ
+                    if (file.size > maxSize) {
+                        alert('Размер файла превышает 10 МБ. Выберите файл меньшего размера.');
+                        e.target.value = '';
+                    }
+                }
+            });
+        });
+    </script>
+}
