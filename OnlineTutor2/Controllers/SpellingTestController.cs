@@ -52,6 +52,8 @@ namespace OnlineTutor2.Controllers
                 .Include(st => st.TestResults)
                     .ThenInclude(tr => tr.Student)
                         .ThenInclude(s => s.User)
+                .Include(st => st.TestResults)
+                    .ThenInclude(tr => tr.Answers)
                 .FirstOrDefaultAsync(st => st.Id == id && st.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -80,6 +82,7 @@ namespace OnlineTutor2.Controllers
                     Title = model.Title,
                     Description = model.Description,
                     TeacherId = currentUser.Id,
+                    TestCategoryId = 1, // Добавьте эту строку - ID категории "Тесты на правописание"
                     ClassId = model.ClassId,
                     TimeLimit = model.TimeLimit,
                     MaxAttempts = model.MaxAttempts,
@@ -156,6 +159,7 @@ namespace OnlineTutor2.Controllers
                     test.ShowHints = model.ShowHints;
                     test.ShowCorrectAnswers = model.ShowCorrectAnswers;
                     test.IsActive = model.IsActive;
+                    // TestCategoryId не изменяем при редактировании
 
                     _context.Update(test);
                     await _context.SaveChangesAsync();
@@ -474,6 +478,25 @@ namespace OnlineTutor2.Controllers
             ViewBag.Test = test;
             ViewBag.NextOrderIndex = test.Questions.Count + 1;
             return View(model);
+        }
+
+        // POST: SpellingTest/ToggleStatus/5
+        [HttpPost]
+        public async Task<IActionResult> ToggleStatus(int id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var test = await _context.SpellingTests
+                .FirstOrDefaultAsync(st => st.Id == id && st.TeacherId == currentUser.Id);
+
+            if (test == null) return NotFound();
+
+            test.IsActive = !test.IsActive;
+            await _context.SaveChangesAsync();
+
+            var status = test.IsActive ? "активирован" : "деактивирован";
+            TempData["InfoMessage"] = $"Тест \"{test.Title}\" {status}.";
+
+            return RedirectToAction(nameof(Details), new { id });
         }
     }
 }
