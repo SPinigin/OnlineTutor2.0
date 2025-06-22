@@ -1,4 +1,345 @@
-﻿<div class="card-footer">
+﻿@model OnlineTutor2.Models.SpellingTest
+@{
+    ViewData["Title"] = $"Тест: {Model.Title}";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-controller="Test" asp-action="Category" asp-route-id="1">Тесты на правописание</a>
+                </li>
+                <li class="breadcrumb-item active">@Model.Title</li>
+            </ol>
+        </nav>
+        <h2>
+            <i class="fas fa-spell-check text-primary"></i> @Model.Title
+            <span class="badge bg-@(Model.IsActive ? "success" : "secondary") ms-2">
+                @(Model.IsActive ? "Активный" : "Неактивный")
+            </span>
+        </h2>
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <p class="text-muted">@Model.Description</p>
+        }
+    </div>
+    <div>
+        <a asp-controller="Test" asp-action="Category" asp-route-id="1" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Назад к списку
+        </a>
+    </div>
+</div>
+
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-question-circle text-primary" style="font-size: 2rem;"></i>
+                <h4 class="mt-2 text-primary">@Model.Questions.Count</h4>
+                <small class="text-muted">Вопросов</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-clock text-info" style="font-size: 2rem;"></i>
+                <h4 class="mt-2 text-info">@Model.TimeLimit</h4>
+                <small class="text-muted">Минут на тест</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-redo text-warning" style="font-size: 2rem;"></i>
+                <h4 class="mt-2 text-warning">@Model.MaxAttempts</h4>
+                <small class="text-muted">Максимум попыток</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-users text-success" style="font-size: 2rem;"></i>
+                <h4 class="mt-2 text-success">@Model.TestResults.Count</h4>
+                <small class="text-muted">Прохождений</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-cog"></i> Настройки теста</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <dl class="row">
+                    @if (Model.Class != null)
+                    {
+                        <dt class="col-sm-4">Назначен классу:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-info">@Model.Class.Name</span>
+                        </dd>
+                    }
+                    else
+                    {
+                        <dt class="col-sm-4">Доступность:</dt>
+                        <dd class="col-sm-8">Всем ученикам</dd>
+                    }
+                    
+                    <dt class="col-sm-4">Подсказки:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-@(Model.ShowHints ? "success" : "secondary")">
+                            @(Model.ShowHints ? "Включены" : "Отключены")
+                        </span>
+                    </dd>
+                    
+                    <dt class="col-sm-4">Показ ответов:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-@(Model.ShowCorrectAnswers ? "success" : "secondary")">
+                            @(Model.ShowCorrectAnswers ? "Включен" : "Отключен")
+                        </span>
+                    </dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <dl class="row">
+                    @if (Model.StartDate.HasValue)
+                    {
+                        <dt class="col-sm-4">Дата начала:</dt>
+                        <dd class="col-sm-8">@Model.StartDate.Value.ToString("dd.MM.yyyy HH:mm")</dd>
+                    }
+                    
+                    @if (Model.EndDate.HasValue)
+                    {
+                        <dt class="col-sm-4">Дата окончания:</dt>
+                        <dd class="col-sm-8">@Model.EndDate.Value.ToString("dd.MM.yyyy HH:mm")</dd>
+
+                    }
+
+                    <dt class="col-sm-4">Создан:</dt>
+                    <dd class="col-sm-8">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-list"></i> Вопросы теста (@Model.Questions.Count)
+        </h5>
+        <div class="btn-group" role="group">
+            <a asp-action="AddQuestion" asp-route-id="@Model.Id" class="btn btn-success btn-sm">
+                <i class="fas fa-plus"></i> Добавить вопрос
+            </a>
+            <a asp-action="ImportQuestions" asp-route-id="@Model.Id" class="btn btn-outline-success btn-sm">
+                <i class="fas fa-file-import"></i> Импорт из Excel
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        @if (Model.Questions.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>Слово с пропуском</th>
+                            <th>Правильный ответ</th>
+                            <th>Полное слово</th>
+                            <th style="width: 80px;">Баллы</th>
+                            <th style="width: 120px;">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var question in Model.Questions.OrderBy(q => q.OrderIndex))
+                        {
+                            <tr>
+                                <td>
+                                    <span class="badge bg-primary">@question.OrderIndex</span>
+                                </td>
+                                <td>
+                                    <strong class="text-primary">@question.WordWithGap</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">@question.CorrectLetter</span>
+                                </td>
+                                <td>@question.FullWord</td>
+                                <td>
+                                    <span class="badge bg-info">@question.Points</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-outline-info btn-sm"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#questionModal"
+                                                onclick="showQuestionDetails(@question.Id, '@question.WordWithGap', '@question.CorrectLetter', '@question.FullWord', '@question.Hint', @question.Points)">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary btn-sm"
+                                                onclick="editQuestion(@question.Id)">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm"
+                                                onclick="deleteQuestion(@question.Id, '@question.WordWithGap')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-question-circle text-muted" style="font-size: 4rem;"></i>
+                <h4 class="mt-3 text-muted">Вопросов пока нет</h4>
+                <p class="text-muted">Добавьте первый вопрос в тест</p>
+                <div class="mt-3">
+                    <a asp-action="AddQuestion" asp-route-id="@Model.Id" class="btn btn-primary me-2">
+                        <i class="fas fa-plus"></i> Добавить вопрос
+                    </a>
+                    <a asp-action="ImportQuestions" asp-route-id="@Model.Id" class="btn btn-outline-primary">
+                        <i class="fas fa-file-import"></i> Импорт из Excel
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+
+@if (Model.TestResults.Any())
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-chart-line"></i> Последние прохождения
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Ученик</th>
+                            <th>Дата</th>
+                            <th>Результат</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var result in Model.TestResults.OrderByDescending(tr => tr.StartedAt).Take(5))
+                        {
+                            <tr>
+                                <td>@result.Student.User.FullName</td>
+                                <td>@result.StartedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                <td>
+                                    @if (result.IsCompleted)
+                                    {
+                                        <span class="badge bg-@(result.Percentage >= 80 ? "success" : result.Percentage >= 60 ? "warning" : "danger")">
+                                            @result.Percentage.ToString("F1")%
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (result.IsCompleted)
+                                    {
+                                        <span><i class="fas fa-check-circle text-success"></i> Завершен</span>
+                                    }
+                                    else
+                                    {
+                                        <span><i class="fas fa-clock text-warning"></i> В процессе</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (Model.TestResults.Count > 5)
+            {
+                <div class="text-center mt-3">
+                    <a asp-action="Analytics" asp-route-id="@Model.Id" class="btn btn-outline-info">
+                        <i class="fas fa-chart-bar"></i> Посмотреть всю аналитику
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+
+<div class="modal fade" id="questionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-question-circle"></i> Детали вопроса
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label"><strong>Слово с пропуском:</strong></label>
+                    <div class="p-3 bg-light rounded">
+                        <span class="h5 text-primary" id="modalWordWithGap"></span>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>Правильная буква:</strong></label>
+                        <div class="p-2 bg-success text-white rounded text-center">
+                            <span class="h6" id="modalCorrectLetter"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>Полное слово:</strong></label>
+                        <div class="p-2 bg-info text-white rounded text-center">
+                            <span class="h6" id="modalFullWord"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Подсказка:</strong></label>
+                    <div class="p-3 bg-light rounded">
+                        <span id="modalHint"></span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Баллы за правильный ответ:</strong></label>
+                    <span class="badge bg-warning" id="modalPoints"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <button type="button" class="btn btn-primary" onclick="editQuestionFromModal()">
+                    <i class="fas fa-edit"></i> Редактировать
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="card-footer">
     <div class="row">
         <div class="col-md-6">
             <div class="btn-group w-100" role="group">
@@ -31,3 +372,36 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        let currentQuestionId = null;
+
+        function showQuestionDetails(id, wordWithGap, correctLetter, fullWord, hint, points) {
+            currentQuestionId = id;
+            document.getElementById('modalWordWithGap').textContent = wordWithGap;
+            document.getElementById('modalCorrectLetter').textContent = correctLetter;
+            document.getElementById('modalFullWord').textContent = fullWord;
+            document.getElementById('modalHint').textContent = hint || 'Подсказка не указана';
+            document.getElementById('modalPoints').textContent = points;
+        }
+
+        function editQuestion(questionId) {
+            // Здесь можно добавить переход на страницу редактирования вопроса
+            alert(`Редактирование вопроса ${questionId} - функция в разработке`);
+        }
+
+        function editQuestionFromModal() {
+            if (currentQuestionId) {
+                editQuestion(currentQuestionId);
+            }
+        }
+
+        function deleteQuestion(questionId, wordWithGap) {
+            if (confirm(`Вы уверены, что хотите удалить вопрос "${wordWithGap}"?`)) {
+                // Здесь можно добавить AJAX запрос на удаление
+                alert(`Удаление вопроса ${questionId} - функция в разработке`);
+            }
+        }
+    </script>
+}
