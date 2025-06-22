@@ -1,0 +1,383 @@
+﻿@model OnlineTutor2.ViewModels.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Админ-панель";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="fas fa-shield-alt text-primary"></i> Админ-панель</h2>
+        <p class="text-muted">Управление системой онлайн-обучения</p>
+    </div>
+    <div>
+        <span class="badge bg-success fs-6">
+            <i class="fas fa-clock"></i> @DateTime.Now.ToString("dd.MM.yyyy HH:mm")
+        </span>
+    </div>
+</div>
+
+
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card text-center border-primary">
+            <div class="card-body">
+                <i class="fas fa-users text-primary" style="font-size: 2.5rem;"></i>
+                <h3 class="mt-2 text-primary">@Model.TotalUsers</h3>
+                <p class="text-muted mb-0">Всего пользователей</p>
+            </div>
+            <div class="card-footer">
+                <a asp-action="Users" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-eye"></i> Управление
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card text-center border-info">
+            <div class="card-body">
+                <i class="fas fa-user-graduate text-info" style="font-size: 2.5rem;"></i>
+                <h3 class="mt-2 text-info">@Model.TotalStudents</h3>
+                <p class="text-muted mb-0">Учеников</p>
+            </div>
+            <div class="card-footer">
+                <a asp-controller="StudentManagement" asp-action="Index" class="btn btn-outline-info btn-sm">
+                    <i class="fas fa-eye"></i> Управление
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card text-center border-success">
+            <div class="card-body">
+                <i class="fas fa-chalkboard-teacher text-success" style="font-size: 2.5rem;"></i>
+                <h3 class="mt-2 text-success">@Model.TotalTeachers</h3>
+                <p class="text-muted mb-0">Учителей</p>
+                @if (Model.PendingTeachers > 0)
+                {
+                    <span class="badge bg-warning">@Model.PendingTeachers на модерации</span>
+                }
+            </div>
+            <div class="card-footer">
+                <a asp-action="Teachers" class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-eye"></i> Управление
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card text-center border-warning">
+            <div class="card-body">
+                <i class="fas fa-tasks text-warning" style="font-size: 2.5rem;"></i>
+                <h3 class="mt-2 text-warning">@Model.TotalTests</h3>
+                <p class="text-muted mb-0">Тестов создано</p>
+                <small class="text-muted">
+                    @Model.TotalSpellingTests правописание + @Model.TotalRegularTests обычные
+                </small>
+            </div>
+            <div class="card-footer">
+                <a asp-action="Tests" class="btn btn-outline-warning btn-sm">
+                    <i class="fas fa-eye"></i> Управление
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-graduation-cap text-secondary" style="font-size: 2rem;"></i>
+                <h4 class="mt-2 text-secondary">@Model.TotalClasses</h4>
+                <p class="text-muted mb-0">Классов создано</p>
+            </div>
+            <div class="card-footer">
+                <a asp-action="Classes" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-eye"></i> Управление
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-chart-line text-info" style="font-size: 2rem;"></i>
+                <h4 class="mt-2 text-info">@Model.TotalTestResults</h4>
+                <p class="text-muted mb-0">Результатов тестов</p>
+            </div>
+            <div class="card-footer">
+                <a asp-action="TestResults" class="btn btn-outline-info btn-sm">
+                    <i class="fas fa-eye"></i> Управление
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-percentage text-primary" style="font-size: 2rem;"></i>
+                <h4 class="mt-2 text-primary">@Model.TeacherApprovalRate%</h4>
+                <p class="text-muted mb-0">Учителей одобрено</p>
+            </div>
+            <div class="card-footer">
+                <a asp-action="SystemInfo" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-info-circle"></i> Подробнее
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-bolt"></i> Быстрые действия</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a asp-action="Users" asp-route-roleFilter="@ApplicationRoles.Teacher" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-user-check"></i> Модерация учителей
+                            @if (Model.PendingTeachers > 0)
+                            {
+                                <span class="badge bg-warning text-dark ms-1">@Model.PendingTeachers</span>
+                            }
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button type="button" class="btn btn-outline-danger w-100" onclick="confirmClearResults()">
+                            <i class="fas fa-trash-alt"></i> Очистить результаты
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a asp-action="SystemInfo" class="btn btn-outline-info w-100">
+                            <i class="fas fa-server"></i> Системная информация
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button type="button" class="btn btn-outline-secondary w-100" onclick="exportData()">
+                            <i class="fas fa-download"></i> Экспорт данных
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-plus"></i> Последние пользователи
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (Model.RecentUsers.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var user in Model.RecentUsers)
+                        {
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>@user.FullName</strong>
+                                    <br>
+                                    <small class="text-muted">@user.Email</small>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block">@user.CreatedAt.ToString("dd.MM.yyyy")</small>
+                                    <span class="badge bg-@(user.IsActive ? "success" : "secondary")">
+                                        @(user.IsActive ? "Активен" : "Заблокирован")
+                                    </span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="card-footer text-center">
+                        <a asp-action="Users" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-list"></i> Все пользователи
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted text-center">Нет новых пользователей</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus"></i> Последние тесты
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (Model.RecentTests.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var test in Model.RecentTests)
+                        {
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>@test.Title</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="fas fa-spell-check"></i> Правописание
+                                        | @test.Teacher.FullName
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block">@test.CreatedAt.ToString("dd.MM.yyyy")</small>
+                                    <span class="badge bg-@(test.IsActive ? "success" : "secondary")">
+                                        @(test.IsActive ? "Активен" : "Неактивен")
+                                    </span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="card-footer text-center">
+                        <a asp-action="Tests" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-list"></i> Все тесты
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted text-center">Нет новых тестов</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="clearResultsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle"></i> Подтверждение удаления
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-warning"></i>
+                    <strong>ВНИМАНИЕ!</strong> Это действие удалит ВСЕ результаты тестов из системы.
+                </div>
+                <p>Будут удалены:</p>
+                <ul>
+                    <li>Все результаты тестов на правописание</li>
+                    <li>Все результаты обычных тестов</li>
+                    <li>Вся статистика прохождения</li>
+                    <li>История ответов учеников</li>
+                </ul>
+                <p class="text-danger"><strong>Это действие нельзя отменить!</strong></p>
+
+                <div class="mt-3">
+                    <label class="form-label">
+                        <strong>Для подтверждения введите: УДАЛИТЬ ВСЕ</strong>
+                    </label>
+                    <input type="text" id="confirmationText" class="form-control"
+                           placeholder="УДАЛИТЬ ВСЕ" autocomplete="off" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Отмена
+                </button>
+                <form asp-action="ClearAllResults" method="post" id="clearResultsForm">
+                    <button type="submit" class="btn btn-danger" id="confirmClearButton" disabled>
+                        <i class="fas fa-trash-alt"></i> Удалить все результаты
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/layout.js" asp-append-version="true"></script>
+    <script>
+        function confirmClearResults() {
+            const modal = new bootstrap.Modal(document.getElementById('clearResultsModal'));
+            modal.show();
+        }
+
+        function exportData() {
+            // TODO: Реализовать экспорт данных
+            alert('Функция экспорта данных будет реализована в следующих версиях');
+        }
+
+        // Обработка подтверждения очистки результатов
+        document.addEventListener('DOMContentLoaded', function() {
+            const confirmationText = document.getElementById('confirmationText');
+            const confirmButton = document.getElementById('confirmClearButton');
+            const expectedText = 'УДАЛИТЬ ВСЕ';
+
+            if (confirmationText && confirmButton) {
+                confirmationText.addEventListener('input', function() {
+                    if (this.value.trim() === expectedText) {
+                        confirmButton.disabled = false;
+                        confirmButton.classList.remove('btn-outline-danger');
+                        confirmButton.classList.add('btn-danger');
+                    } else {
+                        confirmButton.disabled = true;
+                        confirmButton.classList.remove('btn-danger');
+                        confirmButton.classList.add('btn-outline-danger');
+                    }
+                });
+
+                document.getElementById('clearResultsForm').addEventListener('submit', function(e) {
+                    if (confirmationText.value.trim() !== expectedText) {
+                        e.preventDefault();
+                        alert('Введите точный текст подтверждения');
+                        return false;
+                    }
+
+                    if (!confirm('Вы ДЕЙСТВИТЕЛЬНО уверены? Это удалит ВСЕ результаты тестов!')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+            }
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .card {
+            transition: transform 0.2s ease-in-out;
+        }
+
+            .card:hover {
+                transform: translateY(-2px);
+            }
+
+        .list-group-item {
+            border-left: none;
+            border-right: none;
+        }
+
+            .list-group-item:first-child {
+                border-top: none;
+            }
+
+            .list-group-item:last-child {
+                border-bottom: none;
+            }
+    </style>
+}
