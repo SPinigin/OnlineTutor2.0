@@ -17,7 +17,6 @@ catch (Exception ex)
     Console.WriteLine($"[ERROR] EPPlus license configuration failed: {ex.Message}");
 }
 
-// Добавление сервисов
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -62,12 +61,11 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// Инициализация данных
 using (var scope = app.Services.CreateScope())
 {
-    var serviceProvider = scope.ServiceProvider; // Правильная переменная
+    var serviceProvider = scope.ServiceProvider;
     await SeedRoles(serviceProvider);
-    await SeedTestCategories(serviceProvider); // Теперь используем serviceProvider
+    await SeedTestCategories(serviceProvider);
 }
 
 if (!app.Environment.IsDevelopment())
@@ -78,9 +76,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseSession();
 app.UseAuthorization();
@@ -91,7 +87,6 @@ app.MapControllerRoute(
 
 app.Run();
 
-// Методы инициализации данных
 async Task SeedRoles(IServiceProvider serviceProvider)
 {
     var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
