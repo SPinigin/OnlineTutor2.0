@@ -97,10 +97,11 @@ body {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Отступ для body чтобы контент не скрывался под header */
+/* Отступы для body чтобы контент не перекрывался header'ом и footer'ом */
 body {
-    padding-top: 70px; /* Примерная высота navbar */
-    padding-bottom: 120px; /* Высота footer */
+    padding-top: 80px;
+    padding-bottom: 140px; 
+    min-height: 100vh;
 }
 
 /* Фиксированный footer */
@@ -117,9 +118,16 @@ body {
 
 /* Компактный footer */
 .footer-compact {
-    padding: 15px 0;
+    padding: 20px 0;
     font-size: 0.875rem;
 }
+
+/* Основной контент */
+.main-content {
+    min-height: calc(100vh - 220px); /* Учитываем header и footer */
+    padding-bottom: 70px; /* Дополнительный отступ снизу */
+}
+
 
 /* Стили для колонок footer */
 .footer-column h6 {
@@ -170,12 +178,12 @@ body {
 /* Адаптивность для мобильных устройств */
 @media (max-width: 768px) {
     body {
-        padding-top: 60px;
-        padding-bottom: 140px;
+        padding-top: 70px;
+        padding-bottom: 160px;
     }
 
     .footer-compact {
-        padding: 10px 0;
+        padding: 15px 0;
     }
 
     .footer-column {
@@ -190,6 +198,21 @@ body {
         .footer-column p {
             font-size: 0.75rem;
         }
+
+    .main-content {
+        min-height: calc(100vh - 230px);
+        padding-bottom: 30px;
+    }
+}
+
+@media (max-width: 576px) {
+    body {
+        padding-bottom: 180px;
+    }
+
+    .main-content {
+        min-height: calc(100vh - 250px);
+    }
 }
 
 /* Дополнительные стили для контента */
@@ -219,3 +242,165 @@ body {
     border: none;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
+
+/* Стили для мобильного footer - минимальная версия */
+.footer-column-mobile {
+    padding: 4px 2px; /* Минимальные отступы */
+}
+
+.footer-mobile-title {
+    font-size: 0.7rem; /* Еще меньше шрифт */
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 2px; /* Минимальный отступ */
+    line-height: 1;
+}
+
+.footer-mobile-name {
+    font-size: 0.65rem; /* Меньше шрифт */
+    color: #6c757d;
+    margin-bottom: 3px; /* Минимальный отступ */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1;
+}
+
+.footer-mobile-contacts {
+    display: flex;
+    justify-content: center;
+    gap: 4px; /* Меньше расстояние между иконками */
+}
+
+.footer-contact-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px; /* Меньше размер иконок */
+    height: 24px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 50%;
+    color: #6c757d;
+    text-decoration: none;
+    font-size: 0.7rem; /* Меньше размер иконок */
+    transition: all 0.2s ease;
+    line-height: 1;
+}
+
+    .footer-contact-icon:hover {
+        background-color: #e9ecef;
+        color: #495057;
+        transform: translateY(-1px);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .footer-contact-icon.telegram:hover {
+        background-color: #0088cc;
+        color: white;
+        border-color: #0088cc;
+    }
+
+    .footer-contact-icon.github:hover {
+        background-color: #333;
+        color: white;
+        border-color: #333;
+    }
+
+/* Адаптивные отступы для ультра-компактного мобильного footer */
+@media (max-width: 768px) {
+    body {
+        padding-top: 70px;
+        padding-bottom: 70px; /* Значительно уменьшаем отступ */
+    }
+
+    .footer-compact {
+        padding: 4px 0; /* Минимальные отступы сверху и снизу */
+    }
+
+    .main-content {
+        min-height: calc(100vh - 140px);
+        padding-bottom: 10px;
+    }
+
+    /* Убираем копирайт отступы */
+    .footer-copyright-mobile {
+        margin-top: 2px;
+        padding-top: 2px;
+        border-top: 1px solid #e9ecef;
+    }
+
+        .footer-copyright-mobile small {
+            font-size: 0.6rem;
+            line-height: 1;
+        }
+}
+
+@media (max-width: 576px) {
+    body {
+        padding-bottom: 65px; /* Еще меньше для маленьких экранов */
+    }
+
+    .footer-mobile-title {
+        font-size: 0.65rem;
+    }
+
+    .footer-mobile-name {
+        font-size: 0.6rem;
+    }
+
+    .footer-contact-icon {
+        width: 22px;
+        height: 22px;
+        font-size: 0.65rem;
+    }
+
+    .footer-mobile-contacts {
+        gap: 3px;
+    }
+
+    .main-content {
+        min-height: calc(100vh - 135px);
+    }
+
+    .footer-copyright-mobile small {
+        font-size: 0.55rem;
+    }
+}
+
+/* Дополнительная оптимизация для очень маленьких экранов */
+@media (max-width: 360px) {
+    body {
+        padding-bottom: 60px;
+    }
+
+    .footer-compact {
+        padding: 3px 0;
+    }
+
+    .footer-mobile-title {
+        font-size: 0.6rem;
+    }
+
+    .footer-mobile-name {
+        font-size: 0.55rem;
+    }
+
+    .footer-contact-icon {
+        width: 20px;
+        height: 20px;
+        font-size: 0.6rem;
+    }
+
+    .footer-copyright-mobile small {
+        font-size: 0.5rem;
+    }
+}
+
+/* Скрываем элементы на соответствующих экранах */
+@media (min-width: 768px) {
+    .footer-column-mobile {
+        display: none !important;
+    }
+}
+

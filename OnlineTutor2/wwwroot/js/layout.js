@@ -22,20 +22,70 @@ function handleNavbarScroll() {
     });
 }
 
-// динамическая корректировка отступов
-function adjustbodypadding() {
-    const navbarheight = $('.navbar-fixed').outerheight();
-    const footerheight = $('.footer-fixed').outerheight();
+// Динамическая корректировка отступов для компактного footer
+function adjustBodyPadding() {
+    const navbarHeight = $('.navbar-fixed').outerHeight() || 70;
+    let footerHeight = $('.footer-fixed').outerHeight() || 120;
+
+    // Для мобильных устройств используем значительно меньшую высоту footer
+    if ($(window).width() <= 768) {
+        footerHeight = Math.min(footerHeight, 60); // Очень компактный footer для мобильных
+    }
+
+    if ($(window).width() <= 576) {
+        footerHeight = Math.min(footerHeight, 55); // Еще компактнее для маленьких экранов
+    }
+
+    const topPadding = navbarHeight + 5;
+    const bottomPadding = footerHeight + 10;
 
     $('body').css({
-        'padding-top': navbarheight + 'px',
-        'padding-bottom': footerheight + 'px'
+        'padding-top': topPadding + 'px',
+        'padding-bottom': bottomPadding + 'px'
     });
 
     $('.main-content').css({
-        'min-height': 'calc(100vh - ' + (navbarheight + footerheight + 40) + 'px)'
+        'min-height': 'calc(100vh - ' + (topPadding + bottomPadding + 15) + 'px)',
+        'padding-bottom': '10px'
     });
 }
+
+// Функция для проверки и исправления перекрытия
+function checkContentOverlap() {
+    const footerTop = $('.footer-fixed').offset().top;
+    const contentBottom = $('.main-content').offset().top + $('.main-content').outerHeight();
+
+    if (contentBottom > footerTop) {
+        const additionalPadding = (contentBottom - footerTop) + 20;
+        $('body').css('padding-bottom', (parseInt($('body').css('padding-bottom')) + additionalPadding) + 'px');
+    }
+}
+
+// Обновленная инициализация
+function initializeLayout() {
+    handleNavbarScroll();
+    adjustBodyPadding();
+
+    // Проверяем перекрытие после загрузки контента
+    setTimeout(checkContentOverlap, 100);
+
+    initializeTooltips();
+}
+
+// Проверяем при изменении размера окна
+$(window).resize(function () {
+    adjustBodyPadding();
+    setTimeout(checkContentOverlap, 100);
+});
+
+// Проверяем при скролле (для динамического контента)
+$(window).scroll(function () {
+    if ($(this).scrollTop() > 50) {
+        $('.navbar-fixed').addClass('scrolled');
+    } else {
+        $('.navbar-fixed').removeClass('scrolled');
+    }
+});
 
 // Инициализация тултипов Bootstrap
 function initializeTooltips() {
