@@ -52,6 +52,12 @@ builder.Services.AddLogging(logging =>
 
 builder.Services.AddScoped<IStudentImportService, StudentImportService>();
 builder.Services.AddScoped<ISpellingQuestionImportService, SpellingQuestionImportService>();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
@@ -76,6 +82,7 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();
+app.UseSession();
 app.UseAuthorization();
 
 app.MapControllerRoute(

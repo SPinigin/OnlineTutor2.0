@@ -270,7 +270,6 @@ namespace OnlineTutor2.Controllers
 
             try
             {
-                // Детальное логирование
                 Console.WriteLine($"[DEBUG] Starting import for test {model.SpellingTestId}");
 
                 // Проверка файла
@@ -280,7 +279,7 @@ namespace OnlineTutor2.Controllers
                     return View(model);
                 }
 
-                Console.WriteLine($"[DEBUG] File info: Name={model.ExcelFile.FileName}, Size={model.ExcelFile.Length}, ContentType={model.ExcelFile.ContentType}");
+                Console.WriteLine($"[DEBUG] File info: Name={model.ExcelFile.FileName}, Size={model.ExcelFile.Length}");
 
                 // Проверка размера файла
                 if (model.ExcelFile.Length > 10 * 1024 * 1024)
@@ -298,17 +297,9 @@ namespace OnlineTutor2.Controllers
                     return View(model);
                 }
 
-                Console.WriteLine($"[DEBUG] File extension check passed: {fileExtension}");
-
-                // Проверяем, что сервис доступен
-                if (_questionImportService == null)
-                {
-                    throw new InvalidOperationException("Сервис импорта не доступен");
-                }
-
                 Console.WriteLine("[DEBUG] Starting file parsing...");
 
-                // Парсинг файла с дополнительной обработкой ошибок
+                // Парсинг файла
                 List<ImportQuestionRow> questions;
                 try
                 {
@@ -328,32 +319,26 @@ namespace OnlineTutor2.Controllers
                     return View(model);
                 }
 
-                Console.WriteLine("[DEBUG] Creating import data for TempData...");
+                Console.WriteLine("[DEBUG] Saving import data to session...");
 
-                // Сохраняем данные в TempData
-                try
+                var importData = new
                 {
-                    var importData = new
-                    {
-                        TestId = model.SpellingTestId,
-                        Questions = questions,
-                        PointsPerQuestion = model.PointsPerQuestion
-                    };
+                    TestId = model.SpellingTestId,
+                    Questions = questions,
+                    PointsPerQuestion = model.PointsPerQuestion
+                };
 
-                    var jsonString = System.Text.Json.JsonSerializer.Serialize(importData);
-                    TempData["ImportQuestions"] = jsonString;
+                // Сохраняем в Session с уникальным ключом
+                var sessionKey = $"ImportQuestions_{model.SpellingTestId}_{DateTime.Now.Ticks}";
+                HttpContext.Session.SetString(sessionKey, JsonSerializer.Serialize(importData));
 
-                    Console.WriteLine($"[DEBUG] TempData saved, JSON length: {jsonString.Length}");
-                    Console.WriteLine("[DEBUG] Redirecting to PreviewQuestions...");
+                // Передаем ключ через TempData (он маленький)
+                TempData["ImportSessionKey"] = sessionKey;
 
-                    return RedirectToAction(nameof(PreviewQuestions));
-                }
-                catch (Exception jsonEx)
-                {
-                    Console.WriteLine($"[ERROR] JSON serialization error: {jsonEx}");
-                    TempData["ErrorMessage"] = "Ошибка при подготовке данных для предварительного просмотра";
-                    return View(model);
-                }
+                Console.WriteLine($"[DEBUG] Session key saved: {sessionKey}");
+                Console.WriteLine("[DEBUG] Redirecting to PreviewQuestions...");
+
+                return RedirectToAction(nameof(PreviewQuestions));
             }
             catch (Exception ex)
             {
@@ -363,6 +348,7 @@ namespace OnlineTutor2.Controllers
             }
         }
 
+
         // GET: SpellingTest/PreviewQuestions
         public async Task<IActionResult> PreviewQuestions()
         {
@@ -370,17 +356,25 @@ namespace OnlineTutor2.Controllers
             {
                 Console.WriteLine("[DEBUG] PreviewQuestions called");
 
-                var importDataJson = TempData["ImportQuestions"] as string;
+                var sessionKey = TempData["ImportSessionKey"] as string;
+                if (string.IsNullOrEmpty(sessionKey))
+                {
+                    Console.WriteLine("[ERROR] No session key found in TempData");
+                    TempData["ErrorMessage"] = "Данные импорта не найдены. Попробуйте еще раз.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                var importDataJson = HttpContext.Session.GetString(sessionKey);
                 if (string.IsNullOrEmpty(importDataJson))
                 {
-                    Console.WriteLine("[ERROR] No import data found in TempData");
-                    TempData["ErrorMessage"] = "Данные импорта не найдены. Попробуйте еще раз.";
+                    Console.WriteLine("[ERROR] No import data found in session");
+                    TempData["ErrorMessage"] = "Данные импорта истекли. Попробуйте еще раз.";
                     return RedirectToAction(nameof(Index));
                 }
 
                 Console.WriteLine($"[DEBUG] Import data JSON length: {importDataJson.Length}");
 
-                var importData = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(importDataJson);
+                var importData = JsonSerializer.Deserialize<JsonElement>(importDataJson);
                 var testId = importData.GetProperty("TestId").GetInt32();
                 var pointsPerQuestion = importData.GetProperty("PointsPerQuestion").GetInt32();
 
@@ -404,7 +398,7 @@ namespace OnlineTutor2.Controllers
                 {
                     try
                     {
-                        var question = System.Text.Json.JsonSerializer.Deserialize<ImportQuestionRow>(questionElement.GetRawText());
+                        var question = JsonSerializer.Deserialize<ImportQuestionRow>(questionElement.GetRawText());
                         if (question != null)
                         {
                             questions.Add(question);
@@ -420,7 +414,9 @@ namespace OnlineTutor2.Controllers
 
                 ViewBag.Test = test;
                 ViewBag.PointsPerQuestion = pointsPerQuestion;
-                TempData["ImportQuestions"] = importDataJson; // Сохраняем обратно
+
+                // Сохраняем ключ обратно для ConfirmImport
+                TempData["ImportSessionKey"] = sessionKey;
 
                 return View(questions);
             }
@@ -437,16 +433,23 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ConfirmImport()
         {
-            var importDataJson = TempData["ImportQuestions"] as string;
-            if (string.IsNullOrEmpty(importDataJson))
+            var sessionKey = TempData["ImportSessionKey"] as string;
+            if (string.IsNullOrEmpty(sessionKey))
             {
                 TempData["ErrorMessage"] = "Данные импорта не найдены";
                 return RedirectToAction(nameof(Index));
             }
 
+            var importDataJson = HttpContext.Session.GetString(sessionKey);
+            if (string.IsNullOrEmpty(importDataJson))
+            {
+                TempData["ErrorMessage"] = "Данные импорта истекли";
+                return RedirectToAction(nameof(Index));
+            }
+
             try
             {
-                var importData = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(importDataJson);
+                var importData = JsonSerializer.Deserialize<JsonElement>(importDataJson);
                 var testId = importData.GetProperty("TestId").GetInt32();
                 var pointsPerQuestion = importData.GetProperty("PointsPerQuestion").GetInt32();
 
@@ -463,7 +466,7 @@ namespace OnlineTutor2.Controllers
 
                 foreach (var questionElement in questionsArray.EnumerateArray())
                 {
-                    var questionData = System.Text.Json.JsonSerializer.Deserialize<ImportQuestionRow>(questionElement.GetRawText());
+                    var questionData = JsonSerializer.Deserialize<ImportQuestionRow>(questionElement.GetRawText());
                     if (questionData.IsValid)
                     {
                         validQuestions.Add(questionData);
@@ -488,6 +491,8 @@ namespace OnlineTutor2.Controllers
                 }
 
                 await _context.SaveChangesAsync();
+
+                HttpContext.Session.Remove(sessionKey);
 
                 TempData["SuccessMessage"] = $"Успешно импортировано {validQuestions.Count} вопросов!";
                 return RedirectToAction(nameof(Details), new { id = testId });
