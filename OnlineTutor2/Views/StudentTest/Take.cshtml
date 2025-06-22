@@ -1,0 +1,415 @@
+﻿@model OnlineTutor2.ViewModels.TakeSpellingTestViewModel
+@{
+    ViewData["Title"] = $"Прохождение теста: {Model.TestResult.SpellingTest.Title}";
+}
+
+<div class="test-container">
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h5 class="mb-0">
+                        <i class="fas fa-spell-check"></i> @Model.TestResult.SpellingTest.Title
+                    </h5>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div id="timer" class="h5 mb-0">
+                        <i class="fas fa-clock"></i>
+                        <span id="timeRemaining">@($"{Model.TimeRemaining.Minutes:D2}:{Model.TimeRemaining.Seconds:D2}")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="progress mb-2">
+                <div class="progress-bar" role="progressbar" style="width: 0%" id="progressBar"></div>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span class="small text-muted">
+                    Попытка @Model.TestResult.AttemptNumber из @Model.TestResult.SpellingTest.MaxAttempts
+                </span>
+                <span class="small text-muted">
+                    Вопрос <span id="currentQuestion">1</span> из @Model.TestResult.SpellingTest.Questions.Count
+                </span>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="questionsContainer">
+        @for (int i = 0; i < Model.TestResult.SpellingTest.Questions.Count; i++)
+        {
+            var question = Model.TestResult.SpellingTest.Questions.ElementAt(i);
+            var existingAnswer = Model.TestResult.Answers.FirstOrDefault(a => a.SpellingQuestionId == question.Id);
+
+            <div class="question-card @(i == 0 ? "active" : "d-none")" data-question-index="@i" data-question-id="@question.Id">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="question-header mb-4">
+                            <h6 class="text-primary">
+                                <i class="fas fa-question-circle"></i> Вопрос @(i + 1)
+                                <span class="badge bg-info ms-2">@question.Points баллов</span>
+                            </h6>
+                        </div>
+
+                        <div class="question-content mb-4">
+                            <p class="h5 mb-3">
+                                Вставьте пропущенную букву в слове:
+                            </p>
+                            <div class="word-container text-center mb-4">
+                                <span class="word-with-gap">@question.WordWithGap</span>
+                            </div>
+                        </div>
+
+                        <div class="answer-input mb-4">
+                            <label class="form-label">Ваш ответ:</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control answer-input"
+                                       maxlength="10"
+                                       placeholder="Введите букву или буквы"
+                                       value="@(existingAnswer?.StudentAnswer ?? "")"
+                                       data-question-id="@question.Id" />
+                                <button class="btn btn-outline-secondary" type="button" onclick="clearAnswer(@question.Id)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i> Введите одну или несколько букв (например: е или а,о)
+                            </div>
+                        </div>
+
+                        @if (Model.TestResult.SpellingTest.ShowHints && !string.IsNullOrEmpty(question.Hint))
+                        {
+                            <div class="hint-container mb-4" style="display: none;">
+                                <div class="alert alert-info">
+                                    <h6><i class="fas fa-lightbulb"></i> Подсказка:</h6>
+                                    <p class="mb-0">@question.Hint</p>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <button type="button" class="btn btn-outline-info btn-sm" onclick="toggleHint(@i)">
+                                    <i class="fas fa-lightbulb"></i> Показать подсказку
+                                </button>
+                            </div>
+                        }
+
+                        <div class="question-feedback" style="display: none;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-outline-secondary" id="prevButton" onclick="previousQuestion()" disabled>
+                        <i class="fas fa-arrow-left"></i> Предыдущий
+                    </button>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button type="button" class="btn btn-primary" id="nextButton" onclick="nextQuestion()">
+                        Следующий <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button type="button" class="btn btn-success d-none" id="finishButton" onclick="showFinishModal()">
+                        <i class="fas fa-check"></i> Завершить тест
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="finishTestModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-check text-success"></i> Завершить тест
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Внимание!</strong> После завершения теста вы не сможете изменить ответы.
+                </div>
+                <p>Вы ответили на <span id="answeredCount">0</span> из @Model.TestResult.SpellingTest.Questions.Count вопросов.</p>
+                <p>Вы уверены, что хотите завершить тест?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Продолжить тест
+                </button>
+                <form asp-action="Complete" method="post" class="d-inline">
+                    <input type="hidden" name="testResultId" value="@Model.TestResult.Id" />
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check"></i> Завершить тест
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .word-with-gap {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #0d6efd;
+            background: #f8f9fa;
+            padding: 15px 30px;
+            border-radius: 10px;
+            border: 2px dashed #0d6efd;
+        }
+
+        .answer-input {
+            font-size: 1.2rem;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .question-card {
+            transition: all 0.3s ease;
+        }
+
+            .question-card.active {
+                animation: fadeIn 0.3s ease;
+            }
+
+        @@keyframes fadeIn {
+            from
+            {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        #timer {
+            font-family: 'Courier New', monospace;
+        }
+
+        .timer-warning {
+            color: #ffc107 !important;
+        }
+
+        .timer-danger {
+            color: #dc3545 !important;
+            animation: blink 1s infinite;
+        }
+
+        @@keyframes blink {
+            0%, 50%
+            {
+                opacity: 1;
+            }
+            51%, 100% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        let currentQuestionIndex = 0;
+        let totalQuestions = @Model.TestResult.SpellingTest.Questions.Count;
+        let timeRemaining = @((int)Model.TimeRemaining.TotalSeconds);
+        let answers = {};
+        let timerInterval;
+
+        $(document).ready(function() {
+            initializeTest();
+            startTimer();
+            loadExistingAnswers();
+        });
+
+        function initializeTest() {
+            updateProgress();
+            updateNavigation();
+
+            // Обработчик ввода ответов
+            $('.answer-input').on('input', function() {
+                const questionId = $(this).data('question-id');
+                const answer = $(this).val().trim();
+
+                // Автосохранение ответа
+                if (answer) {
+                    saveAnswer(questionId, answer);
+                }
+            });
+
+            // Обработчик Enter для перехода к следующему вопросу
+            $('.answer-input').on('keypress', function(e) {
+                if (e.which === 13) {
+                    nextQuestion();
+                }
+            });
+        }
+
+        function loadExistingAnswers() {
+            @foreach (var answer in Model.TestResult.Answers)
+            {
+                    <text>
+                    answers[@answer.SpellingQuestionId] = '@answer.StudentAnswer';
+                    </text>
+            }
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(function() {
+                timeRemaining--;
+                updateTimerDisplay();
+
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    autoSubmitTest();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            $('#timeRemaining').text(display);
+
+            // Изменение цвета при малом времени
+            const timerElement = $('#timer');
+            if (timeRemaining <= 60) {
+                timerElement.addClass('timer-danger');
+            } else if (timeRemaining <= 300) {
+                timerElement.addClass('timer-warning');
+            }
+        }
+
+        function saveAnswer(questionId, answer) {
+            $.ajax({
+                url: '@Url.Action("SubmitAnswer")',
+                type: 'POST',
+                data: {
+                    TestResultId: @Model.TestResult.Id,
+                    QuestionId: questionId,
+                    StudentAnswer: answer,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        answers[questionId] = answer;
+                        updateProgress();
+                    }
+                },
+                error: function() {
+                    console.error('Ошибка сохранения ответа');
+                }
+            });
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < totalQuestions - 1) {
+                showQuestion(currentQuestionIndex + 1);
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestionIndex > 0) {
+                showQuestion(currentQuestionIndex - 1);
+            }
+        }
+
+        function showQuestion(index) {
+            $('.question-card').addClass('d-none').removeClass('active');
+            $(`.question-card[data-question-index="${index}"]`).removeClass('d-none').addClass('active');
+
+            currentQuestionIndex = index;
+            updateProgress();
+            updateNavigation();
+
+            // Фокус на поле ввода
+            $(`.question-card[data-question-index="${index}"] .answer-input`).focus();
+        }
+
+        function updateProgress() {
+            const answeredCount = Object.keys(answers).length;
+            const percentage = (answeredCount / totalQuestions) * 100;
+
+            $('#progressBar').css('width', percentage + '%');
+            $('#currentQuestion').text(currentQuestionIndex + 1);
+            $('#answeredCount').text(answeredCount);
+        }
+
+        function updateNavigation() {
+            $('#prevButton').prop('disabled', currentQuestionIndex === 0);
+
+            if (currentQuestionIndex === totalQuestions - 1) {
+                $('#nextButton').addClass('d-none');
+                $('#finishButton').removeClass('d-none');
+            } else {
+                $('#nextButton').removeClass('d-none');
+                $('#finishButton').addClass('d-none');
+            }
+        }
+
+        function toggleHint(questionIndex) {
+            const hintContainer = $(`.question-card[data-question-index="${questionIndex}"] .hint-container`);
+            const button = $(`.question-card[data-question-index="${questionIndex}"] .btn-outline-info`);
+
+            if (hintContainer.is(':visible')) {
+                hintContainer.slideUp();
+                button.html('<i class="fas fa-lightbulb"></i> Показать подсказку');
+            } else {
+                hintContainer.slideDown();
+                button.html('<i class="fas fa-lightbulb"></i> Скрыть подсказку');
+            }
+        }
+
+        function clearAnswer(questionId) {
+            $(`.answer-input[data-question-id="${questionId}"]`).val('').focus();
+            delete answers[questionId];
+            updateProgress();
+        }
+
+        function showFinishModal() {
+            const modal = new bootstrap.Modal(document.getElementById('finishTestModal'));
+            modal.show();
+        }
+
+        function autoSubmitTest() {
+            alert('Время вышло! Тест будет автоматически завершен.');
+            $('form').first().submit();
+        }
+
+        // Предотвращение случайного закрытия страницы
+        window.addEventListener('beforeunload', function(e) {
+            e.preventDefault();
+            e.returnValue = '';
+        });
+
+        // Добавляем токен для AJAX запросов
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (settings.type === 'POST') {
+                    xhr.setRequestHeader("RequestVerificationToken",
+                        $('input[name="__RequestVerificationToken"]').val());
+                }
+            }
+        });
+    </script>
+    @Html.AntiForgeryToken()
+}
