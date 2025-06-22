@@ -10,8 +10,12 @@ var builder = WebApplication.CreateBuilder(args);
 try
 {
     ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+    Console.WriteLine("[DEBUG] EPPlus license configured successfully");
 }
-catch { }
+catch (Exception ex)
+{
+    Console.WriteLine($"[ERROR] EPPlus license configuration failed: {ex.Message}");
+}
 
 // Добавление сервисов
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -38,6 +42,12 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Account/AccessDenied";
     options.ExpireTimeSpan = TimeSpan.FromHours(24);
     options.SlidingExpiration = true;
+});
+
+builder.Services.AddLogging(logging =>
+{
+    logging.AddConsole();
+    logging.AddDebug();
 });
 
 builder.Services.AddScoped<IStudentImportService, StudentImportService>();

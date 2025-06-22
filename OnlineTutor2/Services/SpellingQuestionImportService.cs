@@ -15,52 +15,125 @@ namespace OnlineTutor2.Services
         {
             try
             {
-                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                if (ExcelPackage.LicenseContext == LicenseContext.Commercial)
+                {
+                    ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                }
+                Console.WriteLine($"[DEBUG] EPPlus license context: {ExcelPackage.LicenseContext}");
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] ConfigureExcelPackage error: {ex.Message}");
+                // Не прерываем выполнение
+            }
         }
 
         public async Task<List<ImportQuestionRow>> ParseExcelFileAsync(IFormFile file)
         {
-            ConfigureExcelPackage();
-
             var questions = new List<ImportQuestionRow>();
 
-            using var stream = new MemoryStream();
-            await file.CopyToAsync(stream);
-
-            using var package = new ExcelPackage(stream);
-            var worksheet = package.Workbook.Worksheets[0];
-
-            if (worksheet.Dimension == null) return questions;
-
-            var rowCount = worksheet.Dimension.Rows;
-
-            // Начинаем с 2 строки (1-я строка - заголовки)
-            for (int row = 2; row <= rowCount; row++)
+            try
             {
-                var question = new ImportQuestionRow { RowNumber = row };
+                Console.WriteLine("[DEBUG] Configuring Excel package...");
+                ConfigureExcelPackage();
 
-                // Читаем данные из столбцов
-                question.WordWithGap = GetCellValue(worksheet, row, 1);      // Слово (с пропуском)
-                question.CorrectLetter = GetCellValue(worksheet, row, 2);    // Правильная буква
-                question.FullWord = GetCellValue(worksheet, row, 3);         // Полное слово
-                question.Hint = GetCellValue(worksheet, row, 4);             // Подсказка
+                Console.WriteLine("[DEBUG] Creating memory stream...");
+                using var stream = new MemoryStream();
+                await file.CopyToAsync(stream);
+                stream.Position = 0;
 
-                // Пропускаем пустые строки
-                if (string.IsNullOrWhiteSpace(question.WordWithGap) &&
-                    string.IsNullOrWhiteSpace(question.CorrectLetter) &&
-                    string.IsNullOrWhiteSpace(question.FullWord))
+                Console.WriteLine($"[DEBUG] Stream created, length: {stream.Length}");
+
+                Console.WriteLine("[DEBUG] Creating Excel package...");
+                using var package = new ExcelPackage(stream);
+
+                if (package.Workbook == null)
                 {
-                    continue;
+                    throw new InvalidOperationException("Не удалось открыть Excel файл - workbook is null");
                 }
 
-                // Валидация
-                ValidateQuestion(question);
-                questions.Add(question);
-            }
+                Console.WriteLine($"[DEBUG] Workbook created, worksheets count: {package.Workbook.Worksheets.Count}");
 
-            return questions;
+                if (package.Workbook.Worksheets.Count == 0)
+                {
+                    throw new InvalidOperationException("Excel файл не содержит листов");
+                }
+
+                var worksheet = package.Workbook.Worksheets[0];
+                Console.WriteLine($"[DEBUG] Using worksheet: {worksheet.Name}");
+
+                if (worksheet.Dimension == null)
+                {
+                    Console.WriteLine("[DEBUG] Worksheet dimension is null, returning empty list");
+                    return questions;
+                }
+
+                var rowCount = worksheet.Dimension.Rows;
+                var colCount = worksheet.Dimension.Columns;
+                Console.WriteLine($"[DEBUG] Worksheet dimensions: {rowCount} rows, {colCount} columns");
+
+                if (rowCount < 2)
+                {
+                    throw new InvalidOperationException("Excel файл должен содержать заголовки и хотя бы одну строку данных");
+                }
+
+                // Читаем заголовки для отладки
+                Console.WriteLine("[DEBUG] Headers:");
+                for (int col = 1; col <= Math.Min(colCount, 4); col++)
+                {
+                    var header = GetCellValue(worksheet, 1, col);
+                    Console.WriteLine($"  Column {col}: '{header}'");
+                }
+
+                // Читаем данные
+                for (int row = 2; row <= rowCount; row++)
+                {
+                    try
+                    {
+                        var question = new ImportQuestionRow { RowNumber = row };
+
+                        question.WordWithGap = GetCellValue(worksheet, row, 1);
+                        question.CorrectLetter = GetCellValue(worksheet, row, 2);
+                        question.FullWord = GetCellValue(worksheet, row, 3);
+                        question.Hint = GetCellValue(worksheet, row, 4);
+
+                        Console.WriteLine($"[DEBUG] Row {row}: '{question.WordWithGap}' | '{question.CorrectLetter}' | '{question.FullWord}'");
+
+                        // Пропускаем пустые строки
+                        if (string.IsNullOrWhiteSpace(question.WordWithGap) &&
+                            string.IsNullOrWhiteSpace(question.CorrectLetter) &&
+                            string.IsNullOrWhiteSpace(question.FullWord))
+                        {
+                            Console.WriteLine($"[DEBUG] Skipping empty row {row}");
+                            continue;
+                        }
+
+                        ValidateQuestion(question);
+                        questions.Add(question);
+                    }
+                    catch (Exception rowEx)
+                    {
+                        Console.WriteLine($"[ERROR] Error processing row {row}: {rowEx.Message}");
+                        var errorQuestion = new ImportQuestionRow
+                        {
+                            RowNumber = row,
+                            WordWithGap = GetCellValue(worksheet, row, 1) ?? "",
+                            CorrectLetter = GetCellValue(worksheet, row, 2) ?? "",
+                            FullWord = GetCellValue(worksheet, row, 3) ?? ""
+                        };
+                        errorQuestion.Errors.Add($"Ошибка обработки строки: {rowEx.Message}");
+                        questions.Add(errorQuestion);
+                    }
+                }
+
+                Console.WriteLine($"[DEBUG] Parsing completed successfully. Total questions: {questions.Count}");
+                return questions;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] ParseExcelFileAsync error: {ex}");
+                throw new InvalidOperationException($"Ошибка при чтении Excel файла: {ex.Message}", ex);
+            }
         }
 
         public async Task<byte[]> GenerateTemplateAsync()
@@ -138,7 +211,8 @@ namespace OnlineTutor2.Services
         {
             try
             {
-                return worksheet.Cells[row, col].Value?.ToString()?.Trim();
+                var cell = worksheet.Cells[row, col];
+                return cell?.Value?.ToString()?.Trim();
             }
             catch
             {

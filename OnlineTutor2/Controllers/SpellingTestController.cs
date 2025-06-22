@@ -251,96 +251,172 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ImportQuestions(QuestionImportViewModel model)
         {
-            if (ModelState.IsValid)
+            var currentUser = await _userManager.GetUserAsync(User);
+            var test = await _context.SpellingTests
+                .FirstOrDefaultAsync(st => st.Id == model.SpellingTestId && st.TeacherId == currentUser.Id);
+
+            if (test == null)
             {
+                TempData["ErrorMessage"] = "Тест не найден";
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewBag.Test = test;
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            try
+            {
+                // Детальное логирование
+                Console.WriteLine($"[DEBUG] Starting import for test {model.SpellingTestId}");
+
+                // Проверка файла
+                if (model.ExcelFile == null || model.ExcelFile.Length == 0)
+                {
+                    ModelState.AddModelError("ExcelFile", "Выберите файл для импорта");
+                    return View(model);
+                }
+
+                Console.WriteLine($"[DEBUG] File info: Name={model.ExcelFile.FileName}, Size={model.ExcelFile.Length}, ContentType={model.ExcelFile.ContentType}");
+
+                // Проверка размера файла
+                if (model.ExcelFile.Length > 10 * 1024 * 1024)
+                {
+                    ModelState.AddModelError("ExcelFile", "Размер файла не должен превышать 10 МБ");
+                    return View(model);
+                }
+
+                // Проверка расширения
+                var allowedExtensions = new[] { ".xlsx", ".xls" };
+                var fileExtension = Path.GetExtension(model.ExcelFile.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(fileExtension))
+                {
+                    ModelState.AddModelError("ExcelFile", "Поддерживаются только файлы Excel (.xlsx, .xls)");
+                    return View(model);
+                }
+
+                Console.WriteLine($"[DEBUG] File extension check passed: {fileExtension}");
+
+                // Проверяем, что сервис доступен
+                if (_questionImportService == null)
+                {
+                    throw new InvalidOperationException("Сервис импорта не доступен");
+                }
+
+                Console.WriteLine("[DEBUG] Starting file parsing...");
+
+                // Парсинг файла с дополнительной обработкой ошибок
+                List<ImportQuestionRow> questions;
                 try
                 {
-                    var currentUser = await _userManager.GetUserAsync(User);
-                    var test = await _context.SpellingTests
-                        .FirstOrDefaultAsync(st => st.Id == model.SpellingTestId && st.TeacherId == currentUser.Id);
+                    questions = await _questionImportService.ParseExcelFileAsync(model.ExcelFile);
+                    Console.WriteLine($"[DEBUG] Parsing completed. Found {questions?.Count ?? 0} questions");
+                }
+                catch (Exception parseEx)
+                {
+                    Console.WriteLine($"[ERROR] Parse error: {parseEx}");
+                    ModelState.AddModelError("ExcelFile", $"Ошибка при чтении файла Excel: {parseEx.Message}");
+                    return View(model);
+                }
 
-                    if (test == null) return NotFound();
+                if (questions == null || !questions.Any())
+                {
+                    TempData["ErrorMessage"] = "Файл не содержит данных для импорта";
+                    return View(model);
+                }
 
-                    // Проверка файла
-                    if (model.ExcelFile == null || model.ExcelFile.Length == 0)
-                    {
-                        ModelState.AddModelError("ExcelFile", "Выберите файл для импорта");
-                        ViewBag.Test = test;
-                        return View(model);
-                    }
+                Console.WriteLine("[DEBUG] Creating import data for TempData...");
 
-                    var allowedExtensions = new[] { ".xlsx", ".xls" };
-                    var fileExtension = Path.GetExtension(model.ExcelFile.FileName).ToLowerInvariant();
-                    if (!allowedExtensions.Contains(fileExtension))
-                    {
-                        ModelState.AddModelError("ExcelFile", "Поддерживаются только файлы Excel (.xlsx, .xls)");
-                        ViewBag.Test = test;
-                        return View(model);
-                    }
-
-                    // Парсинг файла
-                    var questions = await _questionImportService.ParseExcelFileAsync(model.ExcelFile);
-
-                    if (!questions.Any())
-                    {
-                        TempData["ErrorMessage"] = "Файл не содержит данных для импорта";
-                        ViewBag.Test = test;
-                        return View(model);
-                    }
-
-                    // Сохраняем данные в TempData для предварительного просмотра
-                    TempData["ImportQuestions"] = System.Text.Json.JsonSerializer.Serialize(new
+                // Сохраняем данные в TempData
+                try
+                {
+                    var importData = new
                     {
                         TestId = model.SpellingTestId,
                         Questions = questions,
                         PointsPerQuestion = model.PointsPerQuestion
-                    });
+                    };
+
+                    var jsonString = System.Text.Json.JsonSerializer.Serialize(importData);
+                    TempData["ImportQuestions"] = jsonString;
+
+                    Console.WriteLine($"[DEBUG] TempData saved, JSON length: {jsonString.Length}");
+                    Console.WriteLine("[DEBUG] Redirecting to PreviewQuestions...");
 
                     return RedirectToAction(nameof(PreviewQuestions));
                 }
-                catch (Exception ex)
+                catch (Exception jsonEx)
                 {
-                    ModelState.AddModelError("", $"Ошибка при обработке файла: {ex.Message}");
+                    Console.WriteLine($"[ERROR] JSON serialization error: {jsonEx}");
+                    TempData["ErrorMessage"] = "Ошибка при подготовке данных для предварительного просмотра";
+                    return View(model);
                 }
             }
-
-            var currentUserForView = await _userManager.GetUserAsync(User);
-            var testForView = await _context.SpellingTests
-                .FirstOrDefaultAsync(st => st.Id == model.SpellingTestId && st.TeacherId == currentUserForView.Id);
-            ViewBag.Test = testForView;
-            return View(model);
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] General error in ImportQuestions: {ex}");
+                TempData["ErrorMessage"] = $"Произошла ошибка: {ex.Message}";
+                return View(model);
+            }
         }
 
         // GET: SpellingTest/PreviewQuestions
         public async Task<IActionResult> PreviewQuestions()
         {
-            var importDataJson = TempData["ImportQuestions"] as string;
-            if (string.IsNullOrEmpty(importDataJson))
-            {
-                TempData["ErrorMessage"] = "Данные импорта не найдены. Попробуйте еще раз.";
-                return RedirectToAction(nameof(Index));
-            }
-
             try
             {
+                Console.WriteLine("[DEBUG] PreviewQuestions called");
+
+                var importDataJson = TempData["ImportQuestions"] as string;
+                if (string.IsNullOrEmpty(importDataJson))
+                {
+                    Console.WriteLine("[ERROR] No import data found in TempData");
+                    TempData["ErrorMessage"] = "Данные импорта не найдены. Попробуйте еще раз.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                Console.WriteLine($"[DEBUG] Import data JSON length: {importDataJson.Length}");
+
                 var importData = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(importDataJson);
                 var testId = importData.GetProperty("TestId").GetInt32();
                 var pointsPerQuestion = importData.GetProperty("PointsPerQuestion").GetInt32();
+
+                Console.WriteLine($"[DEBUG] TestId: {testId}, PointsPerQuestion: {pointsPerQuestion}");
 
                 var currentUser = await _userManager.GetUserAsync(User);
                 var test = await _context.SpellingTests
                     .FirstOrDefaultAsync(st => st.Id == testId && st.TeacherId == currentUser.Id);
 
-                if (test == null) return NotFound();
+                if (test == null)
+                {
+                    Console.WriteLine("[ERROR] Test not found");
+                    TempData["ErrorMessage"] = "Тест не найден";
+                    return RedirectToAction(nameof(Index));
+                }
 
                 var questionsArray = importData.GetProperty("Questions");
                 var questions = new List<ImportQuestionRow>();
 
                 foreach (var questionElement in questionsArray.EnumerateArray())
                 {
-                    var question = System.Text.Json.JsonSerializer.Deserialize<ImportQuestionRow>(questionElement.GetRawText());
-                    questions.Add(question);
+                    try
+                    {
+                        var question = System.Text.Json.JsonSerializer.Deserialize<ImportQuestionRow>(questionElement.GetRawText());
+                        if (question != null)
+                        {
+                            questions.Add(question);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[ERROR] Error deserializing question: {ex.Message}");
+                    }
                 }
+
+                Console.WriteLine($"[DEBUG] Questions deserialized: {questions.Count}");
 
                 ViewBag.Test = test;
                 ViewBag.PointsPerQuestion = pointsPerQuestion;
@@ -350,6 +426,7 @@ namespace OnlineTutor2.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[ERROR] PreviewQuestions error: {ex}");
                 TempData["ErrorMessage"] = $"Ошибка обработки данных: {ex.Message}";
                 return RedirectToAction(nameof(Index));
             }
