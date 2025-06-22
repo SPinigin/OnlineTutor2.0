@@ -15,15 +15,19 @@
             </div>
             <div class="card-body">
 
-                <div class="alert alert-info">
-                    <h6><i class="fas fa-info-circle"></i> Добавление вопроса в тест:</h6>
-                    <strong>@test.Title</strong>
-                    <br><small class="text-muted">Вопрос №@nextOrderIndex</small>
-                </div>
-
                 <form asp-action="AddQuestion" method="post">
-                    <input type="hidden" name="testId" value="@test.Id" />
+
+                    <input asp-for="SpellingTestId" type="hidden" />
+                    <input asp-for="OrderIndex" type="hidden" />
+
                     <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> Добавление вопроса в тест:</h6>
+                        <strong>@ViewBag.Test.Title</strong>
+                        <br><small class="text-muted">Вопрос №@ViewBag.NextOrderIndex</small>
+                    </div>
 
 
                     <fieldset class="mb-4">
@@ -85,7 +89,7 @@
                             <label asp-for="Points" class="form-label">
                                 <i class="fas fa-trophy"></i> Баллы за правильный ответ
                             </label>
-                            <input asp-for="Points" class="form-control" type="number" min="1" max="10" value="1" />
+                            <input asp-for="Points" class="form-control" type="number" min="1" max="10" />
                             <span asp-validation-for="Points" class="text-danger"></span>
                         </div>
                     </fieldset>
@@ -101,7 +105,7 @@
                                 <h6>Как будет выглядеть вопрос для ученика:</h6>
                                 <div class="question-preview mt-3 p-3 bg-white rounded border">
                                     <p class="mb-2">
-                                        <strong>Вопрос №@nextOrderIndex:</strong>
+                                        <strong>Вопрос №@ViewBag.NextOrderIndex:</strong>
                                     </p>
                                     <p class="mb-2">
                                         Вставьте пропущенную букву: <strong id="preview-word">прол…тает</strong>
@@ -120,7 +124,7 @@
                     </fieldset>
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a asp-action="Details" asp-route-id="@test.Id" class="btn btn-outline-secondary">
+                        <a asp-action="Details" asp-route-id="@ViewBag.Test.Id" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left"></i> Отмена
                         </a>
                         <button type="submit" class="btn btn-primary">

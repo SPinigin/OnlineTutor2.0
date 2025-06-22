@@ -445,36 +445,57 @@ namespace OnlineTutor2.Controllers
 
             if (test == null) return NotFound();
 
+            // Создаем модель с уже заполненными данными
+            var model = new SpellingQuestion
+            {
+                SpellingTestId = test.Id,
+                OrderIndex = test.Questions.Count + 1,
+                Points = 1 // Значение по умолчанию
+            };
+
             ViewBag.Test = test;
             ViewBag.NextOrderIndex = test.Questions.Count + 1;
 
-            return View();
+            return View(model);
         }
 
         // POST: SpellingTest/AddQuestion
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddQuestion(int testId, SpellingQuestion model)
+        public async Task<IActionResult> AddQuestion(SpellingQuestion model)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.SpellingTests
                 .Include(st => st.Questions)
-                .FirstOrDefaultAsync(st => st.Id == testId && st.TeacherId == currentUser.Id);
+                .FirstOrDefaultAsync(st => st.Id == model.SpellingTestId && st.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
 
+            // Убираем проверку навигационного свойства из валидации
+            ModelState.Remove("SpellingTest");
+
             if (ModelState.IsValid)
             {
-                model.SpellingTestId = testId;
-                model.OrderIndex = test.Questions.Count + 1;
+                // Создаем новый объект без Id (чтобы EF сгенерировал его автоматически)
+                var question = new SpellingQuestion
+                {
+                    SpellingTestId = model.SpellingTestId,
+                    WordWithGap = model.WordWithGap,
+                    CorrectLetter = model.CorrectLetter,
+                    FullWord = model.FullWord,
+                    Hint = model.Hint,
+                    Points = model.Points > 0 ? model.Points : 1,
+                    OrderIndex = model.OrderIndex > 0 ? model.OrderIndex : test.Questions.Count + 1
+                };
 
-                _context.SpellingQuestions.Add(model);
+                _context.SpellingQuestions.Add(question);
                 await _context.SaveChangesAsync();
 
                 TempData["SuccessMessage"] = "Вопрос успешно добавлен!";
-                return RedirectToAction(nameof(Details), new { id = testId });
+                return RedirectToAction(nameof(Details), new { id = model.SpellingTestId });
             }
 
+            // При ошибке валидации перезагружаем данные для представления
             ViewBag.Test = test;
             ViewBag.NextOrderIndex = test.Questions.Count + 1;
             return View(model);
