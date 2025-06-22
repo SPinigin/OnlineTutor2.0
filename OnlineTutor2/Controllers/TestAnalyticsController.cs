@@ -72,13 +72,9 @@ namespace OnlineTutor2.Controllers
             return View("RegularTestAnalytics", analytics);
         }
 
-        // Методы для других типов тестов в будущем:
-        // public async Task<IActionResult> Grammar(int id) { ... }
-        // public async Task<IActionResult> Essay(int id) { ... }
-
+        // Методы для тестов на правописание
         private async Task<SpellingTestAnalyticsViewModel> BuildSpellingAnalyticsAsync(SpellingTest test)
         {
-            // Тот же код, что был в SpellingTestController
             var analytics = new SpellingTestAnalyticsViewModel
             {
                 Test = test
@@ -115,6 +111,157 @@ namespace OnlineTutor2.Controllers
             return analytics;
         }
 
+        private TestStatistics BuildSpellingStatistics(SpellingTest test, List<Student> allStudents)
+        {
+            var completedResults = test.TestResults.Where(tr => tr.IsCompleted).ToList();
+            var inProgressResults = test.TestResults.Where(tr => !tr.IsCompleted).ToList();
+            var studentsWithResults = test.TestResults.Select(tr => tr.StudentId).Distinct().Count();
+
+            var stats = new TestStatistics
+            {
+                TotalStudents = allStudents.Count,
+                StudentsCompleted = completedResults.Select(tr => tr.StudentId).Distinct().Count(),
+                StudentsInProgress = inProgressResults.Select(tr => tr.StudentId).Distinct().Count(),
+                StudentsNotStarted = allStudents.Count - studentsWithResults
+            };
+
+            if (completedResults.Any())
+            {
+                stats.AverageScore = Math.Round(completedResults.Average(tr => tr.Score), 1);
+                stats.AveragePercentage = Math.Round(completedResults.Average(tr => tr.Percentage), 1);
+                stats.HighestScore = completedResults.Max(tr => tr.Score);
+                stats.LowestScore = completedResults.Min(tr => tr.Score);
+                stats.FirstCompletion = completedResults.Min(tr => tr.CompletedAt);
+                stats.LastCompletion = completedResults.Max(tr => tr.CompletedAt);
+
+                // Среднее время выполнения
+                var completionTimes = completedResults
+                    .Where(tr => tr.CompletedAt.HasValue)
+                    .Select(tr => tr.CompletedAt.Value - tr.StartedAt)
+                    .ToList();
+
+                if (completionTimes.Any())
+                {
+                    var averageTicks = (long)completionTimes.Average(ts => ts.Ticks);
+                    stats.AverageCompletionTime = new TimeSpan(averageTicks);
+                }
+
+                // Распределение оценок
+                stats.GradeDistribution = new Dictionary<string, int>
+                {
+                    ["Отлично (80-100%)"] = completedResults.Count(tr => tr.Percentage >= 80),
+                    ["Хорошо (60-79%)"] = completedResults.Count(tr => tr.Percentage >= 60 && tr.Percentage < 80),
+                    ["Удовлетворительно (40-59%)"] = completedResults.Count(tr => tr.Percentage >= 40 && tr.Percentage < 60),
+                    ["Неудовлетворительно (0-39%)"] = completedResults.Count(tr => tr.Percentage < 40)
+                };
+            }
+
+            return stats;
+        }
+
+        private List<StudentTestResultViewModel> BuildSpellingStudentResults(SpellingTest test, List<Student> allStudents)
+        {
+            var studentResults = new List<StudentTestResultViewModel>();
+
+            foreach (var student in allStudents)
+            {
+                var results = test.TestResults.Where(tr => tr.StudentId == student.Id).ToList();
+                var completedResults = results.Where(tr => tr.IsCompleted).ToList();
+
+                var studentResult = new StudentTestResultViewModel
+                {
+                    Student = student,
+                    Results = results,
+                    AttemptsUsed = results.Count,
+                    HasCompleted = completedResults.Any(),
+                    IsInProgress = results.Any(tr => !tr.IsCompleted)
+                };
+
+                if (completedResults.Any())
+                {
+                    studentResult.BestResult = completedResults.OrderByDescending(tr => tr.Percentage).First();
+                    studentResult.LatestResult = completedResults.OrderByDescending(tr => tr.CompletedAt).First();
+
+                    var totalTime = completedResults
+                        .Where(tr => tr.CompletedAt.HasValue)
+                        .Sum(tr => (tr.CompletedAt.Value - tr.StartedAt).Ticks);
+
+                    if (totalTime > 0)
+                    {
+                        studentResult.TotalTimeSpent = new TimeSpan(totalTime);
+                    }
+                }
+
+                studentResults.Add(studentResult);
+            }
+
+            return studentResults.OrderBy(sr => sr.Student.User.LastName).ToList();
+        }
+
+        private List<QuestionAnalyticsViewModel> BuildSpellingQuestionAnalytics(SpellingTest test)
+        {
+            var questionAnalytics = new List<QuestionAnalyticsViewModel>();
+
+            foreach (var question in test.Questions.OrderBy(q => q.OrderIndex))
+            {
+                var answers = test.TestResults
+                    .SelectMany(tr => tr.Answers)
+                    .Where(a => a.SpellingQuestionId == question.Id)
+                    .ToList();
+
+                var analytics = new QuestionAnalyticsViewModel
+                {
+                    Question = question,
+                    TotalAnswers = answers.Count,
+                    CorrectAnswers = answers.Count(a => a.IsCorrect),
+                    IncorrectAnswers = answers.Count(a => !a.IsCorrect)
+                };
+
+                if (answers.Any())
+                {
+                    analytics.SuccessRate = Math.Round((double)analytics.CorrectAnswers / analytics.TotalAnswers * 100, 1);
+
+                    // Анализ частых ошибок
+                    var incorrectAnswers = answers
+                        .Where(a => !a.IsCorrect && !string.IsNullOrEmpty(a.StudentAnswer))
+                        .GroupBy(a => a.StudentAnswer.ToLower())
+                        .Select(g => new CommonMistakeViewModel
+                        {
+                            IncorrectAnswer = g.Key,
+                            Count = g.Count(),
+                            Percentage = Math.Round((double)g.Count() / analytics.IncorrectAnswers * 100, 1),
+                            StudentNames = g.Select(a => a.TestResult.Student.User.FullName).ToList()
+                        })
+                        .OrderByDescending(m => m.Count)
+                        .Take(5)
+                        .ToList();
+
+                    analytics.CommonMistakes = incorrectAnswers;
+                }
+
+                questionAnalytics.Add(analytics);
+            }
+
+            // Отмечаем самые сложные и легкие вопросы
+            if (questionAnalytics.Any(qa => qa.TotalAnswers > 0))
+            {
+                var lowestSuccessRate = questionAnalytics.Where(qa => qa.TotalAnswers > 0).Min(qa => qa.SuccessRate);
+                var highestSuccessRate = questionAnalytics.Where(qa => qa.TotalAnswers > 0).Max(qa => qa.SuccessRate);
+
+                foreach (var qa in questionAnalytics)
+                {
+                    if (qa.TotalAnswers > 0)
+                    {
+                        qa.IsMostDifficult = qa.SuccessRate == lowestSuccessRate;
+                        qa.IsEasiest = qa.SuccessRate == highestSuccessRate;
+                    }
+                }
+            }
+
+            return questionAnalytics;
+        }
+
+        // Методы для обычных тестов
         private async Task<RegularTestAnalyticsViewModel> BuildRegularTestAnalyticsAsync(Test test)
         {
             var analytics = new RegularTestAnalyticsViewModel
@@ -153,10 +300,6 @@ namespace OnlineTutor2.Controllers
             return analytics;
         }
 
-        // Вспомогательные методы для тестов на правописание (перенести из SpellingTestController)
-        // ... (все методы Build*Spelling*)
-
-        // Вспомогательные методы для обычных тестов
         private TestStatistics BuildRegularTestStatistics(Test test, List<Student> allStudents)
         {
             var completedResults = test.TestResults.Where(tr => tr.IsCompleted).ToList();
@@ -180,7 +323,6 @@ namespace OnlineTutor2.Controllers
                 stats.FirstCompletion = completedResults.Min(tr => tr.CompletedAt);
                 stats.LastCompletion = completedResults.Max(tr => tr.CompletedAt);
 
-                // Среднее время выполнения
                 var completionTimes = completedResults
                     .Where(tr => tr.CompletedAt.HasValue)
                     .Select(tr => tr.CompletedAt.Value - tr.StartedAt)
@@ -192,7 +334,6 @@ namespace OnlineTutor2.Controllers
                     stats.AverageCompletionTime = new TimeSpan(averageTicks);
                 }
 
-                // Распределение оценок
                 stats.GradeDistribution = new Dictionary<string, int>
                 {
                     ["Отлично (80-100%)"] = completedResults.Count(tr => tr.Percentage >= 80),
