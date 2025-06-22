@@ -2,21 +2,18 @@
     <div class="row">
         <div class="col-md-6">
             <div class="btn-group w-100" role="group">
-                <a asp-action="ImportQuestions" asp-route-id="@Model.Id" class="btn btn-success">
-                    <i class="fas fa-file-import"></i> Импорт вопросов
-                </a>
-                <a asp-action="AddQuestion" asp-route-id="@Model.Id" class="btn btn-outline-success">
+                <a asp-action="Create" class="btn btn-success">
                     <i class="fas fa-plus"></i> Добавить вопрос
+                </a>
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">
+                    <i class="fas fa-edit"></i> Редактировать
                 </a>
             </div>
         </div>
         <div class="col-md-6">
             <div class="btn-group w-100" role="group">
-                <a asp-action="Analytics" asp-route-id="@Model.Id" class="btn btn-info">
+                <a asp-controller="TestAnalytics" asp-action="Regular" asp-route-id="@Model.Id" class="btn btn-info">
                     <i class="fas fa-chart-bar"></i> Аналитика
-                </a>
-                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
-                    <i class="fas fa-edit"></i> Редактировать
                 </a>
                 <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
                     <i class="fas fa-ellipsis-v"></i>

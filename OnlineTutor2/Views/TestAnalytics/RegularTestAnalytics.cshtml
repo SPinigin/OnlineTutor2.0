@@ -1,0 +1,558 @@
+﻿@model OnlineTutor2.ViewModels.RegularTestAnalyticsViewModel
+@{
+    ViewData["Title"] = $"Аналитика теста: {Model.Test.Title}";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-controller="Test" asp-action="Details" asp-route-id="@Model.Test.Id">@Model.Test.Title</a>
+                </li>
+                <li class="breadcrumb-item active">Аналитика</li>
+            </ol>
+        </nav>
+        <h2><i class="fas fa-chart-bar text-info"></i> Аналитика обычного теста</h2>
+        <p class="text-muted">Детальный анализ результатов и статистика прохождения</p>
+    </div>
+    <div>
+        <a asp-controller="Test" asp-action="Details" asp-route-id="@Model.Test.Id" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Назад к тесту
+        </a>
+    </div>
+</div>
+
+
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="card text-center border-primary">
+            <div class="card-body">
+                <i class="fas fa-users text-primary" style="font-size: 2rem;"></i>
+                <h4 class="mt-2 text-primary">@Model.Statistics.TotalStudents</h4>
+                <small class="text-muted">Всего учеников</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center border-success">
+            <div class="card-body">
+                <i class="fas fa-check-circle text-success" style="font-size: 2rem;"></i>
+                <h4 class="mt-2 text-success">@Model.Statistics.StudentsCompleted</h4>
+                <small class="text-muted">Завершили</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center border-warning">
+            <div class="card-body">
+                <i class="fas fa-clock text-warning" style="font-size: 2rem;"></i>
+                <h4 class="mt-2 text-warning">@Model.Statistics.StudentsInProgress</h4>
+                <small class="text-muted">В процессе</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center border-danger">
+            <div class="card-body">
+                <i class="fas fa-times-circle text-danger" style="font-size: 2rem;"></i>
+                <h4 class="mt-2 text-danger">@Model.Statistics.StudentsNotStarted</h4>
+                <small class="text-muted">Не начали</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center border-info">
+            <div class="card-body">
+                <i class="fas fa-percentage text-info" style="font-size: 2rem;"></i>
+                <h4 class="mt-2 text-info">@Model.Statistics.AveragePercentage.ToString("F1")%</h4>
+                <small class="text-muted">Средний результат</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center border-secondary">
+            <div class="card-body">
+                <i class="fas fa-stopwatch text-secondary" style="font-size: 2rem;"></i>
+                <h4 class="mt-2 text-secondary">@($"{Model.Statistics.AverageCompletionTime.Minutes:D2}:{Model.Statistics.AverageCompletionTime.Seconds:D2}")</h4>
+                <small class="text-muted">Среднее время</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="fas fa-tasks"></i> Информация о тесте</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <strong>Тип теста:</strong>
+                <div class="mt-1">
+                    <span class="badge bg-info fs-6">
+                        @switch (Model.Test.Type)
+                        {
+                            case TestType.Practice:
+                                <i class="fas fa-dumbbell"></i> <span>Практика</span>
+                                break;
+                            case TestType.Quiz:
+                                <i class="fas fa-question-circle"></i> <span>Викторина</span>
+                                break;
+                            case TestType.Exam:
+                                <i class="fas fa-graduation-cap"></i> <span>Экзамен</span>
+                                break;
+                            case TestType.Homework:
+                                <i class="fas fa-home"></i> <span>Домашнее задание</span>
+                                break;
+                            default:
+                                <i class="fas fa-tasks"></i> <span>Обычный тест</span>
+                                break;
+                        }
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <strong>Вопросов в тесте:</strong>
+                <div class="mt-1"><span class="badge bg-primary fs-6">@Model.Test.Questions.Count</span></div>
+            </div>
+            <div class="col-md-3">
+                <strong>Время на выполнение:</strong>
+                <div class="mt-1"><span class="badge bg-warning fs-6">@Model.Test.TimeLimit минут</span></div>
+            </div>
+            <div class="col-md-3">
+                <strong>Максимум попыток:</strong>
+                <div class="mt-1"><span class="badge bg-secondary fs-6">@Model.Test.MaxAttempts</span></div>
+            </div>
+        </div>
+        @if (!string.IsNullOrEmpty(Model.Test.Description))
+        {
+            <div class="mt-3">
+                <strong>Описание:</strong>
+                <p class="text-muted mb-0">@Model.Test.Description</p>
+            </div>
+        }
+    </div>
+</div>
+
+
+<ul class="nav nav-tabs" id="analyticsTabsNav" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+            <i class="fas fa-chart-pie"></i> Обзор
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" type="button" role="tab">
+            <i class="fas fa-users"></i> Ученики (@Model.StudentResults.Count)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="questions-tab" data-bs-toggle="tab" data-bs-target="#questions" type="button" role="tab">
+            <i class="fas fa-question-circle"></i> Анализ вопросов (@Model.QuestionAnalytics.Count)
+        </button>
+    </li>
+    @if (Model.StudentsNotTaken.Any())
+    {
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="not-taken-tab" data-bs-toggle="tab" data-bs-target="#not-taken" type="button" role="tab">
+                <i class="fas fa-user-clock"></i> Не проходили (@Model.StudentsNotTaken.Count)
+            </button>
+        </li>
+    }
+</ul>
+
+<div class="tab-content" id="analyticsTabsContent">
+    
+    
+    <div class="tab-pane fade show active" id="overview" role="tabpanel">
+        <div class="row mt-4">
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Распределение результатов</h5>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var grade in Model.Statistics.GradeDistribution)
+                        {
+                            var percentage = Model.Statistics.StudentsCompleted > 0 
+                                ? Math.Round((double)grade.Value / Model.Statistics.StudentsCompleted * 100, 1) 
+                                : 0;
+                            var colorClass = grade.Key.Contains("Отлично") ? "success" : 
+                                           grade.Key.Contains("Хорошо") ? "info" : 
+                                           grade.Key.Contains("Удовлетворительно") ? "warning" : "danger";
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>@grade.Key</span>
+                                    <span><strong>@grade.Value</strong> (@percentage%)</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-@colorClass" style="width: @percentage%"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-info-circle"></i> Детальная статистика</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.Statistics.StudentsCompleted > 0)
+                        {
+                            <dl class="row">
+                                <dt class="col-sm-6">Лучший результат:</dt>
+                                <dd class="col-sm-6">@Model.Statistics.HighestScore/@Model.Test.Questions.Sum(q => q.Points) баллов</dd>
+
+                                <dt class="col-sm-6">Худший результат:</dt>
+                                <dd class="col-sm-6">@Model.Statistics.LowestScore/@Model.Test.Questions.Sum(q => q.Points) баллов</dd>
+
+                                <dt class="col-sm-6">Средний балл:</dt>
+                                <dd class="col-sm-6">@Model.Statistics.AverageScore.ToString("F1") баллов</dd>
+
+                                @if (Model.Statistics.FirstCompletion.HasValue)
+                                {
+                                    <dt class="col-sm-6">Первое прохождение:</dt>
+                                    <dd class="col-sm-6">@Model.Statistics.FirstCompletion.Value.ToString("dd.MM.yyyy HH:mm")</dd>
+                                }
+
+                                @if (Model.Statistics.LastCompletion.HasValue)
+                                {
+                                    <dt class="col-sm-6">Последнее прохождение:</dt>
+                                    <dd class="col-sm-6">@Model.Statistics.LastCompletion.Value.ToString("dd.MM.yyyy HH:mm")</dd>
+                                }
+                            </dl>
+                        }
+                        else
+                        {
+                            <div class="text-center py-3">
+                                <i class="fas fa-chart-line text-muted" style="font-size: 2rem;"></i>
+                                <p class="text-muted mt-2">Пока нет завершенных попыток</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="tab-pane fade" id="students" role="tabpanel">
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-users"></i> Результаты учеников</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Ученик</th>
+                                <th>Статус</th>
+                                <th>Попыток</th>
+                                <th>Лучший результат</th>
+                                <th>Последний результат</th>
+                                <th>Время</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var studentResult in Model.StudentResults)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-user-graduate text-muted me-2"></i>
+                                            <div>
+                                                <strong>@studentResult.Student.User.FullName</strong>
+                                                @if (!string.IsNullOrEmpty(studentResult.Student.School))
+                                                {
+                                                    <br><small class="text-muted">@studentResult.Student.School</small>
+                                                }
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (studentResult.HasCompleted)
+                                        {
+                                            <span class="badge bg-success">Завершил</span>
+                                        }
+                                        else if (studentResult.IsInProgress)
+                                        {
+                                            <span class="badge bg-warning">В процессе</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Не начал</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            @studentResult.AttemptsUsed/@Model.Test.MaxAttempts
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (studentResult.BestResult != null)
+                                        {
+                                            <span class="badge bg-@(studentResult.BestResult.Percentage >= 80 ? "success" : studentResult.BestResult.Percentage >= 60 ? "warning" : "danger")">
+                                                @studentResult.BestResult.Percentage.ToString("F1")%
+                                            </span>
+                                            <br><small class="text-muted">@studentResult.BestResult.Score/@studentResult.BestResult.MaxScore баллов</small>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (studentResult.LatestResult != null)
+                                        {
+                                            <div>@studentResult.LatestResult.Percentage.ToString("F1")%</div>
+                                            <small class="text-muted">@studentResult.LatestResult.CompletedAt?.ToString("dd.MM.yyyy")</small>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (studentResult.TotalTimeSpent.HasValue)
+                                        {
+                                            <span>@($"{studentResult.TotalTimeSpent.Value.Minutes:D2}:{studentResult.TotalTimeSpent.Value.Seconds:D2}")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (studentResult.Results.Any())
+                                        {
+                                            <button type="button" class="btn btn-outline-info btn-sm" 
+                                                    onclick="showStudentDetails(@studentResult.Student.Id, '@studentResult.Student.User.FullName')">
+                                                <i class="fas fa-eye"></i> Детали
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="tab-pane fade" id="questions" role="tabpanel">
+        <div class="mt-4">
+            @foreach (var qa in Model.QuestionAnalytics)
+            {
+                var questionIndex = Model.QuestionAnalytics.IndexOf(qa) + 1;
+                
+                <div class="card mb-3 @(qa.IsMostDifficult ? "border-danger" : qa.IsEasiest ? "border-success" : "")">
+                    <div class="card-header">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h6 class="mb-0">
+                                    <span class="badge bg-info me-2">@questionIndex</span>
+                                    @qa.Question.Text
+                                    @if (qa.IsMostDifficult)
+                                    {
+                                        <span class="badge bg-danger ms-2">Самый сложный</span>
+                                    }
+                                    @if (qa.IsEasiest)
+                                    {
+                                        <span class="badge bg-success ms-2">Самый легкий</span>
+                                    }
+                                </h6>
+                                <small class="text-muted">
+                                    Тип: 
+                                    @switch (qa.Question.Type)
+                                    {
+                                        case QuestionType.MultipleChoice:
+                                            <span>Множественный выбор</span>
+                                            break;
+                                        case QuestionType.SingleChoice:
+                                            <span>Одиночный выбор</span>
+                                            break;
+                                        case QuestionType.TrueFalse:
+                                            <span>Верно/Неверно</span>
+                                            break;
+                                        case QuestionType.Text:
+                                            <span>Текстовый ответ</span>
+                                            break;
+                                        case QuestionType.Essay:
+                                            <span>Эссе</span>
+                                            break;
+                                        default:
+                                            <span>Обычный</span>
+                                            break;
+                                    }
+                                    | Баллов: @qa.Question.Points
+                                </small>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                @if (qa.TotalAnswers > 0)
+                                {
+                                    <span class="h5 text-@(qa.SuccessRate >= 80 ? "success" : qa.SuccessRate >= 60 ? "warning" : "danger")">
+                                        @qa.SuccessRate.ToString("F1")%
+                                    </span>
+                                    <br><small class="text-muted">@qa.CorrectAnswers/@qa.TotalAnswers правильно</small>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Нет ответов</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    
+                    @if (qa.Question.Type != QuestionType.Essay && qa.Question.Type != QuestionType.Text)
+                    {
+                        <div class="card-body">
+                            <h6><i class="fas fa-list"></i> Варианты ответов:</h6>
+                            <div class="row">
+                                @foreach (var answer in qa.Question.Answers.OrderBy(a => a.OrderIndex))
+                                {
+                                    var answerStats = qa.TotalAnswers > 0 ? 
+                                        Model.Test.TestResults
+                                            .SelectMany(tr => tr.StudentAnswers)
+                                            .Where(sa => sa.QuestionId == qa.Question.Id && sa.AnswerId == answer.Id)
+                                            .Count() : 0;
+                                    var answerPercentage = qa.TotalAnswers > 0 ? Math.Round((double)answerStats / qa.TotalAnswers * 100, 1) : 0;
+                                    
+                                    <div class="col-md-6 mb-2">
+                                        <div class="d-flex justify-content-between align-items-center p-2 @(answer.IsCorrect ? "bg-success" : "bg-light") rounded">
+                                            <div class="d-flex align-items-center">
+                                                @if (answer.IsCorrect)
+                                                {
+                                                    <i class="fas fa-check text-white me-2"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="fas fa-times text-muted me-2"></i>
+                                                }
+                                                <span class="@(answer.IsCorrect ? "text-white" : "")">@answer.Text</span>
+                                            </div>
+                                            <span class="badge bg-@(answer.IsCorrect ? "light text-success" : "secondary")">
+                                                @answerStats (@answerPercentage%)
+                                            </span>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                    
+                    @if (qa.CommonMistakes.Any())
+                    {
+                        <div class="card-footer">
+                            <h6><i class="fas fa-exclamation-triangle text-warning"></i> Частые неправильные ответы:</h6>
+                            <div class="row">
+                                @foreach (var mistake in qa.CommonMistakes)
+                                {
+                                    <div class="col-md-6 mb-2">
+                                        <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                            <div>
+                                                <strong>"@mistake.IncorrectAnswer"</strong>
+                                                <small class="text-muted">(@mistake.Count раз, @mistake.Percentage%)</small>
+                                            </div>
+                                        </div>
+                                        @if (mistake.StudentNames.Count <= 3)
+                                        {
+                                            <small class="text-muted">@string.Join(", ", mistake.StudentNames)</small>
+                                        }
+                                        else
+                                        {
+                                            <small class="text-muted">@string.Join(", ", mistake.StudentNames.Take(2)) и еще @(mistake.StudentNames.Count - 2)</small>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    
+    @if (Model.StudentsNotTaken.Any())
+    {
+        <div class="tab-pane fade" id="not-taken" role="tabpanel">
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-clock"></i> Ученики, которые не проходили тест
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @foreach (var student in Model.StudentsNotTaken)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-warning">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-user-graduate text-warning fa-2x me-3"></i>
+                                            <div>
+                                                <h6 class="mb-1">@student.User.FullName</h6>
+                                                <small class="text-muted">@student.User.Email</small>
+                                                @if (!string.IsNullOrEmpty(student.School))
+                                                {
+                                                    <br><small class="text-muted">@student.School</small>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function showStudentDetails(studentId, studentName) {
+            // Здесь можно добавить модальное окно с детальной информацией об ученике
+            alert(`Детальная информация для ${studentName} (ID: ${studentId})`);
+            // TODO: Реализовать модальное окно с детальными результатами ученика
+        }
+    </script>
+}
+
+@section Styles {
+    <style>
+        .card {
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .border-danger {
+            border-width: 2px !important;
+        }
+        
+        .border-success {
+            border-width: 2px !important;
+        }
+
+        .bg-success .text-white {
+            color: white !important;
+        }
+    </style>
+}

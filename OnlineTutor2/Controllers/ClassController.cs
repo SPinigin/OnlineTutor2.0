@@ -109,7 +109,7 @@ namespace OnlineTutor2.Controllers
                     CreatedAt = test.CreatedAt,
                     CreatedAtFormatted = test.CreatedAt.ToString("dd.MM.yyyy"),
                     IsActive = test.IsActive,
-                    TestType = "Regular",
+                    TestType = "Regular", // Для маршрутизации к TestAnalytics/Regular
                     TypeDisplayName = "Обычный тест",
                     IconClass = "fas fa-tasks",
                     ColorClass = "info",
@@ -136,7 +136,7 @@ namespace OnlineTutor2.Controllers
                     CreatedAt = spellingTest.CreatedAt,
                     CreatedAtFormatted = spellingTest.CreatedAt.ToString("dd.MM.yyyy"),
                     IsActive = spellingTest.IsActive,
-                    TestType = "Spelling",
+                    TestType = "Spelling", // Для маршрутизации к TestAnalytics/Spelling
                     TypeDisplayName = "Правописание",
                     IconClass = "fas fa-spell-check",
                     ColorClass = "primary",
