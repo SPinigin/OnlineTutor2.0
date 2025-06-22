@@ -188,6 +188,10 @@ namespace OnlineTutor2.Controllers
                 .Include(st => st.Class)
                 .Include(st => st.Questions)
                 .Include(st => st.TestResults)
+                    .ThenInclude(tr => tr.Student)
+                        .ThenInclude(s => s.User) // Добавляем загрузку пользователя
+                .Include(st => st.TestResults)
+                    .ThenInclude(tr => tr.Answers) // Добавляем загрузку ответов
                 .FirstOrDefaultAsync(st => st.Id == id && st.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();

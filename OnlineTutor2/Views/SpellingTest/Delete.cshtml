@@ -53,6 +53,12 @@
                                                 <i class="fas fa-users"></i> Класс: @Model.Class.Name
                                             </small>
                                         }
+                                        else
+                                        {
+                                            <small class="text-muted d-block">
+                                                <i class="fas fa-globe"></i> Доступен всем
+                                            </small>
+                                        }
                                     </div>
                                     <div class="col-6">
                                         @if (Model.StartDate.HasValue)
@@ -81,27 +87,27 @@
                 <div class="row mt-3">
                     <div class="col-md-4">
                         <div class="text-center p-3 bg-light rounded">
-                            <h5 class="text-danger">@Model.Questions.Count</h5>
+                            <h5 class="text-danger">@(Model.Questions?.Count ?? 0)</h5>
                             <small class="text-muted">вопросов</small>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="text-center p-3 bg-light rounded">
-                            <h5 class="text-danger">@Model.TestResults.Count</h5>
+                            <h5 class="text-danger">@(Model.TestResults?.Count ?? 0)</h5>
                             <small class="text-muted">результатов</small>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="text-center p-3 bg-light rounded">
                             <h5 class="text-danger">
-                                @Model.TestResults.SelectMany(tr => tr.Answers).Count()
+                                @(Model.TestResults?.SelectMany(tr => tr.Answers)?.Count() ?? 0)
                             </h5>
                             <small class="text-muted">ответов учеников</small>
                         </div>
                     </div>
                 </div>
 
-                @if (Model.TestResults.Any())
+                @if (Model.TestResults?.Any() == true)
                 {
                     <div class="alert alert-danger mt-3">
                         <i class="fas fa-ban"></i>
@@ -113,7 +119,11 @@
                             <ul class="mb-0 mt-1">
                                 @foreach (var result in Model.TestResults.Take(5))
                                 {
-                                    <li>@result.Student.User.FullName - @result.Percentage.ToString("F1")% (@result.CompletedAt?.ToString("dd.MM.yyyy") ?? "не завершен")</li>
+                                    <li>
+                                        @(result.Student?.User?.FullName ?? "Неизвестный ученик") -
+                                        @result.Percentage.ToString("F1")%
+                                        (@(result.CompletedAt?.ToString("dd.MM.yyyy") ?? "не завершен"))
+                                    </li>
                                 }
                                 @if (Model.TestResults.Count > 5)
                                 {
@@ -123,21 +133,20 @@
                         </div>
                     </div>
                 }
-                else if (Model.Questions.Any())
+                else if (Model.Questions?.Any() == true)
                 {
                     <div class="alert alert-warning mt-3">
                         <i class="fas fa-info-circle"></i>
                         <strong>Будет удалено:</strong>
                         <ul class="mb-0 mt-2">
                             <li>Тест "@Model.Title"</li>
-                            <li>Все вопросы (@Model.Questions.Count шт.)</li>
+                            <li>Все вопросы (@(Model.Questions?.Count ?? 0) шт.)</li>
                             <li>Настройки и конфигурация теста</li>
                         </ul>
                     </div>
                 }
 
-
-                @if (Model.TestResults.Any())
+                @if (Model.TestResults?.Any() == true)
                 {
                     <div class="alert alert-info mt-3">
                         <h6><i class="fas fa-lightbulb"></i> Рекомендуемые действия:</h6>
@@ -149,8 +158,7 @@
                     </div>
                 }
 
-
-                @if (!Model.TestResults.Any())
+                @if (Model.TestResults?.Any() != true)
                 {
                     <div class="mt-4">
                         <label for="confirmationText" class="form-label">
@@ -179,9 +187,8 @@
                             <i class="fas fa-arrow-left"></i> Отмена
                         </a>
 
-                        @if (Model.TestResults.Any())
+                        @if (Model.TestResults?.Any() == true)
                         {
-
                             <form asp-action="ToggleStatus" asp-route-id="@Model.Id" method="post" class="d-inline">
                                 <button type="submit" class="btn btn-warning">
                                     <i class="fas fa-pause"></i> Деактивировать
