@@ -207,7 +207,7 @@ namespace OnlineTutor2.Controllers
                         FileSize = model.File.Length,
                         ContentType = model.File.ContentType,
                         Type = DetermineMaterialType(model.File.FileName),
-                        ClassId = model.ClassId,
+                        ClassId = (int)model.ClassId,
                         UploadedById = currentUser.Id,
                         IsActive = model.IsActive
                     };
@@ -277,7 +277,7 @@ namespace OnlineTutor2.Controllers
                     // Обновляем основные поля
                     material.Title = model.Title;
                     material.Description = model.Description;
-                    material.ClassId = model.ClassId;
+                    material.ClassId = (int)model.ClassId;
                     material.IsActive = model.IsActive;
 
                     // Если загружен новый файл
