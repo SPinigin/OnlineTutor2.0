@@ -389,8 +389,7 @@
         }
 
         function editQuestion(questionId) {
-            // Здесь можно добавить переход на страницу редактирования вопроса
-            alert(`Редактирование вопроса ${questionId} - функция в разработке`);
+            window.location.href = '@Url.Action("EditQuestion")?id=' + questionId;
         }
 
         function editQuestionFromModal() {
@@ -400,10 +399,111 @@
         }
 
         function deleteQuestion(questionId, wordWithGap) {
-            if (confirm(`Вы уверены, что хотите удалить вопрос "${wordWithGap}"?`)) {
-                // Здесь можно добавить AJAX запрос на удаление
-                alert(`Удаление вопроса ${questionId} - функция в разработке`);
+            if (confirm(`Вы уверены, что хотите удалить вопрос "${wordWithGap}"?\n\nВнимание: Если на этот вопрос уже отвечали ученики, удаление будет невозможно.`)) {
+                // AJAX запрос на удаление
+                fetch('@Url.Action("DeleteQuestion")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify(questionId)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Показываем сообщение об успехе
+                        showNotification(data.message, 'success');
+                        // Перезагружаем страницу через 1 секунду
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        showNotification(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Произошла ошибка при удалении вопроса', 'error');
+                });
             }
         }
+
+        function showNotification(message, type) {
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const icon = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-triangle';
+
+            const notification = `
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                    <i class="${icon} me-2"></i>${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', notification);
+
+            // Автоматическое скрытие через 5 секунд
+            setTimeout(() => {
+                const alerts = document.querySelectorAll('.alert');
+                if (alerts.length > 0) {
+                    alerts[alerts.length - 1].remove();
+                }
+            }, 5000);
+        }
+
+        // Инициализация сортировки вопросов (drag & drop)
+        function initializeSortable() {
+            const tableBody = document.querySelector('#questionsTable tbody');
+            if (tableBody && typeof Sortable !== 'undefined') {
+                new Sortable(tableBody, {
+                    animation: 150,
+                    handle: '.drag-handle',
+                    onEnd: function(evt) {
+                        updateQuestionOrder();
+                    }
+                });
+            }
+        }
+
+        function updateQuestionOrder() {
+            const rows = document.querySelectorAll('#questionsTable tbody tr');
+            const questionIds = Array.from(rows).map(row =>
+                parseInt(row.querySelector('[data-question-id]').getAttribute('data-question-id'))
+            );
+
+            fetch('@Url.Action("ReorderQuestions")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify({
+                    testId: @Model.Id,
+                    questionIds: questionIds
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Порядок вопросов обновлен', 'success');
+                    // Обновляем номера в таблице
+                    rows.forEach((row, index) => {
+                        const badge = row.querySelector('.badge');
+                        if (badge) {
+                            badge.textContent = index + 1;
+                        }
+                    });
+                } else {
+                    showNotification(data.message, 'error');
+                    window.location.reload(); // Перезагружаем при ошибке
+                }
+            });
+        }
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSortable();
+        });
     </script>
+    @Html.AntiForgeryToken()
 }

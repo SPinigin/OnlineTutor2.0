@@ -744,5 +744,163 @@ namespace OnlineTutor2.Controllers
             return questionAnalytics;
         }
 
+        // GET: SpellingTest/EditQuestion/5
+        public async Task<IActionResult> EditQuestion(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            var question = await _context.SpellingQuestions
+                .Include(sq => sq.SpellingTest)
+                .FirstOrDefaultAsync(sq => sq.Id == id && sq.SpellingTest.TeacherId == currentUser.Id);
+
+            if (question == null) return NotFound();
+
+            ViewBag.Test = question.SpellingTest;
+            return View(question);
+        }
+
+        // POST: SpellingTest/EditQuestion/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditQuestion(int id, SpellingQuestion model)
+        {
+            if (id != model.Id) return NotFound();
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            var existingQuestion = await _context.SpellingQuestions
+                .Include(sq => sq.SpellingTest)
+                .FirstOrDefaultAsync(sq => sq.Id == id && sq.SpellingTest.TeacherId == currentUser.Id);
+
+            if (existingQuestion == null) return NotFound();
+
+            // Убираем проверку навигационного свойства из валидации
+            ModelState.Remove("SpellingTest");
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    existingQuestion.WordWithGap = model.WordWithGap;
+                    existingQuestion.CorrectLetter = model.CorrectLetter;
+                    existingQuestion.FullWord = model.FullWord;
+                    existingQuestion.Hint = model.Hint;
+                    existingQuestion.Points = model.Points > 0 ? model.Points : 1;
+                    existingQuestion.OrderIndex = model.OrderIndex > 0 ? model.OrderIndex : existingQuestion.OrderIndex;
+
+                    _context.Update(existingQuestion);
+                    await _context.SaveChangesAsync();
+
+                    TempData["SuccessMessage"] = "Вопрос успешно обновлен!";
+                    return RedirectToAction(nameof(Details), new { id = existingQuestion.SpellingTestId });
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    ModelState.AddModelError("", "Произошла ошибка при сохранении. Попробуйте еще раз.");
+                }
+            }
+
+            ViewBag.Test = existingQuestion.SpellingTest;
+            return View(model);
+        }
+
+        // POST: SpellingTest/DeleteQuestion/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteQuestion(int id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var question = await _context.SpellingQuestions
+                .Include(sq => sq.SpellingTest)
+                .Include(sq => sq.StudentAnswers) // Проверяем, есть ли ответы студентов
+                .FirstOrDefaultAsync(sq => sq.Id == id && sq.SpellingTest.TeacherId == currentUser.Id);
+
+            if (question == null)
+                return Json(new { success = false, message = "Вопрос не найден" });
+
+            // Проверяем, есть ли ответы студентов на этот вопрос
+            if (question.StudentAnswers.Any())
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Нельзя удалить вопрос, на который уже отвечали ученики"
+                });
+            }
+
+            try
+            {
+                var testId = question.SpellingTestId;
+                _context.SpellingQuestions.Remove(question);
+                await _context.SaveChangesAsync();
+
+                // Перенумеровываем оставшиеся вопросы
+                await ReorderQuestions(testId);
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Вопрос успешно удален",
+                    testId = testId
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Ошибка при удалении вопроса: " + ex.Message
+                });
+            }
+        }
+
+        // POST: SpellingTest/ReorderQuestions
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReorderQuestions(int testId, List<int> questionIds)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var test = await _context.SpellingTests
+                .Include(st => st.Questions)
+                .FirstOrDefaultAsync(st => st.Id == testId && st.TeacherId == currentUser.Id);
+
+            if (test == null)
+                return Json(new { success = false, message = "Тест не найден" });
+
+            try
+            {
+                for (int i = 0; i < questionIds.Count; i++)
+                {
+                    var question = test.Questions.FirstOrDefault(q => q.Id == questionIds[i]);
+                    if (question != null)
+                    {
+                        question.OrderIndex = i + 1;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "Порядок вопросов обновлен" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Ошибка: " + ex.Message });
+            }
+        }
+
+        // Вспомогательный метод для перенумерации вопросов
+        private async Task ReorderQuestions(int testId)
+        {
+            var questions = await _context.SpellingQuestions
+                .Where(q => q.SpellingTestId == testId)
+                .OrderBy(q => q.OrderIndex)
+                .ToListAsync();
+
+            for (int i = 0; i < questions.Count; i++)
+            {
+                questions[i].OrderIndex = i + 1;
+            }
+
+            await _context.SaveChangesAsync();
+        }
     }
 }
