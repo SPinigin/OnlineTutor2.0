@@ -232,11 +232,17 @@
         let timeRemaining = @((int)Model.TimeRemaining.TotalSeconds);
         let answers = {};
         let timerInterval;
+        let testCompleting = false; // Флаг завершения теста
 
         $(document).ready(function() {
             initializeTest();
             startTimer();
             loadExistingAnswers();
+
+            // Обработчик отправки ТОЛЬКО формы завершения теста (не всех форм)
+            $('form[action*="Complete"]').on('submit', function() {
+                testCompleting = true;
+            });
         });
 
         function initializeTest() {
@@ -391,12 +397,20 @@
         }
 
         function autoSubmitTest() {
+            testCompleting = true; // Устанавливаем флаг перед автоотправкой
             alert('Время вышло! Тест будет автоматически завершен.');
-            $('form').first().submit();
+
+            // Находим форму завершения теста и отправляем её
+            $('form[action*="Complete"]').submit();
         }
 
         // Предотвращение случайного закрытия страницы
         window.addEventListener('beforeunload', function(e) {
+            // Не показываем предупреждение если тест завершается
+            if (testCompleting) {
+                return;
+            }
+
             e.preventDefault();
             e.returnValue = '';
         });
