@@ -179,14 +179,15 @@
 
     <footer class="footer-fixed footer-compact bg-light border-top">
         <div class="container">
-            <div class="row">
+
+            <div class="row d-none d-md-flex">
 
                 <div class="col-md-4 footer-column">
                     <h6><i class="fas fa-graduation-cap text-primary"></i> Образовательный портал</h6>
                     <p>&copy; 2025 - Система онлайн-обучения</p>
                     <p>Эффективная подготовка к ЕГЭ по русскому языку</p>
                     <p>
-                        <a asp-area="" asp-controller="Home" asp-action="Privacy"><br />
+                        <a asp-area="" asp-controller="Home" asp-action="Privacy">
                             <i class="fas fa-shield-alt"></i> Конфиденциальность
                         </a>
                     </p>
@@ -203,7 +204,7 @@
                     <p><i class="fas fa-map-marker-alt"></i> г. Нефтеюганск</p>
                     <p>
                         <i class="fas fa-phone"></i>
-                        <a href="tel:+74951234567">+7 (932) 422-45-97</a>
+                        <a href="tel:+79324224597">+7 (932) 422-45-97</a>
                     </p>
                 </div>
 
@@ -222,6 +223,52 @@
                             <i class="fab fa-github"></i>
                         </a>
                     </div>
+                </div>
+            </div>
+
+            <div class="row d-md-none">
+
+                <div class="col-6 footer-column-mobile">
+                    <div class="text-center">
+                        <h6 class="footer-mobile-title">
+                            <i class="fas fa-address-book text-success"></i> Контакты
+                        </h6>
+                        <p class="footer-mobile-name">Пинигина Наталья Анатольевна</p>
+                        <div class="footer-mobile-contacts">
+                            <a href="mailto:pn31@mail.ru" class="footer-contact-icon" title="Email">
+                                <i class="fas fa-envelope"></i>
+                            </a>
+                            <a href="tel:+79324224597" class="footer-contact-icon" title="Телефон">
+                                <i class="fas fa-phone"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 footer-column-mobile">
+                    <div class="text-center">
+                        <h6 class="footer-mobile-title">
+                            <i class="fas fa-code text-info"></i> Тех.поддержка
+                        </h6>
+                        <p class="footer-mobile-name">Пинигин Сергей</p>
+                        <div class="footer-mobile-contacts">
+                            <a href="mailto:pinigin09@yandex.ru" class="footer-contact-icon" title="Email">
+                                <i class="fas fa-envelope"></i>
+                            </a>
+                            <a href="https://t.me/SPin09" class="footer-contact-icon telegram" target="_blank" title="Telegram">
+                                <i class="fab fa-telegram"></i>
+                            </a>
+                            <a href="https://github.com/SPinigin" class="footer-contact-icon github" target="_blank" title="GitHub">
+                                <i class="fab fa-github"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row d-md-none">
+                <div class="col-12 text-center mt-2">
+                    <small class="text-muted">&copy; 2025 Образовательный портал</small>
                 </div>
             </div>
         </div>
