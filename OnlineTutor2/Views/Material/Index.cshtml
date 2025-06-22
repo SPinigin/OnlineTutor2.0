@@ -1,0 +1,284 @@
+﻿@model IEnumerable<OnlineTutor2.Models.Material>
+@{
+    ViewData["Title"] = "Управление материалами";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-book text-primary"></i> Управление материалами</h2>
+    <a asp-action="Create" class="btn btn-success">
+        <i class="fas fa-plus"></i> Загрузить материал
+    </a>
+</div>
+
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="searchString" class="form-label">
+                    <i class="fas fa-search"></i> Поиск
+                </label>
+                <input type="text" class="form-control" name="searchString" value="@ViewBag.CurrentFilter"
+                       placeholder="Название, описание, имя файла..." />
+            </div>
+            <div class="col-md-2">
+                <label for="classFilter" class="form-label">
+                    <i class="fas fa-filter"></i> Класс
+                </label>
+                <select class="form-select" name="classFilter">
+                    <option value="">Все классы</option>
+                    <option value="0">Без класса</option>
+                    @if (ViewBag.Classes != null)
+                    {
+                        @foreach (var item in (SelectList)ViewBag.Classes)
+                        {
+                            <option value="@item.Value" selected="@(item.Value == ViewBag.ClassFilter?.ToString())">@item.Text</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="typeFilter" class="form-label">
+                    <i class="fas fa-file"></i> Тип
+                </label>
+                <select class="form-select" name="typeFilter">
+                    <option value="">Все типы</option>
+                    @if (ViewBag.MaterialTypes != null)
+                    {
+                        @foreach (var type in (List<SelectListItem>)ViewBag.MaterialTypes)
+                        {
+                            <option value="@type.Value" selected="@(type.Value == ViewBag.TypeFilter)">@type.Text</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="sortOrder" class="form-label">
+                    <i class="fas fa-sort"></i> Сортировка
+                </label>
+                <select class="form-select" name="sortOrder">
+                    <option value="">По названию (А-Я)</option>
+                    <option value="title_desc" selected="@(ViewBag.CurrentSort == "title_desc")">По названию (Я-А)</option>
+                    <option value="Date" selected="@(ViewBag.CurrentSort == "Date")">По дате (старые)</option>
+                    <option value="date_desc" selected="@(ViewBag.CurrentSort == "date_desc")">По дате (новые)</option>
+                    <option value="Size" selected="@(ViewBag.CurrentSort == "Size")">По размеру (меньше)</option>
+                    <option value="size_desc" selected="@(ViewBag.CurrentSort == "size_desc")">По размеру (больше)</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search"></i> Найти
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="text-center py-5">
+        <i class="fas fa-book text-muted" style="font-size: 4rem;"></i>
+        <h4 class="mt-3 text-muted">Материалов не найдено</h4>
+        <p class="text-muted">
+            @if (!string.IsNullOrEmpty(ViewBag.CurrentFilter as string))
+            {
+                <span>По вашему запросу материалы не найдены. Попробуйте изменить критерии поиска.</span>
+            }
+            else
+            {
+                <span>Загрузите первый учебный материал для начала работы</span>
+            }
+        </p>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Загрузить материал
+        </a>
+    </div>
+}
+else
+{
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center border-primary">
+                <div class="card-body">
+                    <h4 class="text-primary">@Model.Count()</h4>
+                    <small class="text-muted">Материалов найдено</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-info">
+                <div class="card-body">
+                    <h4 class="text-info">@OnlineTutor2.ViewModels.MaterialStatisticsViewModel.FormatFileSize(Model.Sum(m => m.FileSize))</h4>
+                    <small class="text-muted">Общий размер</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-success">
+                <div class="card-body">
+                    <h4 class="text-success">@Model.Count(m => m.IsActive)</h4>
+                    <small class="text-muted">Активных</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-warning">
+                <div class="card-body">
+                    <h4 class="text-warning">@Model.Count(m => m.ClassId != null)</h4>
+                    <small class="text-muted">Назначено классам</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row">
+        @foreach (var material in Model)
+        {
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 @(material.IsActive ? "" : "opacity-75")">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            @switch (material.Type)
+                            {
+                                case MaterialType.Document:
+                                    <i class="fas fa-file-alt text-danger me-2"></i>
+                                    break;
+                                case MaterialType.Presentation:
+                                    <i class="fas fa-file-powerpoint text-warning me-2"></i>
+                                    break;
+                                case MaterialType.Image:
+                                    <i class="fas fa-file-image text-info me-2"></i>
+                                    break;
+                                case MaterialType.Audio:
+                                    <i class="fas fa-file-audio text-success me-2"></i>
+                                    break;
+                                case MaterialType.Video:
+                                    <i class="fas fa-file-video text-primary me-2"></i>
+                                    break;
+                                default:
+                                    <i class="fas fa-file text-secondary me-2"></i>
+                                    break;
+                            }
+                            <h6 class="card-title mb-0 text-truncate" title="@material.Title">
+                                @material.Title
+                            </h6>
+                        </div>
+                        <div>
+                            <span class="badge bg-@(material.IsActive ? "success" : "secondary")">
+                                @(material.IsActive ? "Активный" : "Неактивный")
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        @if (!string.IsNullOrEmpty(material.Description))
+                        {
+                            <p class="card-text text-muted small">
+                                @(material.Description.Length > 100 ? material.Description.Substring(0, 100) + "..." : material.Description)
+                            </p>
+                        }
+
+                        <div class="mt-auto">
+                            <div class="row text-center mb-2">
+                                <div class="col-6">
+                                    <small class="text-muted">Размер</small>
+                                    <div class="fw-bold">@OnlineTutor2.ViewModels.MaterialStatisticsViewModel.FormatFileSize(material.FileSize)</div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Тип</small>
+                                    <div class="fw-bold">
+                                        @switch (material.Type)
+                                        {
+                                            case MaterialType.Document:
+                                                <span>Документ</span>
+                                                break;
+                                            case MaterialType.Presentation:
+                                                <span>Презентация</span>
+                                                break;
+                                            case MaterialType.Image:
+                                                <span>Изображение</span>
+                                                break;
+                                            case MaterialType.Audio:
+                                                <span>Аудио</span>
+                                                break;
+                                            case MaterialType.Video:
+                                                <span>Видео</span>
+                                                break;
+                                            default:
+                                                <span>Другое</span>
+                                                break;
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <small class="text-muted d-block">
+                                <i class="fas fa-file"></i> @material.FileName
+                            </small>
+
+                            @if (material.Class != null)
+                            {
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-users"></i> Класс: @material.Class.Name
+                                </small>
+                            }
+                            else
+                            {
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-globe"></i> Доступен всем
+                                </small>
+                            }
+
+                            <small class="text-muted d-block">
+                                <i class="fas fa-calendar"></i> @material.UploadedAt.ToString("dd.MM.yyyy HH:mm")
+                            </small>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="btn-group w-100" role="group">
+                            <a asp-action="Download" asp-route-id="@material.Id"
+                               class="btn btn-outline-success btn-sm" title="Скачать">
+                                <i class="fas fa-download"></i>
+                            </a>
+                            <a asp-action="Details" asp-route-id="@material.Id"
+                               class="btn btn-outline-info btn-sm" title="Подробности">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a asp-action="Edit" asp-route-id="@material.Id"
+                               class="btn btn-outline-primary btn-sm" title="Редактировать">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle"
+                                        data-bs-toggle="dropdown" title="Дополнительно">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <form asp-action="ToggleStatus" asp-route-id="@material.Id" method="post" class="d-inline">
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="fas fa-@(material.IsActive ? "pause" : "play")"></i>
+                                                @(material.IsActive ? "Деактивировать" : "Активировать")
+                                            </button>
+                                        </form>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a asp-action="Delete" asp-route-id="@material.Id" class="dropdown-item text-danger">
+                                            <i class="fas fa-trash"></i> Удалить
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script src="~/js/layout.js" asp-append-version="true"></script>
+}

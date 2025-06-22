@@ -1,0 +1,117 @@
+﻿@model OnlineTutor2.ViewModels.EditMaterialViewModel
+@{
+    ViewData["Title"] = "Редактирование материала";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-edit"></i> Редактирование материала
+                </h4>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                    <input asp-for="Id" type="hidden" />
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-primary border-bottom pb-1 mb-3">
+                            <i class="fas fa-info-circle"></i> Основная информация
+                        </legend>
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label">
+                                <i class="fas fa-heading"></i> Название материала <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Title" class="form-control" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">
+                                <i class="fas fa-align-left"></i> Описание
+                            </label>
+                            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                    </fieldset>
+
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-success border-bottom pb-1 mb-3">
+                            <i class="fas fa-file"></i> Текущий файл
+                        </legend>
+
+                        <div class="alert alert-light">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-file fa-2x text-muted me-3"></i>
+                                <div>
+                                    <div class="fw-bold">@Model.CurrentFileName</div>
+                                    <small class="text-muted">Текущий файл материала</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="NewFile" class="form-label">
+                                <i class="fas fa-upload"></i> Заменить файл (необязательно)
+                            </label>
+                            <input asp-for="NewFile" class="form-control" type="file"
+                                   accept=".pdf,.doc,.docx,.txt,.rtf,.ppt,.pptx,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.gif,.bmp,.mp3,.wav,.m4a,.mp4,.avi,.mov,.wmv" />
+                            <span asp-validation-for="NewFile" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i> Оставьте пустым, если не хотите менять файл
+                            </div>
+                        </div>
+                    </fieldset>
+
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-primary border-bottom pb-1 mb-3">
+                            <i class="fas fa-users"></i> Назначение
+                        </legend>
+
+                        <div class="mb-3">
+                            <label asp-for="ClassId" class="form-label">
+                                <i class="fas fa-graduation-cap"></i> Назначить классу
+                            </label>
+                            <select asp-for="ClassId" asp-items="@ViewBag.Classes" class="form-select">
+                                <option value="">Доступен всем ученикам</option>
+                            </select>
+                            <span asp-validation-for="ClassId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsActive" class="form-check-input" />
+                                <label asp-for="IsActive" class="form-check-label">
+                                    <i class="fas fa-toggle-on"></i> Материал активен
+                                </label>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info">
+                            <i class="fas fa-eye"></i> Просмотр
+                        </a>
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Отмена
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Сохранить изменения
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/layout.js" asp-append-version="true"></script>
+}

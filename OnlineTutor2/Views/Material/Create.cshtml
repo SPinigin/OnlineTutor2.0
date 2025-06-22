@@ -1,0 +1,282 @@
+﻿@model OnlineTutor2.ViewModels.CreateMaterialViewModel
+@{
+    ViewData["Title"] = "Загрузка материала";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-upload"></i> Загрузка учебного материала
+                </h4>
+            </div>
+            <div class="card-body">
+
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle"></i> Поддерживаемые форматы:</h6>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>Документы:</strong>
+                            <ul class="small mb-0">
+                                <li>PDF (до 50 МБ)</li>
+                                <li>Word (до 25 МБ)</li>
+                                <li>TXT, RTF</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Презентации:</strong>
+                            <ul class="small mb-0">
+                                <li>PowerPoint (до 50 МБ)</li>
+                                <li>PPT, PPTX</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Медиа:</strong>
+                            <ul class="small mb-0">
+                                <li>Изображения (до 10 МБ)</li>
+                                <li>Аудио (до 25 МБ)</li>
+                                <li>Видео (до 200 МБ)</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Таблицы:</strong>
+                            <ul class="small mb-0">
+                                <li>Excel (до 25 МБ)</li>
+                                <li>CSV (до 5 МБ)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <form asp-action="Create" method="post" enctype="multipart/form-data" id="uploadForm">
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-primary border-bottom pb-1 mb-3">
+                            <i class="fas fa-info-circle"></i> Основная информация
+                        </legend>
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label">
+                                <i class="fas fa-heading"></i> Название материала <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Title" class="form-control" placeholder="Например: Правила орфографии - Безударные гласные" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">
+                                <i class="fas fa-align-left"></i> Описание
+                            </label>
+                            <textarea asp-for="Description" class="form-control" rows="4"
+                                      placeholder="Краткое описание содержания материала..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                    </fieldset>
+
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-primary border-bottom pb-1 mb-3">
+                            <i class="fas fa-file-upload"></i> Файл
+                        </legend>
+
+                        <div class="mb-3">
+                            <label asp-for="File" class="form-label">
+                                <i class="fas fa-paperclip"></i> Выберите файл <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="File" class="form-control" type="file" id="fileInput"
+                                   accept=".pdf,.doc,.docx,.txt,.rtf,.ppt,.pptx,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.gif,.bmp,.mp3,.wav,.m4a,.mp4,.avi,.mov,.wmv" />
+                            <span asp-validation-for="File" class="text-danger"></span>
+
+
+                            <div id="fileInfo" class="mt-2" style="display: none;">
+                                <div class="alert alert-light border">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <div class="d-flex align-items-center">
+                                                <i id="fileIcon" class="fas fa-file fa-2x text-muted me-3"></i>
+                                                <div>
+                                                    <div id="fileName" class="fw-bold"></div>
+                                                    <div id="fileSize" class="small text-muted"></div>
+                                                    <div id="fileType" class="small text-muted"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div id="uploadProgress" class="progress" style="display: none;">
+                                                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-primary border-bottom pb-1 mb-3">
+                            <i class="fas fa-users"></i> Назначение
+                        </legend>
+
+                        <div class="mb-3">
+                            <label asp-for="ClassId" class="form-label">
+                                <i class="fas fa-graduation-cap"></i> Назначить классу
+                            </label>
+                            <select asp-for="ClassId" asp-items="@ViewBag.Classes" class="form-select">
+                                <option value="">Доступен всем ученикам</option>
+                            </select>
+                            <span asp-validation-for="ClassId" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="fas fa-lightbulb"></i> Если класс не выбран, материал будет доступен всем вашим ученикам
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsActive" class="form-check-input" />
+                                <label asp-for="IsActive" class="form-check-label">
+                                    <i class="fas fa-toggle-on"></i> Материал активен
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i> Неактивные материалы скрыты от учеников
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Отмена
+                        </a>
+                        <button type="submit" class="btn btn-success" id="submitBtn">
+                            <i class="fas fa-upload"></i> Загрузить материал
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/layout.js" asp-append-version="true"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('fileInput');
+            const fileInfo = document.getElementById('fileInfo');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const fileType = document.getElementById('fileType');
+            const fileIcon = document.getElementById('fileIcon');
+            const titleInput = document.getElementById('Title');
+
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+
+                if (file) {
+                    // Показываем информацию о файле
+                    fileName.textContent = file.name;
+                    fileSize.textContent = formatFileSize(file.size);
+                    fileType.textContent = file.type || 'Неизвестный тип';
+
+                    // Устанавливаем иконку в зависимости от типа файла
+                    updateFileIcon(file.name);
+
+                    // Автоматически заполняем название, если оно пустое
+                    if (!titleInput.value.trim()) {
+                        const nameWithoutExtension = file.name.replace(/\.[^/.]+$/, "");
+                        titleInput.value = nameWithoutExtension;
+                    }
+
+                    fileInfo.style.display = 'block';
+                } else {
+                    fileInfo.style.display = 'none';
+                }
+            });
+
+            function formatFileSize(bytes) {
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                if (bytes === 0) return '0 Bytes';
+                const i = Math.floor(Math.log(bytes) / Math.log(1024));
+                return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+            }
+
+            function updateFileIcon(fileName) {
+                const extension = fileName.split('.').pop().toLowerCase();
+                let iconClass = 'fas fa-file text-muted';
+
+                switch (extension) {
+                    case 'pdf':
+                        iconClass = 'fas fa-file-pdf text-danger';
+                        break;
+                    case 'doc':
+                    case 'docx':
+                        iconClass = 'fas fa-file-word text-primary';
+                        break;
+                    case 'xls':
+                    case 'xlsx':
+                        iconClass = 'fas fa-file-excel text-success';
+                        break;
+                    case 'ppt':
+                    case 'pptx':
+                        iconClass = 'fas fa-file-powerpoint text-warning';
+                        break;
+                    case 'jpg':
+                    case 'jpeg':
+                    case 'png':
+                    case 'gif':
+                    case 'bmp':
+                        iconClass = 'fas fa-file-image text-info';
+                        break;
+                    case 'mp3':
+                    case 'wav':
+                    case 'm4a':
+                        iconClass = 'fas fa-file-audio text-success';
+                        break;
+                    case 'mp4':
+                    case 'avi':
+                    case 'mov':
+                    case 'wmv':
+                        iconClass = 'fas fa-file-video text-primary';
+                        break;
+                    case 'txt':
+                    case 'rtf':
+                        iconClass = 'fas fa-file-alt text-secondary';
+                        break;
+                    default:
+                        iconClass = 'fas fa-file text-muted';
+                }
+
+                fileIcon.className = iconClass + ' fa-2x me-3';
+            }
+
+            // Показываем прогресс при отправке формы
+            document.getElementById('uploadForm').addEventListener('submit', function() {
+                const submitBtn = document.getElementById('submitBtn');
+                const progressDiv = document.getElementById('uploadProgress');
+
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Загружается...';
+
+                if (progressDiv) {
+                    progressDiv.style.display = 'block';
+                    // Имитация прогресса (в реальном приложении используйте AJAX)
+                    let progress = 0;
+                    const interval = setInterval(() => {
+                        progress += Math.random() * 15;
+                        if (progress >= 95) {
+                            clearInterval(interval);
+                            progress = 95;
+                        }
+                        progressDiv.querySelector('.progress-bar').style.width = progress + '%';
+                    }, 200);
+                }
+            });
+        });
+    </script>
+}
