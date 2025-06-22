@@ -143,7 +143,7 @@
                 <li><a asp-action="AddQuestion" asp-route-id="@Model.Id" class="dropdown-item"><i class="fas fa-plus"></i> Добавить вопрос</a></li>
                 <li><a asp-action="ImportQuestions" asp-route-id="@Model.Id" class="dropdown-item"><i class="fas fa-file-import"></i> Импорт</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a asp-action="Analytics" asp-route-id="@Model.Id" class="dropdown-item"><i class="fas fa-chart-bar"></i> Аналитика</a></li>
+                <li><a asp-controller="TestAnalytics" asp-action="Spelling" asp-route-id="@Model.Id" class="dropdown-item"><i class="fas fa-chart-bar"></i> Аналитика</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="#"><i class="fas fa-copy"></i> Дублировать</a></li>
                 <li><a class="dropdown-item" href="#"><i class="fas fa-play"></i> Предварительный просмотр</a></li>
@@ -282,7 +282,7 @@
             @if (Model.TestResults.Count > 5)
             {
                 <div class="text-center mt-3">
-                    <a asp-action="Analytics" asp-route-id="@Model.Id" class="btn btn-outline-info">
+                    <a asp-action="TestAnalytics" asp-route-id="@Model.Id" class="btn btn-outline-info">
                         <i class="fas fa-chart-bar"></i> Посмотреть всю аналитику
                     </a>
                 </div>
