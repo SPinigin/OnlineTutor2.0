@@ -124,10 +124,9 @@ body {
 
 /* Основной контент */
 .main-content {
-    min-height: calc(100vh - 220px); /* Учитываем header и footer */
-    padding-bottom: 70px; /* Дополнительный отступ снизу */
+    min-height: calc(100vh - 220px);
+    padding-bottom: 70px; 
 }
-
 
 /* Стили для колонок footer */
 .footer-column h6 {
@@ -245,21 +244,21 @@ body {
 
 /* Стили для мобильного footer - минимальная версия */
 .footer-column-mobile {
-    padding: 4px 2px; /* Минимальные отступы */
+    padding: 4px 2px;
 }
 
 .footer-mobile-title {
-    font-size: 0.7rem; /* Еще меньше шрифт */
+    font-size: 0.7rem;
     font-weight: 600;
     color: #495057;
-    margin-bottom: 2px; /* Минимальный отступ */
+    margin-bottom: 2px;
     line-height: 1;
 }
 
 .footer-mobile-name {
-    font-size: 0.65rem; /* Меньше шрифт */
+    font-size: 0.65rem;
     color: #6c757d;
-    margin-bottom: 3px; /* Минимальный отступ */
+    margin-bottom: 3px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -269,21 +268,21 @@ body {
 .footer-mobile-contacts {
     display: flex;
     justify-content: center;
-    gap: 4px; /* Меньше расстояние между иконками */
+    gap: 4px;
 }
 
 .footer-contact-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px; /* Меньше размер иконок */
+    width: 24px;
     height: 24px;
     background-color: #f8f9fa;
     border: 1px solid #dee2e6;
     border-radius: 50%;
     color: #6c757d;
     text-decoration: none;
-    font-size: 0.7rem; /* Меньше размер иконок */
+    font-size: 0.7rem;
     transition: all 0.2s ease;
     line-height: 1;
 }
@@ -311,11 +310,11 @@ body {
 @media (max-width: 768px) {
     body {
         padding-top: 70px;
-        padding-bottom: 70px; /* Значительно уменьшаем отступ */
+        padding-bottom: 70px;
     }
 
     .footer-compact {
-        padding: 4px 0; /* Минимальные отступы сверху и снизу */
+        padding: 4px 0;
     }
 
     .main-content {
@@ -338,7 +337,7 @@ body {
 
 @media (max-width: 576px) {
     body {
-        padding-bottom: 65px; /* Еще меньше для маленьких экранов */
+        padding-bottom: 65px;
     }
 
     .footer-mobile-title {
@@ -403,4 +402,3 @@ body {
         display: none !important;
     }
 }
-

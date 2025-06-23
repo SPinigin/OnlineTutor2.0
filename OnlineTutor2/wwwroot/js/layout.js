@@ -29,11 +29,11 @@ function adjustBodyPadding() {
 
     // Для мобильных устройств используем значительно меньшую высоту footer
     if ($(window).width() <= 768) {
-        footerHeight = Math.min(footerHeight, 60); // Очень компактный footer для мобильных
+        footerHeight = Math.min(footerHeight, 60);
     }
 
     if ($(window).width() <= 576) {
-        footerHeight = Math.min(footerHeight, 55); // Еще компактнее для маленьких экранов
+        footerHeight = Math.min(footerHeight, 55);
     }
 
     const topPadding = navbarHeight + 5;

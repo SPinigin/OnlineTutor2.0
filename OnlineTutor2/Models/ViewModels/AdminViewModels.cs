@@ -88,7 +88,7 @@ namespace OnlineTutor2.ViewModels
         public DateTime StartedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
         public bool IsCompleted { get; set; }
-        public string ResultType { get; set; } // "Spelling" или "Regular"
+        public string ResultType { get; set; }
 
         public string StartedAtFormatted => StartedAt.ToString("dd.MM.yyyy HH:mm");
         public string CompletedAtFormatted => CompletedAt?.ToString("dd.MM.yyyy HH:mm") ?? "Не завершен";

@@ -549,7 +549,7 @@ namespace OnlineTutor2.Controllers
                     students.Add(student);
                 }
 
-                TempData["ImportData"] = importDataJson; // Сохраняем обратно
+                TempData["ImportData"] = importDataJson;
                 return View(students);
             }
             catch (Exception ex)

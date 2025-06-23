@@ -82,7 +82,7 @@ namespace OnlineTutor2.Controllers
                     Title = model.Title,
                     Description = model.Description,
                     TeacherId = currentUser.Id,
-                    TestCategoryId = 1, // Добавьте эту строку - ID категории "Тесты на правописание"
+                    TestCategoryId = 1,
                     ClassId = model.ClassId,
                     TimeLimit = model.TimeLimit,
                     MaxAttempts = model.MaxAttempts,
@@ -159,7 +159,6 @@ namespace OnlineTutor2.Controllers
                     test.ShowHints = model.ShowHints;
                     test.ShowCorrectAnswers = model.ShowCorrectAnswers;
                     test.IsActive = model.IsActive;
-                    // TestCategoryId не изменяем при редактировании
 
                     _context.Update(test);
                     await _context.SaveChangesAsync();
@@ -189,9 +188,9 @@ namespace OnlineTutor2.Controllers
                 .Include(st => st.Questions)
                 .Include(st => st.TestResults)
                     .ThenInclude(tr => tr.Student)
-                        .ThenInclude(s => s.User) // Добавляем загрузку пользователя
+                        .ThenInclude(s => s.User)
                 .Include(st => st.TestResults)
-                    .ThenInclude(tr => tr.Answers) // Добавляем загрузку ответов
+                    .ThenInclude(tr => tr.Answers)
                 .FirstOrDefaultAsync(st => st.Id == id && st.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -415,7 +414,6 @@ namespace OnlineTutor2.Controllers
                 ViewBag.Test = test;
                 ViewBag.PointsPerQuestion = pointsPerQuestion;
 
-                // Сохраняем ключ обратно для ConfirmImport
                 TempData["ImportSessionKey"] = sessionKey;
 
                 return View(questions);
@@ -462,7 +460,7 @@ namespace OnlineTutor2.Controllers
 
                 var questionsArray = importData.GetProperty("Questions");
                 var validQuestions = new List<ImportQuestionRow>();
-                var orderIndex = test.Questions.Count; // Продолжаем нумерацию
+                var orderIndex = test.Questions.Count;
 
                 foreach (var questionElement in questionsArray.EnumerateArray())
                 {
@@ -536,7 +534,7 @@ namespace OnlineTutor2.Controllers
             {
                 SpellingTestId = test.Id,
                 OrderIndex = test.Questions.Count + 1,
-                Points = 1 // Значение по умолчанию
+                Points = 1
             };
 
             ViewBag.Test = test;
@@ -674,7 +672,7 @@ namespace OnlineTutor2.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var question = await _context.SpellingQuestions
                 .Include(sq => sq.SpellingTest)
-                .Include(sq => sq.StudentAnswers) // Проверяем, есть ли ответы студентов
+                .Include(sq => sq.StudentAnswers)
                 .FirstOrDefaultAsync(sq => sq.Id == id && sq.SpellingTest.TeacherId == currentUser.Id);
 
             if (question == null)

@@ -71,7 +71,7 @@ namespace OnlineTutor2.Controllers
                         .ToListAsync();
                     return View("SpellingTests", spellingTests);
 
-                // Здесь можно добавить другие case для других типов тестов
+                // добавить другие case для других типов тестов
                 default:
                     return View("EmptyCategory");
             }

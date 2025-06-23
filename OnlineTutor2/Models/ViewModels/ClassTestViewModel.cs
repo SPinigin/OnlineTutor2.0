@@ -9,7 +9,7 @@ namespace OnlineTutor2.ViewModels
         public string? Description { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsActive { get; set; }
-        public string TestType { get; set; } // "Spelling", "Regular", "Grammar", etc.
+        public string TestType { get; set; } // "Spelling", "Regular", "Grammar", другие
         public string TypeDisplayName { get; set; }
         public string IconClass { get; set; }
         public string ColorClass { get; set; }
@@ -70,7 +70,7 @@ namespace OnlineTutor2.ViewModels
             };
         }
 
-        // В будущем можно добавить:
+        // добавить:
         // public static ClassTestViewModel FromGrammarTest(GrammarTest grammarTest) { ... }
         // public static ClassTestViewModel FromEssayTest(EssayTest essayTest) { ... }
     }

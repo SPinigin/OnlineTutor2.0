@@ -42,7 +42,7 @@ namespace OnlineTutor2.Controllers
                 .Select(g => new { ClassId = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.ClassId.Value, x => x.Count);
 
-            // В будущем здесь можно добавить другие типы тестов:
+            // добавить другие типы тестов:
             // var grammarTestsCounts = await _context.GrammarTests...
             // var essayTestsCounts = await _context.EssayTests...
 
@@ -54,7 +54,7 @@ namespace OnlineTutor2.Controllers
                 var regularTestsCount = @class.Tests.Count;
                 var spellingTestsCount = spellingTestsCounts.ContainsKey(@class.Id) ? spellingTestsCounts[@class.Id] : 0;
 
-                // В будущем добавить:
+                // добавить:
                 // var grammarTestsCount = grammarTestsCounts.ContainsKey(@class.Id) ? grammarTestsCounts[@class.Id] : 0;
                 // var essayTestsCount = essayTestsCounts.ContainsKey(@class.Id) ? essayTestsCounts[@class.Id] : 0;
 
@@ -109,7 +109,7 @@ namespace OnlineTutor2.Controllers
                     CreatedAt = test.CreatedAt,
                     CreatedAtFormatted = test.CreatedAt.ToString("dd.MM.yyyy"),
                     IsActive = test.IsActive,
-                    TestType = "Regular", // Для маршрутизации к TestAnalytics/Regular
+                    TestType = "Regular",
                     TypeDisplayName = "Обычный тест",
                     IconClass = "fas fa-tasks",
                     ColorClass = "info",
@@ -136,7 +136,7 @@ namespace OnlineTutor2.Controllers
                     CreatedAt = spellingTest.CreatedAt,
                     CreatedAtFormatted = spellingTest.CreatedAt.ToString("dd.MM.yyyy"),
                     IsActive = spellingTest.IsActive,
-                    TestType = "Spelling", // Для маршрутизации к TestAnalytics/Spelling
+                    TestType = "Spelling",
                     TypeDisplayName = "Правописание",
                     IconClass = "fas fa-spell-check",
                     ColorClass = "primary",

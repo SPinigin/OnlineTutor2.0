@@ -287,7 +287,6 @@ namespace OnlineTutor2.Controllers
             return View(testResults);
         }
 
-        // Вспомогательные методы
         private bool IsTestAvailable(SpellingTest test, Student student)
         {
             // Проверка класса

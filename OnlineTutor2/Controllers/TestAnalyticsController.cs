@@ -334,6 +334,7 @@ namespace OnlineTutor2.Controllers
                     stats.AverageCompletionTime = new TimeSpan(averageTicks);
                 }
 
+                //изменить градацию
                 stats.GradeDistribution = new Dictionary<string, int>
                 {
                     ["Отлично (80-100%)"] = completedResults.Count(tr => tr.Percentage >= 80),

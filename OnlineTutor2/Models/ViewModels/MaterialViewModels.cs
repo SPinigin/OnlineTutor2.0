@@ -47,7 +47,6 @@ namespace OnlineTutor2.ViewModels
         [Display(Name = "Активный")]
         public bool IsActive { get; set; } = true;
 
-        // Для отображения текущего файла
         public string? CurrentFileName { get; set; }
     }
 
