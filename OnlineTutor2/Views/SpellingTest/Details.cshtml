@@ -255,9 +255,18 @@
                                 <td>
                                     @if (result.IsCompleted)
                                     {
-                                        <span class="badge bg-@(result.Percentage >= 80 ? "success" : result.Percentage >= 60 ? "warning" : "danger")">
-                                            @result.Percentage.ToString("F1")%
-                                        </span>
+                                        var grade = GetGradeFromPercentage(result.Percentage);
+                                        var gradeColor = GetGradeColor(grade);
+
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge bg-@(result.Percentage >= 80 ? "success" : result.Percentage >= 60 ? "warning" : "danger")">
+                                                @result.Percentage.ToString("F1")%
+                                            </span>
+                                            <span class="grade-badge grade-@gradeColor">
+                                                @grade
+                                            </span>
+                                        </div>
+                                        <small class="text-muted">@result.Score/@result.MaxScore баллов</small>
                                     }
                                     else
                                     {
@@ -282,7 +291,7 @@
             @if (Model.TestResults.Count > 5)
             {
                 <div class="text-center mt-3">
-                    <a asp-action="TestAnalytics" asp-route-id="@Model.Id" class="btn btn-outline-info">
+                    <a asp-controller="TestAnalytics" asp-action="Spelling" asp-route-id="@Model.Id" class="btn btn-outline-info">
                         <i class="fas fa-chart-bar"></i> Посмотреть всю аналитику
                     </a>
                 </div>
@@ -347,7 +356,59 @@
         .btn-group {
             max-width: 50px;
         }
+
+        /* Стили для оценок */
+        .grade-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .grade-excellent {
+            background-color: #28a745;
+        }
+
+        .grade-good {
+            background-color: #17a2b8;
+        }
+
+        .grade-satisfactory {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .grade-unsatisfactory {
+            background-color: #dc3545;
+        }
     </style>
+}
+
+@functions {
+    int GetGradeFromPercentage(double percentage)
+    {
+        if (percentage >= 91) return 5;
+        if (percentage >= 76) return 4;
+        if (percentage >= 61) return 3;
+        return 2;
+    }
+
+    string GetGradeColor(int grade)
+    {
+        return grade switch
+        {
+            5 => "excellent",
+            4 => "good",
+            3 => "satisfactory",
+            2 => "unsatisfactory",
+            _ => "unsatisfactory"
+        };
+    }
 }
 
 @section Scripts {
