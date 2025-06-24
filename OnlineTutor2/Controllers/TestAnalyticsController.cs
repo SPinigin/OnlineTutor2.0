@@ -100,12 +100,6 @@ namespace OnlineTutor2.Controllers
 
             analytics.Statistics = BuildSpellingStatistics(test, allStudents);
             analytics.StudentResults = BuildSpellingStudentResults(test, allStudents);
-
-            var studentsWithResults = test.TestResults.Select(tr => tr.StudentId).Distinct().ToList();
-            analytics.StudentsNotTaken = allStudents
-                .Where(s => !studentsWithResults.Contains(s.Id))
-                .ToList();
-
             analytics.QuestionAnalytics = BuildSpellingQuestionAnalytics(test);
 
             return analytics;
@@ -289,12 +283,6 @@ namespace OnlineTutor2.Controllers
 
             analytics.Statistics = BuildRegularTestStatistics(test, allStudents);
             analytics.StudentResults = BuildRegularTestStudentResults(test, allStudents);
-
-            var studentsWithResults = test.TestResults.Select(tr => tr.StudentId).Distinct().ToList();
-            analytics.StudentsNotTaken = allStudents
-                .Where(s => !studentsWithResults.Contains(s.Id))
-                .ToList();
-
             analytics.QuestionAnalytics = BuildRegularTestQuestionAnalytics(test);
 
             return analytics;

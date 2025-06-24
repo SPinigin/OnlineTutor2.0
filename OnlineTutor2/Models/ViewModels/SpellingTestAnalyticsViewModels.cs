@@ -7,7 +7,6 @@ namespace OnlineTutor2.ViewModels
         public SpellingTest Test { get; set; }
         public TestStatistics Statistics { get; set; }
         public List<StudentTestResultViewModel> StudentResults { get; set; } = new List<StudentTestResultViewModel>();
-        public List<Student> StudentsNotTaken { get; set; } = new List<Student>();
         public List<QuestionAnalyticsViewModel> QuestionAnalytics { get; set; } = new List<QuestionAnalyticsViewModel>();
     }
 

@@ -137,7 +137,6 @@
     </div>
 </div>
 
-
 <ul class="nav nav-tabs" id="analyticsTabsNav" role="tablist">
     <li class="nav-item" role="presentation">
         <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
@@ -154,18 +153,9 @@
             <i class="fas fa-question-circle"></i> Анализ вопросов (@Model.QuestionAnalytics.Count)
         </button>
     </li>
-    @if (Model.StudentsNotTaken.Any())
-    {
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="not-taken-tab" data-bs-toggle="tab" data-bs-target="#not-taken" type="button" role="tab">
-                <i class="fas fa-user-clock"></i> Не проходили (@Model.StudentsNotTaken.Count)
-            </button>
-        </li>
-    }
 </ul>
 
 <div class="tab-content" id="analyticsTabsContent">
-    
     
     <div class="tab-pane fade show active" id="overview" role="tabpanel">
         <div class="row mt-4">
@@ -199,7 +189,6 @@
                 </div>
             </div>
 
-            
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
@@ -244,7 +233,6 @@
         </div>
     </div>
 
-    
     <div class="tab-pane fade" id="students" role="tabpanel">
         <div class="card mt-4">
             <div class="card-header">
@@ -483,44 +471,6 @@
             }
         </div>
     </div>
-
-    
-    @if (Model.StudentsNotTaken.Any())
-    {
-        <div class="tab-pane fade" id="not-taken" role="tabpanel">
-            <div class="card mt-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-user-clock"></i> Ученики, которые не проходили тест
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        @foreach (var student in Model.StudentsNotTaken)
-                        {
-                            <div class="col-md-6 mb-3">
-                                <div class="card border-warning">
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-center">
-                                            <i class="fas fa-user-graduate text-warning fa-2x me-3"></i>
-                                            <div>
-                                                <h6 class="mb-1">@student.User.FullName</h6>
-                                                <small class="text-muted">@student.User.Email</small>
-                                                @if (!string.IsNullOrEmpty(student.School))
-                                                {
-                                                    <br><small class="text-muted">@student.School</small>
-                                                }
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
 </div>
 
 @section Scripts {
