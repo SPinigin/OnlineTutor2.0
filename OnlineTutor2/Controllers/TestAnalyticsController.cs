@@ -436,5 +436,83 @@ namespace OnlineTutor2.Controllers
 
             return questionAnalytics;
         }
+
+        // GET: TestAnalytics/GetStudentDetails
+        [HttpGet]
+        public async Task<IActionResult> GetStudentDetails(int studentId, int testId)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            // Проверяем права доступа к тесту
+            var test = await _context.SpellingTests
+                .FirstOrDefaultAsync(st => st.Id == testId && st.TeacherId == currentUser.Id);
+
+            if (test == null)
+                return NotFound();
+
+            var student = await _context.Students
+                .Include(s => s.User)
+                .Include(s => s.Class)
+                .FirstOrDefaultAsync(s => s.Id == studentId);
+
+            if (student == null)
+                return NotFound();
+
+            var results = await _context.SpellingTestResults
+                .Include(tr => tr.Answers)
+                    .ThenInclude(a => a.Question)
+                .Where(tr => tr.SpellingTestId == testId && tr.StudentId == studentId && tr.IsCompleted)
+                .OrderByDescending(tr => tr.CompletedAt)
+                .ToListAsync();
+
+            var bestResult = results.OrderByDescending(r => r.Percentage).FirstOrDefault();
+
+            var mistakes = results
+                .SelectMany(r => r.Answers)
+                .Where(a => !a.IsCorrect)
+                .GroupBy(a => new { a.StudentAnswer, a.Question.CorrectLetter, a.Question.FullWord })
+                .Select(g => new
+                {
+                    IncorrectAnswer = g.Key.StudentAnswer,
+                    CorrectAnswer = g.Key.CorrectLetter,
+                    FullWord = g.Key.FullWord,
+                    Count = g.Count()
+                })
+                .OrderByDescending(m => m.Count)
+                .Take(10)
+                .ToList();
+
+            var totalTime = results
+                .Where(r => r.CompletedAt.HasValue)
+                .Sum(r => (r.CompletedAt.Value - r.StartedAt).Ticks);
+
+            var response = new
+            {
+                FullName = student.User.FullName,
+                School = student.School,
+                ClassName = student.Class?.Name,
+                AttemptsUsed = results.Count,
+                MaxAttempts = test.MaxAttempts,
+                BestResult = bestResult != null ? new
+                {
+                    Percentage = bestResult.Percentage,
+                    Score = bestResult.Score,
+                    MaxScore = bestResult.MaxScore
+                } : null,
+                TotalTimeSpent = totalTime > 0 ? new TimeSpan(totalTime).ToString(@"hh\:mm\:ss") : null,
+                Attempts = results.Select(r => new
+                {
+                    AttemptNumber = r.AttemptNumber,
+                    Percentage = r.Percentage,
+                    Score = r.Score,
+                    MaxScore = r.MaxScore,
+                    Duration = r.CompletedAt.HasValue ? (r.CompletedAt.Value - r.StartedAt).ToString(@"mm\:ss") : null,
+                    CompletedAt = r.CompletedAt
+                }).ToList(),
+                Mistakes = mistakes
+            };
+
+            return Json(response);
+        }
     }
 }

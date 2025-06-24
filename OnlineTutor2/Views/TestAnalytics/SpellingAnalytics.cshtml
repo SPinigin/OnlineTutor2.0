@@ -417,89 +417,171 @@
     </div>
 
     <div class="tab-pane fade" id="questions" role="tabpanel">
-    <div class="mt-4">
-        @foreach (var qa in Model.QuestionAnalytics)
-        {
-            var questionIndex = Model.QuestionAnalytics.IndexOf(qa) + 1;
+        <div class="mt-4">
+            @foreach (var qa in Model.QuestionAnalytics)
+            {
+                var questionIndex = Model.QuestionAnalytics.IndexOf(qa) + 1;
 
-            <div class="card mb-3 border-0 shadow-sm @(qa.IsMostDifficult ? "border-start border-danger border-3" : qa.IsEasiest ? "border-start border-success border-3" : "")">
+                <div class="card mb-3 border-0 shadow-sm @(qa.IsMostDifficult ? "border-start border-danger border-3" : qa.IsEasiest ? "border-start border-success border-3" : "")">
                 
-                <div class="card-header bg-transparent border-0 py-3">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <div class="d-flex align-items-center gap-3">
-                                <span class="badge bg-primary fs-6 px-3 py-2">@questionIndex</span>
-                                <div>
-                                    <h6 class="mb-1 fw-bold text-primary">@qa.Question.WordWithGap</h6>
-                                    <small class="text-muted">
-                                        @qa.Question.CorrectLetter → @qa.Question.FullWord (@qa.Question.Points б.)
-                                    </small>
+                    <div class="card-header bg-transparent border-0 py-3">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <div class="d-flex align-items-center gap-3">
+                                    <span class="badge bg-primary fs-6 px-3 py-2">@questionIndex</span>
+                                    <div>
+                                        <h6 class="mb-1 fw-bold text-primary">@qa.Question.WordWithGap</h6>
+                                        <small class="text-muted">
+                                            @qa.Question.CorrectLetter → @qa.Question.FullWord (@qa.Question.Points б.)
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <div class="text-end">
+                                    @if (qa.TotalAnswers > 0)
+                                    {
+                                        <div class="h4 mb-0 text-@(qa.SuccessRate >= 80 ? "success" : qa.SuccessRate >= 60 ? "warning" : "danger")">
+                                            @qa.SuccessRate.ToString("F0")%
+                                        </div>
+                                        <small class="text-muted">@qa.CorrectAnswers/@qa.TotalAnswers</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
                                 </div>
                             </div>
                         </div>
-                        <div class="col-auto">
-                            <div class="text-end">
-                                @if (qa.TotalAnswers > 0)
+                    </div>
+                
+                    @if (!string.IsNullOrEmpty(qa.Question.Hint))
+                    {
+                        <div class="card-body py-2 bg-light">
+                            <small class="text-muted">
+                                <i class="fas fa-lightbulb me-1"></i>@qa.Question.Hint
+                            </small>
+                        </div>
+                    }
+                
+                   @if (qa.CommonMistakes.Any())
+                    {
+                        <div class="card-body pt-2">
+                            <div class="row g-2">
+                                @foreach (var mistake in qa.CommonMistakes.Take(4))
                                 {
-                                    <div class="h4 mb-0 text-@(qa.SuccessRate >= 80 ? "success" : qa.SuccessRate >= 60 ? "warning" : "danger")">
-                                        @qa.SuccessRate.ToString("F0")%
+                                    <div class="col-md-6">
+                                        <div class="p-2 bg-light rounded border-start border-danger border-2">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="fw-bold text-danger">"@mistake.IncorrectAnswer"</span>
+                                                <small class="badge bg-danger">@mistake.Count</small>
+                                            </div>
+                        
+                                            <div class="students-minimal">
+                                                @foreach (var name in mistake.StudentNames)
+                                                {
+                                                    <span class="student-tag">@name</span>
+                                                }
+                                            </div>
+                                        </div>
                                     </div>
-                                    <small class="text-muted">@qa.CorrectAnswers/@qa.TotalAnswers</small>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">—</span>
                                 }
                             </div>
-                        </div>
-                    </div>
-                </div>
-                
-                @if (!string.IsNullOrEmpty(qa.Question.Hint))
-                {
-                    <div class="card-body py-2 bg-light">
-                        <small class="text-muted">
-                            <i class="fas fa-lightbulb me-1"></i>@qa.Question.Hint
-                        </small>
-                    </div>
-                }
-                
-               @if (qa.CommonMistakes.Any())
-                {
-                    <div class="card-body pt-2">
-                        <div class="row g-2">
-                            @foreach (var mistake in qa.CommonMistakes.Take(4))
+                            @if (qa.CommonMistakes.Count > 4)
                             {
-                                <div class="col-md-6">
-                                    <div class="p-2 bg-light rounded border-start border-danger border-2">
-                                        <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <span class="fw-bold text-danger">"@mistake.IncorrectAnswer"</span>
-                                            <small class="badge bg-danger">@mistake.Count</small>
-                                        </div>
-                        
-                                        <div class="students-minimal">
-                                            @foreach (var name in mistake.StudentNames)
-                                            {
-                                                <span class="student-tag">@name</span>
-                                            }
-                                        </div>
-                                    </div>
+                                <div class="text-center mt-2">
+                                    <small class="text-muted">и еще @(qa.CommonMistakes.Count - 4) вариантов ошибок</small>
                                 </div>
                             }
                         </div>
-                        @if (qa.CommonMistakes.Count > 4)
-                        {
-                            <div class="text-center mt-2">
-                                <small class="text-muted">и еще @(qa.CommonMistakes.Count - 4) вариантов ошибок</small>
-                            </div>
-                        }
-                    </div>
-                }
-            </div>
-        }
+                    }
+                </div>
+            }
+        </div>
     </div>
 </div>
+
+<div class="modal fade" id="studentDetailsModal" tabindex="-1" aria-labelledby="studentModalName" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="studentModalName">
+                    <i class="fas fa-user-graduate text-primary"></i>
+                    Детальная информация об ученике
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+
+                <div id="studentModalLoading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Загрузка...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Загрузка данных...</p>
+                </div>
+
+                <div id="studentModalContent" style="display: none;">
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-primary border-bottom pb-1">
+                                <i class="fas fa-info-circle"></i> Общая информация
+                            </h6>
+                            <dl class="row">
+                                <dt class="col-sm-4">Ученик:</dt>
+                                <dd class="col-sm-8" id="studentFullName">-</dd>
+                                <dt class="col-sm-4">Школа:</dt>
+                                <dd class="col-sm-8" id="studentSchool">-</dd>
+                                <dt class="col-sm-4">Класс:</dt>
+                                <dd class="col-sm-8" id="studentClass">-</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-success border-bottom pb-1">
+                                <i class="fas fa-chart-line"></i> Статистика по тесту
+                            </h6>
+                            <dl class="row">
+                                <dt class="col-sm-5">Попыток:</dt>
+                                <dd class="col-sm-7" id="studentAttempts">-</dd>
+                                <dt class="col-sm-5">Лучший результат:</dt>
+                                <dd class="col-sm-7" id="studentBestResult">-</dd>
+                                <dt class="col-sm-5">Всего времени:</dt>
+                                <dd class="col-sm-7" id="studentTotalTime">-</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="text-info border-bottom pb-1">
+                            <i class="fas fa-list-alt"></i> История попыток
+                        </h6>
+                        <div id="studentAttemptsList">
+                        </div>
+                    </div>
+
+                    <div>
+                        <h6 class="text-warning border-bottom pb-1">
+                            <i class="fas fa-exclamation-triangle"></i> Анализ ошибок
+                        </h6>
+                        <div id="studentMistakes">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="studentModalError" style="display: none;" class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="studentErrorMessage">Произошла ошибка при загрузке данных</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Закрыть
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
+
 
 @functions {
     int GetGradeFromPercentage(double percentage)
@@ -528,9 +610,305 @@
 
     <script>
         function showStudentDetails(studentId, studentName) {
-            // Здесь можно добавить модальное окно с детальной информацией об ученике
-            alert(`Детальная информация для ${studentName} (ID: ${studentId})`);
-            // TODO: Реализовать модальное окно с детальными результатами ученика
+            console.log('Opening modal for student:', studentName, 'ID:', studentId);
+
+            // Сброс состояния модального окна
+            resetModalState();
+
+            // Устанавливаем имя ученика в заголовок
+            const nameElement = document.getElementById('studentModalName');
+            if (nameElement) {
+                nameElement.textContent = studentName;
+            }
+
+            // Показываем загрузку
+            showLoading();
+
+            // Простое открытие модального окна через jQuery/Bootstrap
+            $('#studentDetailsModal').modal('show');
+
+            // Загружаем данные ученика
+            loadStudentDetails(studentId, @Model.Test.Id);
+        }
+
+        // Обработчик закрытия модального окна (один раз при загрузке страницы)
+        $(document).ready(function() {
+            const modal = $('#studentDetailsModal');
+
+            // Обработчик при показе модального окна
+            modal.on('shown.bs.modal', function () {
+                // Убираем фокус с любых элементов внутри модального окна
+                $(this).find('button, input, select, textarea').blur();
+                // Устанавливаем фокус на само модальное окно
+                $(this).focus();
+            });
+
+            // Обработчик при скрытии модального окна
+            modal.on('hide.bs.modal', function () {
+                // Убираем фокус со всех элементов внутри модального окна
+                $(this).find('button, input, select, textarea').blur();
+                // Возвращаем фокус на body
+                $('body').focus();
+            });
+
+            // Обработчик после полного закрытия модального окна
+            modal.on('hidden.bs.modal', function () {
+                console.log('Modal closed, resetting state');
+                resetModalState();
+                // Дополнительно убираем фокус
+                $(this).find('*').blur();
+                $('body').focus();
+            });
+        });
+
+        function resetModalState() {
+            console.log('Resetting modal state');
+
+            // Убираем фокус со всех элементов модального окна перед сбросом
+            $('#studentDetailsModal').find('button, input, select, textarea').blur();
+
+            // Список элементов для сброса видимости
+            const visibilityElements = [
+                'studentModalLoading',
+                'studentModalContent',
+                'studentModalError'
+            ];
+
+            visibilityElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.style.display = 'none';
+                } else {
+                    console.warn(`Element with ID '${id}' not found`);
+                }
+            });
+
+            // Список элементов для очистки текста
+            const textElements = {
+                'studentModalName': 'Детальная информация об ученике',
+                'studentFullName': '-',
+                'studentSchool': '-',
+                'studentClass': '-',
+                'studentAttempts': '-',
+                'studentTotalTime': '-',
+                'studentErrorMessage': 'Произошла ошибка при загрузке данных'
+            };
+
+            Object.entries(textElements).forEach(([id, defaultText]) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = defaultText;
+                }
+            });
+
+            // Элементы для очистки HTML
+            const htmlElements = [
+                'studentBestResult',
+                'studentAttemptsList',
+                'studentMistakes'
+            ];
+
+            htmlElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    if (id === 'studentBestResult') {
+                        element.innerHTML = '-';
+                    } else {
+                        element.innerHTML = '';
+                    }
+                }
+            });
+        }
+
+        function showLoading() {
+            const loadingElement = document.getElementById('studentModalLoading');
+            const contentElement = document.getElementById('studentModalContent');
+            const errorElement = document.getElementById('studentModalError');
+
+            if (loadingElement) loadingElement.style.display = 'block';
+            if (contentElement) contentElement.style.display = 'none';
+            if (errorElement) errorElement.style.display = 'none';
+        }
+
+        function loadStudentDetails(studentId, testId) {
+            console.log('Loading student details for:', studentId, 'test:', testId);
+
+            fetch(`/TestAnalytics/GetStudentDetails?studentId=${studentId}&testId=${testId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: Ошибка загрузки данных`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Data received:', data);
+                displayStudentDetails(data);
+            })
+            .catch(error => {
+                console.error('Error loading student details:', error);
+                showError(error.message);
+            });
+        }
+
+        function displayStudentDetails(data) {
+            console.log('Displaying student details');
+
+            // Скрываем загрузку
+            const loadingElement = document.getElementById('studentModalLoading');
+            if (loadingElement) {
+                loadingElement.style.display = 'none';
+            }
+
+            // Заполняем общую информацию
+            const setTextContent = (id, value) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = value;
+                }
+            };
+
+            setTextContent('studentFullName', data.fullName || 'Не указано');
+            setTextContent('studentSchool', data.school || 'Не указано');
+            setTextContent('studentClass', data.className || 'Не указан');
+            setTextContent('studentAttempts', `${data.attemptsUsed || 0}/${data.maxAttempts || 0}`);
+            setTextContent('studentTotalTime', data.totalTimeSpent || 'Не определено');
+
+            // Заполняем лучший результат
+            const bestResultElement = document.getElementById('studentBestResult');
+            if (bestResultElement) {
+                if (data.bestResult) {
+                    const grade = getGradeFromPercentage(data.bestResult.percentage);
+                    bestResultElement.innerHTML =
+                        `<span class="badge bg-${getPercentageColor(data.bestResult.percentage)}">${data.bestResult.percentage.toFixed(1)}%</span>
+                         <span class="grade-badge grade-${getGradeColorClass(grade)}">${grade}</span>
+                         <small class="text-muted">(${data.bestResult.score}/${data.bestResult.maxScore} баллов)</small>`;
+                } else {
+                    bestResultElement.innerHTML = '<span class="text-muted">Нет результатов</span>';
+                }
+            }
+
+            // Заполняем историю попыток
+            displayAttemptsList(data.attempts || []);
+
+            // Заполняем анализ ошибок
+            displayMistakesAnalysis(data.mistakes || []);
+
+            // Показываем контент
+            const contentElement = document.getElementById('studentModalContent');
+            if (contentElement) {
+                contentElement.style.display = 'block';
+            }
+        }
+
+        function displayAttemptsList(attempts) {
+            const container = document.getElementById('studentAttemptsList');
+            if (!container) {
+                return;
+            }
+
+            if (!attempts || attempts.length === 0) {
+                container.innerHTML = '<p class="text-muted"><i class="fas fa-info-circle"></i> Попыток пока нет</p>';
+                return;
+            }
+
+            let html = '<div class="table-responsive"><table class="table table-sm table-striped">';
+            html += '<thead class="table-light"><tr><th>Попытка</th><th>Результат</th><th>Баллы</th><th>Время</th><th>Дата</th></tr></thead><tbody>';
+
+            attempts.forEach(attempt => {
+                const grade = getGradeFromPercentage(attempt.percentage);
+                const duration = attempt.duration || '-';
+                const completedDate = attempt.completedAt ? new Date(attempt.completedAt).toLocaleDateString('ru-RU') : '-';
+
+                html += `<tr>
+                    <td><span class="badge bg-info">${attempt.attemptNumber}</span></td>
+                    <td>
+                        <span class="badge bg-${getPercentageColor(attempt.percentage)}">${attempt.percentage.toFixed(1)}%</span>
+                        <span class="grade-badge grade-${getGradeColorClass(grade)} ms-1">${grade}</span>
+                    </td>
+                    <td><small>${attempt.score}/${attempt.maxScore}</small></td>
+                    <td><small>${duration}</small></td>
+                    <td><small>${completedDate}</small></td>
+                </tr>`;
+            });
+
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        function displayMistakesAnalysis(mistakes) {
+            const container = document.getElementById('studentMistakes');
+            if (!container) {
+                return;
+            }
+
+            if (!mistakes || mistakes.length === 0) {
+                container.innerHTML = '<p class="text-success"><i class="fas fa-check-circle"></i> Ошибок не найдено! Отличная работа!</p>';
+                return;
+            }
+
+            let html = '<div class="row g-2">';
+
+            mistakes.forEach(mistake => {
+                html += `<div class="col-md-6 mb-2">
+                    <div class="p-2 bg-light rounded border-start border-danger border-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-danger">"${mistake.incorrectAnswer || 'Пусто'}"</span>
+                            <small class="badge bg-danger">${mistake.count}</small>
+                        </div>
+                        <div class="mt-1">
+                            <small class="text-muted d-block">Правильно: <strong class="text-success">${mistake.correctAnswer}</strong></small>
+                            <small class="text-muted">Слово: ${mistake.fullWord}</small>
+                        </div>
+                    </div>
+                </div>`;
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function showError(message) {
+            console.log('Showing error:', message);
+
+            const loadingElement = document.getElementById('studentModalLoading');
+            const contentElement = document.getElementById('studentModalContent');
+            const errorElement = document.getElementById('studentModalError');
+            const errorMessageElement = document.getElementById('studentErrorMessage');
+
+            if (loadingElement) loadingElement.style.display = 'none';
+            if (contentElement) contentElement.style.display = 'none';
+            if (errorMessageElement) errorMessageElement.textContent = message;
+            if (errorElement) errorElement.style.display = 'block';
+        }
+
+        // Вспомогательные функции
+        function getGradeFromPercentage(percentage) {
+            if (percentage >= 91) return 5;
+            if (percentage >= 76) return 4;
+            if (percentage >= 51) return 3;
+            return 2;
+        }
+
+        function getPercentageColor(percentage) {
+            if (percentage >= 80) return 'success';
+            if (percentage >= 60) return 'warning';
+            return 'danger';
+        }
+
+        function getGradeColorClass(grade) {
+            switch(grade) {
+                case 5: return 'excellent';
+                case 4: return 'good';
+                case 3: return 'satisfactory';
+                case 2: return 'unsatisfactory';
+                default: return 'unsatisfactory';
+            }
         }
     </script>
 }
