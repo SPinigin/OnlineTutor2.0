@@ -91,7 +91,7 @@
     </div>
     <div class="card-body py-3">
         <div class="row">
-            
+
             <div class="col-md-4">
                 <div class="info-column">
                     <div class="test-info-item mb-2">
@@ -128,7 +128,7 @@
 
             <div class="col-md-4">
                 <div class="info-column">
-                     <h6 class="test-info-item mb-2">
+                    <h6 class="test-info-item mb-2">
                         <i class="fas fa-cog me-2"></i>Настройки:
                     </h6>
                     <div class="mb-2">
@@ -144,7 +144,7 @@
                                 <i class="fas fa-lightbulb"></i> Подсказки
                             </span>
                         }
-                        
+
                         @if (Model.Test.ShowCorrectAnswers)
                         {
                             <span class="setting-tag setting-enabled">
@@ -423,7 +423,7 @@
                 var questionIndex = Model.QuestionAnalytics.IndexOf(qa) + 1;
 
                 <div class="card mb-3 border-0 shadow-sm @(qa.IsMostDifficult ? "border-start border-danger border-3" : qa.IsEasiest ? "border-start border-success border-3" : "")">
-                
+
                     <div class="card-header bg-transparent border-0 py-3">
                         <div class="row align-items-center">
                             <div class="col">
@@ -454,7 +454,7 @@
                             </div>
                         </div>
                     </div>
-                
+
                     @if (!string.IsNullOrEmpty(qa.Question.Hint))
                     {
                         <div class="card-body py-2 bg-light">
@@ -463,8 +463,8 @@
                             </small>
                         </div>
                     }
-                
-                   @if (qa.CommonMistakes.Any())
+
+                    @if (qa.CommonMistakes.Any())
                     {
                         <div class="card-body pt-2">
                             <div class="row g-2">
@@ -476,7 +476,7 @@
                                                 <span class="fw-bold text-danger">"@mistake.IncorrectAnswer"</span>
                                                 <small class="badge bg-danger">@mistake.Count</small>
                                             </div>
-                        
+
                                             <div class="students-minimal">
                                                 @foreach (var name in mistake.StudentNames)
                                                 {
@@ -612,10 +612,8 @@
         function showStudentDetails(studentId, studentName) {
             console.log('Opening modal for student:', studentName, 'ID:', studentId);
 
-            // Сброс состояния модального окна
             resetModalState();
 
-            // Устанавливаем имя ученика в заголовок
             const nameElement = document.getElementById('studentModalName');
             if (nameElement) {
                 nameElement.textContent = studentName;
@@ -887,7 +885,6 @@
             if (errorElement) errorElement.style.display = 'block';
         }
 
-        // Вспомогательные функции
         function getGradeFromPercentage(percentage) {
             if (percentage >= 91) return 5;
             if (percentage >= 76) return 4;
@@ -919,9 +916,9 @@
             transition: transform 0.2s ease-in-out;
         }
 
-        .card:hover {
-            transform: translateY(-2px);
-        }
+            .card:hover {
+                transform: translateY(-2px);
+            }
 
         .border-start {
             border-left-width: 3px !important;
@@ -959,11 +956,11 @@
             font-size: 0.85rem;
         }
 
-        .test-info-item i {
-            font-size: 0.9rem;
-            width: 16px;
-            text-align: center;
-        }
+            .test-info-item i {
+                font-size: 0.9rem;
+                width: 16px;
+                text-align: center;
+            }
 
         .info-value {
             font-weight: 600;
@@ -975,7 +972,6 @@
             font-size: 0.8rem;
         }
 
-       /* Информация о тесте - 3 колонки */
         .info-column {
             padding: 0 10px;
         }
@@ -987,11 +983,11 @@
             font-size: 0.85rem;
         }
 
-        .test-info-item i {
-            font-size: 0.9rem;
-            width: 16px;
-            text-align: center;
-        }
+            .test-info-item i {
+                font-size: 0.9rem;
+                width: 16px;
+                text-align: center;
+            }
 
         .info-value {
             font-weight: 600;
@@ -1003,7 +999,6 @@
             font-size: 0.85rem;
         }
 
-        /* Компактные теги настроек */
         .setting-tag {
             display: inline-flex;
             align-items: center;
@@ -1028,7 +1023,6 @@
             border: 1px solid #e9ecef;
         }
 
-        /* Информация о датах */
         .date-info {
             display: flex;
             align-items: center;
@@ -1037,24 +1031,22 @@
             color: #6c757d;
         }
 
-        .date-info i {
-            font-size: 0.8rem;
-            width: 12px;
-        }
+            .date-info i {
+                font-size: 0.8rem;
+                width: 12px;
+            }
 
-        /* Адаптивность для мобильных */
         @@media (max-width: 768px) {
             .info-column {
                 padding: 10px 0;
                 border-bottom: 1px solid #e9ecef;
             }
-    
-            .info-column:last-child {
-                border-bottom: none;
-            }
+
+                .info-column:last-child {
+                    border-bottom: none;
+                }
         }
 
-        /* Стили для отображения результатов */
         .result-display {
             display: flex;
             flex-direction: column;
@@ -1071,7 +1063,6 @@
                 line-height: 1.2;
             }
 
-        /* Стили для оценок */
         .grade-badge {
             display: inline-flex;
             align-items: center;
@@ -1101,7 +1092,6 @@
             background-color: #dc3545;
         }
 
-        /* Минималистичные теги учеников */
         .students-minimal {
             display: flex;
             flex-wrap: wrap;
