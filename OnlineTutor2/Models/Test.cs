@@ -18,7 +18,7 @@ namespace OnlineTutor2.Models
 
         public int? ClassId { get; set; }
 
-        public int TimeLimit { get; set; } // в минутах
+        public int TimeLimit { get; set; }
 
         public int MaxAttempts { get; set; } = 1;
 

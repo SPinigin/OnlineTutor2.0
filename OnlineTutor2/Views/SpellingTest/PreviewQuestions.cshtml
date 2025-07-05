@@ -26,7 +26,6 @@
     var invalidQuestions = Model?.Where(q => !q.IsValid).ToList() ?? new List<ImportQuestionRow>();
 }
 
-
 <div class="row mb-4">
     <div class="col-md-3">
         <div class="card text-center border-primary">
@@ -65,7 +64,6 @@
         </div>
     </div>
 </div>
-
 
 @if (invalidQuestions.Any())
 {
@@ -116,76 +114,74 @@
     </div>
 }
 
-
-@if (validQuestions.Any())
-{
-    <div class="card border-success">
-        <div class="card-header bg-success text-white">
-            <h5 class="mb-0">
-                <i class="fas fa-check-circle"></i> Готовы к импорту (@validQuestions.Count)
-            </h5>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-sm table-hover">
-                    <thead>
-                        <tr>
-                            <th>№</th>
-                            <th>Слово с пропуском</th>
-                            <th>Правильная буква</th>
-                            <th>Полное слово</th>
-                            <th>Подсказка</th>
-                            <th>Баллы</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @{
-                            int index = 1;
-                        }
-                        @foreach (var question in validQuestions.Take(20)) // Показываем первые 20
-                        {
+    @if (validQuestions.Any())
+    {
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-check-circle"></i> Готовы к импорту (@validQuestions.Count)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
                             <tr>
-                                <td>@index</td>
-                                <td>
-                                    <strong>@question.WordWithGap</strong>
-                                </td>
-                                <td>
-                                    <span class="badge bg-primary">@question.CorrectLetter</span>
-                                </td>
-                                <td>@question.FullWord</td>
-                                <td>
-                                    @if (!string.IsNullOrEmpty(question.Hint))
-                                    {
-                                        <small class="text-muted">
-                                            @(question.Hint.Length > 50 ? question.Hint.Substring(0, 50) + "..." : question.Hint)
-                                        </small>
-                                    }
-                                    else
-                                    {
-                                        <small class="text-muted fst-italic">Без подсказки</small>
-                                    }
-                                </td>
-                                <td>
-                                    <span class="badge bg-info">@pointsPerQuestion</span>
-                                </td>
+                                <th>№</th>
+                                <th>Слово с пропуском</th>
+                                <th>Правильная буква</th>
+                                <th>Полное слово</th>
+                                <th>Подсказка</th>
+                                <th>Баллы</th>
                             </tr>
-                            index++;
-                        }
-                        @if (validQuestions.Count > 20)
-                        {
-                            <tr>
-                                <td colspan="6" class="text-center text-muted">
-                                    ... и еще @(validQuestions.Count - 20) вопросов
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @{
+                                int index = 1;
+                            }
+                            @foreach (var question in validQuestions.Take(20)) // Показываем первые 20
+                            {
+                                <tr>
+                                    <td>@index</td>
+                                    <td>
+                                        <strong>@question.WordWithGap</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">@question.CorrectLetter</span>
+                                    </td>
+                                    <td>@question.FullWord</td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(question.Hint))
+                                        {
+                                            <small class="text-muted">
+                                                @(question.Hint.Length > 50 ? question.Hint.Substring(0, 50) + "..." : question.Hint)
+                                            </small>
+                                        }
+                                        else
+                                        {
+                                            <small class="text-muted fst-italic">Без подсказки</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">@pointsPerQuestion</span>
+                                    </td>
+                                </tr>
+                                index++;
+                            }
+                            @if (validQuestions.Count > 20)
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">
+                                        ... и еще @(validQuestions.Count - 20) вопросов
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
-}
-
+    }
 
 <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
     <a asp-action="ImportQuestions" asp-route-id="@test.Id" class="btn btn-outline-secondary">

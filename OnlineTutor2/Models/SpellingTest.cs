@@ -21,7 +21,7 @@ namespace OnlineTutor2.Models
 
         public int? ClassId { get; set; }
 
-        public int TimeLimit { get; set; } = 30; // в минутах
+        public int TimeLimit { get; set; } = 30;
 
         public int MaxAttempts { get; set; } = 1;
 
@@ -33,9 +33,9 @@ namespace OnlineTutor2.Models
 
         public bool IsActive { get; set; } = true;
 
-        public bool ShowHints { get; set; } = true; // Показывать ли подсказки
+        public bool ShowHints { get; set; } = true;
 
-        public bool ShowCorrectAnswers { get; set; } = true; // Показывать ли правильные ответы после теста
+        public bool ShowCorrectAnswers { get; set; } = true;
 
         // Навигационные свойства
         public virtual ApplicationUser Teacher { get; set; }

@@ -19,7 +19,7 @@ namespace OnlineTutor2.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        public bool IsApproved { get; set; } = false; // Для модерации учителей
+        public bool IsApproved { get; set; } = false;
 
         // Навигационные свойства
         public virtual ApplicationUser User { get; set; }

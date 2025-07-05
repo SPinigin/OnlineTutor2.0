@@ -12,7 +12,6 @@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
-
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom navbar-fixed">
             <div class="container-fluid">
@@ -129,7 +128,6 @@
                         }
                     </ul>
 
-
                     <ul class="navbar-nav">
                         @if (User.Identity.IsAuthenticated)
                         {
@@ -154,44 +152,41 @@
         </nav>
     </header>
 
-
-@if (TempData["SuccessMessage"] != null)
-{
-        <div class="container">
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    @if (TempData["SuccessMessage"] != null)
+    {
+            <div class="container">
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
             </div>
-        </div>
-}
+    }
 
-@if (TempData["ErrorMessage"] != null)
-{
-        <div class="container">
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-triangle"></i> @TempData["ErrorMessage"]
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    @if (TempData["ErrorMessage"] != null)
+    {
+            <div class="container">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle"></i> @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
             </div>
-        </div>
-}
+    }
 
-@if (TempData["InfoMessage"] != null)
-{
-        <div class="container">
-            <div class="alert alert-info alert-dismissible fade show" role="alert">
-                <i class="fas fa-info-circle"></i> @TempData["InfoMessage"]
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    @if (TempData["InfoMessage"] != null)
+    {
+            <div class="container">
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <i class="fas fa-info-circle"></i> @TempData["InfoMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
             </div>
-        </div>
-}
-
+    }
 
     <div class="container main-content">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
-
 
     <footer class="footer-fixed footer-compact bg-light border-top">
         <div class="container">
@@ -209,7 +204,6 @@
                     </p>
                 </div>
 
-
                 <div class="col-md-4 footer-column">
                     <h6><i class="fas fa-address-book text-success"></i> Контакты</h6>
                     <p><i class="fas fa-user"></i> Пинигина Наталья Анатольевна</p>
@@ -223,7 +217,6 @@
                         <a href="tel:+79324224597">+7 (932) 422-45-97</a>
                     </p>
                 </div>
-
 
                 <div class="col-md-4 footer-column">
                     <h6><i class="fas fa-code text-info"></i> Техническая поддержка</h6>
@@ -243,7 +236,6 @@
             </div>
 
             <div class="row d-md-none">
-
                 <div class="col-6 footer-column-mobile">
                     <div class="text-center">
                         <h6 class="footer-mobile-title">

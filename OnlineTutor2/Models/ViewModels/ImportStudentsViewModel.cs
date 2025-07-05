@@ -18,7 +18,6 @@ namespace OnlineTutor2.ViewModels
         [StringLength(100, MinimumLength = 6)]
         public string? DefaultPassword { get; set; } = "Student123";
     }
-
     public class ImportStudentRow
     {
         public int RowNumber { get; set; }

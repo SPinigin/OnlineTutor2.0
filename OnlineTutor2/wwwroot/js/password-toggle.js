@@ -1,4 +1,7 @@
-﻿$(document).ready(function () {
+﻿//проверить и выпилить, так как уже не должен использоваться нигде
+
+
+$(document).ready(function () {
     initializePasswordFields();
 });
 

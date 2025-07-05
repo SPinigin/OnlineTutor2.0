@@ -15,13 +15,13 @@ namespace OnlineTutor2.Models
 
         [Required]
         [StringLength(50)]
-        public string IconClass { get; set; } // CSS класс иконки (например: "fas fa-spell-check")
+        public string IconClass { get; set; }
 
         [Required]
         [StringLength(20)]
-        public string ColorClass { get; set; } // CSS класс цвета (например: "bg-primary")
+        public string ColorClass { get; set; }
 
-        public int OrderIndex { get; set; } // Порядок отображения
+        public int OrderIndex { get; set; }
 
         public bool IsActive { get; set; } = true;
 

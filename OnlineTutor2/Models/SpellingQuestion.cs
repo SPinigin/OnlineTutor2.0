@@ -11,22 +11,22 @@ namespace OnlineTutor2.Models
 
         [Required]
         [StringLength(200)]
-        public string WordWithGap { get; set; } // Слово с пропуском (например: "Прол…тает")
+        public string WordWithGap { get; set; }
 
         [Required]
         [StringLength(10)]
-        public string CorrectLetter { get; set; } // Правильная буква (например: "е")
+        public string CorrectLetter { get; set; }
 
         [Required]
         [StringLength(200)]
-        public string FullWord { get; set; } // Полное слово (например: "пролетает")
+        public string FullWord { get; set; }
 
         [StringLength(1000)]
-        public string? Hint { get; set; } // Подсказка
+        public string? Hint { get; set; }
 
-        public int OrderIndex { get; set; } // Порядок вопроса в тесте
+        public int OrderIndex { get; set; }
 
-        public int Points { get; set; } = 1; // Баллы за правильный ответ
+        public int Points { get; set; } = 1;
 
         // Навигационные свойства
         public virtual SpellingTest SpellingTest { get; set; }

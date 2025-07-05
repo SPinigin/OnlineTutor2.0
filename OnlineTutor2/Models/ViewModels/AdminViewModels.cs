@@ -3,7 +3,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace OnlineTutor2.ViewModels
 {
-    // Основная модель для дашборда админа
     public class AdminDashboardViewModel
     {
         public int TotalUsers { get; set; }
@@ -23,7 +22,6 @@ namespace OnlineTutor2.ViewModels
         public double TeacherApprovalRate => TotalTeachers > 0 ? Math.Round((double)(TotalTeachers - PendingTeachers) / TotalTeachers * 100, 1) : 0;
     }
 
-    // Модель пользователя для админа
     public class AdminUserViewModel
     {
         public ApplicationUser User { get; set; }
@@ -37,7 +35,6 @@ namespace OnlineTutor2.ViewModels
         public bool IsAdmin => Roles.Contains(ApplicationRoles.Admin);
     }
 
-    // Детальная информация о пользователе
     public class AdminUserDetailsViewModel
     {
         public ApplicationUser User { get; set; }
@@ -61,14 +58,14 @@ namespace OnlineTutor2.ViewModels
     {
         public int Id { get; set; }
         public string Title { get; set; }
-        public string Type { get; set; } // "Правописание", "Обычный"
+        public string Type { get; set; }
         public string TeacherName { get; set; }
         public string ClassName { get; set; }
         public int QuestionsCount { get; set; }
         public int ResultsCount { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsActive { get; set; }
-        public string ControllerName { get; set; } // Для маршрутизации
+        public string ControllerName { get; set; }
 
         public string CreatedAtFormatted => CreatedAt.ToString("dd.MM.yyyy");
         public string StatusBadge => IsActive ? "success" : "secondary";
@@ -89,7 +86,6 @@ namespace OnlineTutor2.ViewModels
         public DateTime? CompletedAt { get; set; }
         public bool IsCompleted { get; set; }
         public string ResultType { get; set; }
-
         public string StartedAtFormatted => StartedAt.ToString("dd.MM.yyyy HH:mm");
         public string CompletedAtFormatted => CompletedAt?.ToString("dd.MM.yyyy HH:mm") ?? "Не завершен";
         public string StatusBadge => IsCompleted ? "success" : "warning";

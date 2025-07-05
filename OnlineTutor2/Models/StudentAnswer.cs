@@ -8,9 +8,9 @@
 
         public int QuestionId { get; set; }
 
-        public int? AnswerId { get; set; } // для вопросов с выбором
+        public int? AnswerId { get; set; }
 
-        public string? TextAnswer { get; set; } // для текстовых вопросов
+        public string? TextAnswer { get; set; }
 
         public bool IsCorrect { get; set; }
 

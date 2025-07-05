@@ -13,7 +13,7 @@ namespace OnlineTutor2.Models
         public string? Description { get; set; }
 
         [Required]
-        public string TeacherId { get; set; } // Изменено на string
+        public string TeacherId { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 

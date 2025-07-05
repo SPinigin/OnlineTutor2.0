@@ -18,7 +18,7 @@ namespace OnlineTutor2.Data
         public DbSet<Answer> Answers { get; set; }
         public DbSet<TestResult> TestResults { get; set; }
         public DbSet<StudentAnswer> StudentAnswers { get; set; }
-        public DbSet<Assignment> Assignments { get; set; }
+        public DbSet<Assignment> Assignments { get; set; } //???
         public DbSet<Grade> Grades { get; set; }
         public DbSet<Material> Materials { get; set; }
         public DbSet<TestCategory> TestCategories { get; set; }
@@ -26,7 +26,6 @@ namespace OnlineTutor2.Data
         public DbSet<SpellingQuestion> SpellingQuestions { get; set; }
         public DbSet<SpellingTestResult> SpellingTestResults { get; set; }
         public DbSet<SpellingAnswer> SpellingAnswers { get; set; }
-
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

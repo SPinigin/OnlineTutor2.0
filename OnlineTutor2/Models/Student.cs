@@ -17,7 +17,7 @@ namespace OnlineTutor2.Models
         [StringLength(200)]
         public string? School { get; set; }
 
-        public int? Grade { get; set; } // Класс в школе (1-11)
+        public int? Grade { get; set; }
 
         public DateTime EnrollmentDate { get; set; } = DateTime.Now;
 

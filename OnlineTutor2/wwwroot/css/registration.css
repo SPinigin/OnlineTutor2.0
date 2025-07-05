@@ -1,5 +1,4 @@
-﻿/* Стили для карточек выбора роли */
-.role-card {
+﻿.role-card {
     transition: all 0.3s ease;
     border: 2px solid #e9ecef;
     cursor: pointer;
@@ -23,12 +22,10 @@
         box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
     }
 
-/* Скрытие радио-кнопок */
 .role-radio {
     display: none;
 }
 
-/* Стили для специфичных полей ролей */
 .role-specific-fields {
     border-left: 4px solid #007bff;
     padding-left: 15px;
@@ -43,7 +40,6 @@
         border-left-color: #28a745;
     }
 
-/* Анимация появления полей */
 .role-specific-fields {
     animation: slideIn 0.3s ease-in-out;
 }
@@ -60,7 +56,6 @@
     }
 }
 
-/* Стили для меток полей */
 .form-label {
     font-weight: 600;
     color: #495057;
@@ -71,12 +66,10 @@
         color: #6c757d;
     }
 
-    /* Стили для обязательных полей */
     .form-label .required {
         color: #dc3545;
     }
 
-/* Стили для телефонного поля */
 .phone-input-container {
     position: relative;
 }
@@ -95,7 +88,6 @@
         font-size: 1.2em;
     }
 
-/* Стили для карточки формы */
 .registration-card {
     border: none;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
@@ -109,7 +101,6 @@
         padding: 20px;
     }
 
-/* Стили для кнопки отправки */
 .btn-register {
     background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
     border: none;
@@ -125,7 +116,6 @@
         box-shadow: 0 8px 20px rgba(40, 167, 69, 0.3);
     }
 
-/* Стили для алертов */
 .alert-role-info {
     border: none;
     border-radius: 8px;
@@ -145,7 +135,6 @@
         border-left: 4px solid #ffc107;
     }
 
-/* Адаптивность */
 @media (max-width: 768px) {
     .role-card {
         margin-bottom: 15px;
@@ -163,7 +152,6 @@
         }
 }
 
-/* Стили для валидации */
 .is-invalid {
     border-color: #dc3545;
     animation: shake 0.5s ease-in-out;
@@ -183,12 +171,10 @@
     }
 }
 
-/* Стили для успешно заполненных полей */
 .is-valid {
     border-color: #28a745;
 }
 
-/* Стили для подсказок */
 .form-text {
     font-size: 0.875rem;
     color: #6c757d;

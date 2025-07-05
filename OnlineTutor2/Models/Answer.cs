@@ -16,7 +16,6 @@ namespace OnlineTutor2.Models
 
         public int OrderIndex { get; set; }
 
-        // Навигационные свойства
         public virtual Question Question { get; set; }
     }
 }

@@ -11,7 +11,7 @@ namespace OnlineTutor2.Models
         public int SpellingQuestionId { get; set; }
 
         [StringLength(10)]
-        public string? StudentAnswer { get; set; } // Ответ ученика
+        public string? StudentAnswer { get; set; }
 
         public bool IsCorrect { get; set; }
 

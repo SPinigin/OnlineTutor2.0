@@ -129,138 +129,138 @@
         </div>
     </div>
 
-<div class="tab-pane fade" id="tests" role="tabpanel">
-    <div class="card border-0">
-        <div class="card-body">
-            @{
-                var allTests = ViewBag.AllTests as List<object> ?? new List<object>();
-                var allTestsCount = ViewBag.AllTestsCount as int? ?? 0;
-                var spellingTestsCount = ViewBag.SpellingTestsCount as int? ?? 0;
-                var regularTestsCount = ViewBag.RegularTestsCount as int? ?? 0;
-            }
+    <div class="tab-pane fade" id="tests" role="tabpanel">
+        <div class="card border-0">
+            <div class="card-body">
+                @{
+                    var allTests = ViewBag.AllTests as List<object> ?? new List<object>();
+                    var allTestsCount = ViewBag.AllTestsCount as int? ?? 0;
+                    var spellingTestsCount = ViewBag.SpellingTestsCount as int? ?? 0;
+                    var regularTestsCount = ViewBag.RegularTestsCount as int? ?? 0;
+                }
             
-            @if (allTestsCount > 0)
-            {
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="mb-0">
-                        <i class="fas fa-tasks"></i> Всего тестов: @allTestsCount
-                    </h6>
-                    <div class="btn-group btn-group-sm" role="group">
-                        <button type="button" class="btn btn-outline-secondary active" onclick="filterTests('all')">
-                            Все (@allTestsCount)
-                        </button>
-                        @if (spellingTestsCount > 0)
-                        {
-                            <button type="button" class="btn btn-outline-primary" onclick="filterTests('spelling')">
-                                Правописание (@spellingTestsCount)
+                @if (allTestsCount > 0)
+                {
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">
+                            <i class="fas fa-tasks"></i> Всего тестов: @allTestsCount
+                        </h6>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-outline-secondary active" onclick="filterTests('all')">
+                                Все (@allTestsCount)
                             </button>
-                        }
-                        @if (regularTestsCount > 0)
-                        {
-                            <button type="button" class="btn btn-outline-info" onclick="filterTests('regular')">
-                                Обычные (@regularTestsCount)
-                            </button>
-                        }
+                            @if (spellingTestsCount > 0)
+                            {
+                                <button type="button" class="btn btn-outline-primary" onclick="filterTests('spelling')">
+                                    Правописание (@spellingTestsCount)
+                                </button>
+                            }
+                            @if (regularTestsCount > 0)
+                            {
+                                <button type="button" class="btn btn-outline-info" onclick="filterTests('regular')">
+                                    Обычные (@regularTestsCount)
+                                </button>
+                            }
+                        </div>
                     </div>
-                </div>
 
-                <div class="row" id="testsContainer">
-                    @foreach (dynamic test in allTests)
-                    {
-                        <div class="col-md-6 mb-3 test-card" data-test-type="@test.TestType.ToString().ToLower()">
-                            <div class="card border-@test.ColorClass">
-                                <div class="card-header bg-@test.ColorClass text-white d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0">
-                                        <i class="@test.IconClass"></i> @test.Title
-                                    </h6>
-                                    <span class="badge bg-light text-dark">@test.TypeDisplayName</span>
-                                </div>
-                                <div class="card-body">
-                                    @if (!string.IsNullOrEmpty(test.Description))
-                                    {
-                                        <p class="card-text text-muted small mb-3">@test.Description</p>
-                                    }
-                                    
-                                    <div class="row text-center mb-3">
-                                        <div class="col-3">
-                                            <small class="text-muted d-block">Вопросов</small>
-                                            <div class="fw-bold text-@test.ColorClass">@test.QuestionsCount</div>
-                                        </div>
-                                        <div class="col-3">
-                                            <small class="text-muted d-block">Время</small>
-                                            <div class="fw-bold text-info">@test.TimeLimit мин</div>
-                                        </div>
-                                        <div class="col-3">
-                                            <small class="text-muted d-block">Попыток</small>
-                                            <div class="fw-bold text-warning">@test.MaxAttempts</div>
-                                        </div>
-                                        <div class="col-3">
-                                            <small class="text-muted d-block">Прошли</small>
-                                            <div class="fw-bold text-success">@test.ResultsCount</div>
-                                        </div>
+                    <div class="row" id="testsContainer">
+                        @foreach (dynamic test in allTests)
+                        {
+                            <div class="col-md-6 mb-3 test-card" data-test-type="@test.TestType.ToString().ToLower()">
+                                <div class="card border-@test.ColorClass">
+                                    <div class="card-header bg-@test.ColorClass text-white d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">
+                                            <i class="@test.IconClass"></i> @test.Title
+                                        </h6>
+                                        <span class="badge bg-light text-dark">@test.TypeDisplayName</span>
                                     </div>
+                                    <div class="card-body">
+                                        @if (!string.IsNullOrEmpty(test.Description))
+                                        {
+                                            <p class="card-text text-muted small mb-3">@test.Description</p>
+                                        }
                                     
-                                    @if (test.StartDateFormatted != null || test.EndDateFormatted != null)
-                                    {
-                                        <div class="mb-3">
-                                            @if (test.StartDateFormatted != null)
-                                            {
-                                                <small class="text-muted d-block">
-                                                    <i class="fas fa-play"></i> Начало: @test.StartDateFormatted
-                                                </small>
-                                            }
-                                            @if (test.EndDateFormatted != null)
-                                            {
-                                                <small class="text-muted d-block">
-                                                    <i class="fas fa-stop"></i> Окончание: @test.EndDateFormatted
-                                                </small>
-                                            }
+                                        <div class="row text-center mb-3">
+                                            <div class="col-3">
+                                                <small class="text-muted d-block">Вопросов</small>
+                                                <div class="fw-bold text-@test.ColorClass">@test.QuestionsCount</div>
+                                            </div>
+                                            <div class="col-3">
+                                                <small class="text-muted d-block">Время</small>
+                                                <div class="fw-bold text-info">@test.TimeLimit мин</div>
+                                            </div>
+                                            <div class="col-3">
+                                                <small class="text-muted d-block">Попыток</small>
+                                                <div class="fw-bold text-warning">@test.MaxAttempts</div>
+                                            </div>
+                                            <div class="col-3">
+                                                <small class="text-muted d-block">Прошли</small>
+                                                <div class="fw-bold text-success">@test.ResultsCount</div>
+                                            </div>
                                         </div>
-                                    }
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted">
-                                            <i class="fas fa-calendar"></i> @test.CreatedAtFormatted
-                                        </small>
-                                        <div>
-                                            <span class="badge bg-@(test.IsActive ? "success" : "secondary") me-1">
-                                                @(test.IsActive ? "Активный" : "Неактивный")
-                                            </span>
-                                            <a asp-controller="@test.ControllerName" asp-action="Details" asp-route-id="@test.Id" 
-                                               class="btn btn-outline-@test.ColorClass btn-sm me-1" title="Подробности">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
+                                    
+                                        @if (test.StartDateFormatted != null || test.EndDateFormatted != null)
+                                        {
+                                            <div class="mb-3">
+                                                @if (test.StartDateFormatted != null)
+                                                {
+                                                    <small class="text-muted d-block">
+                                                        <i class="fas fa-play"></i> Начало: @test.StartDateFormatted
+                                                    </small>
+                                                }
+                                                @if (test.EndDateFormatted != null)
+                                                {
+                                                    <small class="text-muted d-block">
+                                                        <i class="fas fa-stop"></i> Окончание: @test.EndDateFormatted
+                                                    </small>
+                                                }
+                                            </div>
+                                        }
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">
+                                                <i class="fas fa-calendar"></i> @test.CreatedAtFormatted
+                                            </small>
+                                            <div>
+                                                <span class="badge bg-@(test.IsActive ? "success" : "secondary") me-1">
+                                                    @(test.IsActive ? "Активный" : "Неактивный")
+                                                </span>
+                                                <a asp-controller="@test.ControllerName" asp-action="Details" asp-route-id="@test.Id" 
+                                                   class="btn btn-outline-@test.ColorClass btn-sm me-1" title="Подробности">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
         
-                                            <a asp-controller="TestAnalytics" asp-action="@test.TestType" asp-route-id="@test.Id" 
-                                               class="btn btn-outline-info btn-sm" title="Аналитика">
-                                                <i class="fas fa-chart-bar"></i>
-                                            </a>
+                                                <a asp-controller="TestAnalytics" asp-action="@test.TestType" asp-route-id="@test.Id" 
+                                                   class="btn btn-outline-info btn-sm" title="Аналитика">
+                                                    <i class="fas fa-chart-bar"></i>
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="text-center py-4">
-                    <i class="fas fa-tasks text-muted" style="font-size: 3rem;"></i>
-                    <h5 class="mt-3 text-muted">Тестов пока нет</h5>
-                    <p class="text-muted">Создайте первый тест для этого класса</p>
-                    <div class="btn-group" role="group">
-                        <a asp-controller="SpellingTest" asp-action="Create" class="btn btn-primary">
-                            <i class="fas fa-spell-check"></i> Тест на правописание
-                        </a>
-                        <a asp-controller="Test" asp-action="Create" class="btn btn-outline-info">
-                            <i class="fas fa-tasks"></i> Обычный тест
-                        </a>
+                        }
                     </div>
-                </div>
-            }
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-tasks text-muted" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 text-muted">Тестов пока нет</h5>
+                        <p class="text-muted">Создайте первый тест для этого класса</p>
+                        <div class="btn-group" role="group">
+                            <a asp-controller="SpellingTest" asp-action="Create" class="btn btn-primary">
+                                <i class="fas fa-spell-check"></i> Тест на правописание
+                            </a>
+                            <a asp-controller="Test" asp-action="Create" class="btn btn-outline-info">
+                                <i class="fas fa-tasks"></i> Обычный тест
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
         </div>
     </div>
-</div>
 
     <div class="tab-pane fade" id="materials" role="tabpanel">
         <div class="card border-0">
