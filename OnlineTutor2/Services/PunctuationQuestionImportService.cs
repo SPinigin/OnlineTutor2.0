@@ -117,18 +117,18 @@ namespace OnlineTutor2.Services
             worksheet.Cells[1, 4].Value = "Подсказка";
 
             // Примеры данных
-            worksheet.Cells[2, 1].Value = "Когда солнце взошло¹ птицы запели² а цветы раскрылись³ наступил новый день.";
-            worksheet.Cells[2, 2].Value = "1,3";
+            worksheet.Cells[2, 1].Value = "Когда солнце взошло(1) птицы запели(2) а цветы раскрылись(3) наступил новый день.";
+            worksheet.Cells[2, 2].Value = "13";
             worksheet.Cells[2, 3].Value = "Когда солнце взошло, птицы запели, а цветы раскрылись, наступил новый день.";
             worksheet.Cells[2, 4].Value = "Запятые ставятся для выделения однородных членов и обстоятельственных оборотов.";
 
-            worksheet.Cells[3, 1].Value = "Если завтра будет дождь¹ мы останемся дома² но если погода наладится³ пойдем в парк.";
-            worksheet.Cells[3, 2].Value = "1,2,3";
+            worksheet.Cells[3, 1].Value = "Если завтра будет дождь(1) мы останемся дома(2) но если погода наладится(3) пойдем в парк.";
+            worksheet.Cells[3, 2].Value = "123";
             worksheet.Cells[3, 3].Value = "Если завтра будет дождь, мы останемся дома, но если погода наладится, пойдем в парк.";
             worksheet.Cells[3, 4].Value = "Запятые разделяют части сложного предложения.";
 
-            worksheet.Cells[4, 1].Value = "Мария¹ которая работает учителем² очень любит детей.";
-            worksheet.Cells[4, 2].Value = "1,2";
+            worksheet.Cells[4, 1].Value = "Мария(1) которая работает учителем(2) очень любит детей.";
+            worksheet.Cells[4, 2].Value = "12";
             worksheet.Cells[4, 3].Value = "Мария, которая работает учителем, очень любит детей.";
             worksheet.Cells[4, 4].Value = "Запятые выделяют придаточное определительное предложение.";
 
@@ -152,14 +152,14 @@ namespace OnlineTutor2.Services
 
             instructionSheet.Cells[3, 1].Value = "Формат заполнения:";
             instructionSheet.Cells[3, 1].Style.Font.Bold = true;
-            instructionSheet.Cells[4, 1].Value = "1. Предложение с номерами - используйте символы ¹²³⁴⁵⁶⁷⁸⁹ для обозначения мест где могут быть запятые";
-            instructionSheet.Cells[5, 1].Value = "2. Правильные позиции - укажите номера через запятую где должны стоять запятые (например: 1,3,5)";
+            instructionSheet.Cells[4, 1].Value = "1. Предложение с номерами - используйте символы (1) (2) (3) (4) (5) (6) (7) (8) (9) для обозначения мест где могут быть запятые";
+            instructionSheet.Cells[5, 1].Value = "2. Правильные позиции - укажите номера через запятую где должны стоять запятые (например: 135)";
             instructionSheet.Cells[6, 1].Value = "3. Предложение без номеров - то же предложение с правильно расставленными запятыми";
             instructionSheet.Cells[7, 1].Value = "4. Подсказка - объяснение правила пунктуации (необязательно)";
 
             instructionSheet.Cells[9, 1].Value = "Примеры номеров:";
             instructionSheet.Cells[9, 1].Style.Font.Bold = true;
-            instructionSheet.Cells[10, 1].Value = "¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ (скопируйте нужные символы)";
+            instructionSheet.Cells[10, 1].Value = "(1) (2) (3) (4) (5) (6) (7) (8) (9) (скопируйте нужные символы)";
 
             instructionSheet.Cells[12, 1].Value = "Важно:";
             instructionSheet.Cells[12, 1].Style.Font.Bold = true;
@@ -198,26 +198,33 @@ namespace OnlineTutor2.Services
             // Проверка формата позиций
             if (!string.IsNullOrWhiteSpace(question.CorrectPositions))
             {
-                var positions = question.CorrectPositions.Split(',');
-                foreach (var position in positions)
+                // Проверяем, что строка содержит только цифры от 1 до 9
+                foreach (char c in question.CorrectPositions)
                 {
-                    if (!int.TryParse(position.Trim(), out int pos) || pos < 1 || pos > 9)
+                    if (!char.IsDigit(c) || c < '1' || c > '9')
                     {
-                        question.Errors.Add($"Неверный формат позиции: {position}. Используйте числа от 1 до 9 через запятую");
+                        question.Errors.Add($"Неверный формат позиций: {question.CorrectPositions}. Используйте только цифры от 1 до 9 без пробелов и знаков препинания (например: 135)");
                         break;
                     }
+                }
+
+                // Проверяем на дублирование позиций
+                var uniquePositions = question.CorrectPositions.Distinct().Count();
+                if (uniquePositions != question.CorrectPositions.Length)
+                {
+                    question.Errors.Add($"Обнаружены дублирующиеся позиции в: {question.CorrectPositions}");
                 }
             }
 
             // Проверка наличия номеров в предложении
             if (!string.IsNullOrWhiteSpace(question.SentenceWithNumbers))
             {
-                var superscriptNumbers = new[] { "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹" };
+                var superscriptNumbers = new[] { "(1)", "(2)", "(3)", "(4)", "(5)", "(6)", "(7)", "(8)", "(9)" };
                 bool hasNumbers = superscriptNumbers.Any(num => question.SentenceWithNumbers.Contains(num));
 
                 if (!hasNumbers)
                 {
-                    question.Errors.Add("Предложение должно содержать номера позиций (¹²³⁴⁵⁶⁷⁸⁹)");
+                    question.Errors.Add("Предложение должно содержать номера позиций (1) (2) (3) (4) (5) (6) (7) (8) (9)");
                 }
             }
         }

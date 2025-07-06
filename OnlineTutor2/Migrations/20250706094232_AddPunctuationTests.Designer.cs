@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OnlineTutor2.Data;
 
@@ -11,9 +12,11 @@ using OnlineTutor2.Data;
 namespace OnlineTutor2.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250706094232_AddPunctuationTests")]
+    partial class AddPunctuationTests
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -582,6 +585,9 @@ namespace OnlineTutor2.Migrations
                     b.Property<int>("TestCategoryId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("TestCategoryId1")
+                        .HasColumnType("int");
+
                     b.Property<int>("TimeLimit")
                         .HasColumnType("int");
 
@@ -597,6 +603,8 @@ namespace OnlineTutor2.Migrations
                     b.HasIndex("TeacherId");
 
                     b.HasIndex("TestCategoryId");
+
+                    b.HasIndex("TestCategoryId1");
 
                     b.ToTable("PunctuationTests");
                 });
@@ -1301,10 +1309,14 @@ namespace OnlineTutor2.Migrations
                         .IsRequired();
 
                     b.HasOne("OnlineTutor2.Models.TestCategory", "TestCategory")
-                        .WithMany("PunctuationTests")
+                        .WithMany()
                         .HasForeignKey("TestCategoryId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("OnlineTutor2.Models.TestCategory", null)
+                        .WithMany("PunctuationTests")
+                        .HasForeignKey("TestCategoryId1");
 
                     b.Navigation("Class");
 

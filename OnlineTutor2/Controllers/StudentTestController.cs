@@ -650,23 +650,28 @@ namespace OnlineTutor2.Controllers
 
         private bool CheckPunctuationAnswer(string correctPositions, string studentAnswer)
         {
-            if (string.IsNullOrWhiteSpace(studentAnswer) || string.IsNullOrWhiteSpace(correctPositions))
+            if (string.IsNullOrWhiteSpace(studentAnswer) && string.IsNullOrWhiteSpace(correctPositions))
             {
-                return string.IsNullOrWhiteSpace(correctPositions) && string.IsNullOrWhiteSpace(studentAnswer);
+                return true; // Оба пустые - правильно
             }
 
-            var correctSet = correctPositions.Split(',')
-                .Select(p => p.Trim())
-                .Where(p => !string.IsNullOrEmpty(p))
-                .OrderBy(p => int.TryParse(p, out int num) ? num : 0)
+            if (string.IsNullOrWhiteSpace(studentAnswer) || string.IsNullOrWhiteSpace(correctPositions))
+            {
+                return false; // Один пустой, другой нет
+            }
+
+            // Нормализуем ответы - убираем пробелы и сортируем символы
+            var correctSet = correctPositions.Trim()
+                .Where(c => char.IsDigit(c))
+                .OrderBy(c => c)
                 .ToHashSet();
 
-            var studentSet = studentAnswer.Split(',')
-                .Select(p => p.Trim())
-                .Where(p => !string.IsNullOrEmpty(p))
-                .OrderBy(p => int.TryParse(p, out int num) ? num : 0)
+            var studentSet = studentAnswer.Trim()
+                .Where(c => char.IsDigit(c))
+                .OrderBy(c => c)
                 .ToHashSet();
 
+            // Сравниваем множества
             return correctSet.SetEquals(studentSet);
         }
 

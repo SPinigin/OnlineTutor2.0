@@ -55,7 +55,7 @@
             <div class="card-body">
                 <i class="fas fa-redo text-warning" style="font-size: 2rem;"></i>
                 <h4 class="mt-2 text-warning">@Model.MaxAttempts</h4>
-                <small class="text-muted">Максимум попыток</small>
+                <small class="text-muted">Попыток на тест</small>
             </div>
         </div>
     </div>
@@ -385,6 +385,11 @@
         .grade-unsatisfactory {
             background-color: #dc3545;
         }
+		
+		.question-preview {
+			font-size: 0.9rem;
+			line-height: 1.4;
+		}
     </style>
 }
 
@@ -452,7 +457,7 @@
                         // Перезагружаем страницу через 1 секунду
                         setTimeout(() => {
                             window.location.reload();
-                        }, 1000);
+                        }, 5000);
                     } else {
                         showNotification(data.message, 'error');
                     }

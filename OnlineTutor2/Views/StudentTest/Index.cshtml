@@ -19,7 +19,6 @@
     </div>
 </div>
 
-
 <div class="card mb-4">
     <div class="card-body">
         <div class="btn-group w-100" role="group">
@@ -46,7 +45,6 @@
 }
 else
 {
-
     @if (Model.SpellingTests.Any() && (string.IsNullOrEmpty(currentCategory) || currentCategory == "spelling"))
     {
         <h4 class="mb-3"><i class="fas fa-spell-check text-primary"></i> Тесты на правописание</h4>
@@ -150,7 +148,6 @@ else
             }
         </div>
     }
-
 
     @if (Model.PunctuationTests.Any() && (string.IsNullOrEmpty(currentCategory) || currentCategory == "punctuation"))
     {
@@ -257,7 +254,6 @@ else
     }
 }
 
-
 <div class="modal fade" id="confirmStartModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -278,9 +274,9 @@ else
                     <h6><i class="fas fa-exclamation-triangle"></i> Особенности теста на пунктуацию:</h6>
                     <ul class="mb-0">
                         <li>В предложениях вместо запятых стоят номера позиций</li>
-                        <li>Укажите номера через запятую, где должны быть запятые</li>
+                        <li>Укажите номера без пробелов и знаков препинания, где должны быть запятые</li>
                         <li>Если запятые не нужны, оставьте поле пустым</li>
-                        <li>Пример ответа: 1,3,5</li>
+                        <li>Пример ответа: 135</li>
                     </ul>
                 </div>
                 <p class="text-warning">

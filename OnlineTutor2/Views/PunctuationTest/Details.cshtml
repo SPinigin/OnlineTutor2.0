@@ -8,7 +8,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-controller="Test" asp-action="Category" asp-route-id="2">Тесты на пунктуацию</a>
+                    <a asp-controller="Test" asp-action="Category" asp-route-id="5">Тесты на пунктуацию</a>
                 </li>
                 <li class="breadcrumb-item active">@Model.Title</li>
             </ol>
@@ -55,7 +55,7 @@
             <div class="card-body">
                 <i class="fas fa-redo text-primary" style="font-size: 2rem;"></i>
                 <h4 class="mt-2 text-primary">@Model.MaxAttempts</h4>
-                <small class="text-muted">Максимум попыток</small>
+                <small class="text-muted">Попыток на тест</small>
             </div>
         </div>
     </div>
@@ -134,16 +134,12 @@
             <i class="fas fa-list"></i> Вопросы теста (@Model.Questions.Count)
         </h5>
         <div class="btn-group" role="group">
-            <a asp-action="AddQuestion" asp-route-id="@Model.Id" class="btn btn-warning btn-sm">
-                <i class="fas fa-plus"></i> Добавить вопрос
-            </a>
-            <a asp-action="ImportQuestions" asp-route-id="@Model.Id" class="btn btn-outline-warning btn-sm">
-                <i class="fas fa-file-import"></i> Импорт
-            </a>
             <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
                 <i class="fas fa-ellipsis-v"></i>
             </button>
             <ul class="dropdown-menu">
+                <li><a asp-action="AddQuestion" asp-route-id="@Model.Id" class="dropdown-item"><i class="fas fa-plus"></i> Добавить вопрос</a></li>
+                <li><a asp-action="ImportQuestions" asp-route-id="@Model.Id" class="dropdown-item"><i class="fas fa-file-import"></i> Импорт</a></li>
                 <li><a asp-action="Edit" asp-route-id="@Model.Id" class="dropdown-item"><i class="fas fa-edit"></i> Редактировать</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="#"><i class="fas fa-chart-bar"></i> Аналитика</a></li>
@@ -371,28 +367,6 @@
     </div>
 </div>
 
-@functions {
-    int GetGradeFromPercentage(double percentage)
-    {
-        if (percentage >= 91) return 5;
-        if (percentage >= 76) return 4;
-        if (percentage >= 61) return 3;
-        return 2;
-    }
-
-    string GetGradeColor(int grade)
-    {
-        return grade switch
-        {
-            5 => "excellent",
-            4 => "good",
-            3 => "satisfactory",
-            2 => "unsatisfactory",
-            _ => "unsatisfactory"
-        };
-    }
-}
-
 @section Styles {
     <style>
         .btn-group {
@@ -433,6 +407,28 @@
             line-height: 1.4;
         }
     </style>
+}
+
+@functions {
+    int GetGradeFromPercentage(double percentage)
+    {
+        if (percentage >= 91) return 5;
+        if (percentage >= 76) return 4;
+        if (percentage >= 61) return 3;
+        return 2;
+    }
+
+    string GetGradeColor(int grade)
+    {
+        return grade switch
+        {
+            5 => "excellent",
+            4 => "good",
+            3 => "satisfactory",
+            2 => "unsatisfactory",
+            _ => "unsatisfactory"
+        };
+    }
 }
 
 @section Scripts {
@@ -476,7 +472,7 @@
                         showNotification(data.message, 'success');
                         setTimeout(() => {
                             window.location.reload();
-                        }, 1000);
+                        }, 5000);
                     } else {
                         showNotification(data.message, 'error');
                     }
@@ -508,6 +504,60 @@
                 }
             }, 5000);
         }
+
+        // Инициализация сортировки вопросов (drag & drop)
+           function initializeSortable() {
+               const tableBody = document.querySelector('#questionsTable tbody');
+               if (tableBody && typeof Sortable !== 'undefined') {
+                   new Sortable(tableBody, {
+                       animation: 150,
+                       handle: '.drag-handle',
+                       onEnd: function(evt) {
+                           updateQuestionOrder();
+                       }
+                   });
+               }
+           }
+
+           function updateQuestionOrder() {
+               const rows = document.querySelectorAll('#questionsTable tbody tr');
+               const questionIds = Array.from(rows).map(row =>
+                   parseInt(row.querySelector('[data-question-id]').getAttribute('data-question-id'))
+               );
+
+               fetch('@Url.Action("ReorderQuestions")', {
+                   method: 'POST',
+                   headers: {
+                       'Content-Type': 'application/json',
+                       'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                   },
+                   body: JSON.stringify({
+                       testId: @Model.Id,
+                       questionIds: questionIds
+                   })
+               })
+               .then(response => response.json())
+               .then(data => {
+                   if (data.success) {
+                       showNotification('Порядок вопросов обновлен', 'success');
+                       // Обновляем номера в таблице
+                       rows.forEach((row, index) => {
+                           const badge = row.querySelector('.badge');
+                           if (badge) {
+                               badge.textContent = index + 1;
+                           }
+                       });
+                   } else {
+                       showNotification(data.message, 'error');
+                       window.location.reload(); // Перезагружаем при ошибке
+                   }
+               });
+           }
+
+           // Инициализация при загрузке страницы
+           document.addEventListener('DOMContentLoaded', function() {
+               initializeSortable();
+           });
     </script>
     @Html.AntiForgeryToken()
 }
