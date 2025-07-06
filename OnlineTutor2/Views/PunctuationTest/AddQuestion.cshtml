@@ -1,0 +1,192 @@
+﻿@model OnlineTutor2.Models.PunctuationQuestion
+@{
+    ViewData["Title"] = "Добавить вопрос на пунктуацию";
+    var test = ViewBag.Test as OnlineTutor2.Models.PunctuationTest;
+    var nextOrderIndex = ViewBag.NextOrderIndex;
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">
+                    <i class="fas fa-plus"></i> Добавить вопрос на пунктуацию
+                </h4>
+            </div>
+            <div class="card-body">
+
+                <form asp-action="AddQuestion" method="post">
+
+                    <input asp-for="PunctuationTestId" type="hidden" />
+                    <input asp-for="OrderIndex" type="hidden" />
+
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> Добавление вопроса в тест:</h6>
+                        <strong>@ViewBag.Test.Title</strong>
+                        <br><small class="text-muted">Вопрос №@ViewBag.NextOrderIndex</small>
+                    </div>
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-primary border-bottom pb-1 mb-3">
+                            <i class="fas fa-exclamation"></i> Информация о вопросе
+                        </legend>
+
+                        <div class="mb-3">
+                            <label asp-for="SentenceWithNumbers" class="form-label">
+                                <i class="fas fa-edit"></i> Предложение с номерами позиций <span class="text-danger">*</span>
+                            </label>
+                            <textarea asp-for="SentenceWithNumbers" class="form-control" rows="3"
+                                      placeholder="Например: Когда солнце взошло¹ птицы запели² а цветы раскрылись³ наступил новый день."></textarea>
+                            <span asp-validation-for="SentenceWithNumbers" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="fas fa-lightbulb"></i> Используйте символы ¹²³⁴⁵⁶⁷⁸⁹ для обозначения позиций где могут быть запятые
+                                <br><strong>Символы для копирования:</strong> ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="CorrectPositions" class="form-label">
+                                    <i class="fas fa-check"></i> Правильные позиции <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="CorrectPositions" class="form-control" placeholder="1,3" maxlength="50" />
+                                <span asp-validation-for="CorrectPositions" class="text-danger"></span>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle"></i> Укажите номера через запятую (например: 1,3,5 или оставьте пустым если запятых не нужно)
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Points" class="form-label">
+                                    <i class="fas fa-trophy"></i> Баллы за правильный ответ
+                                </label>
+                                <input asp-for="Points" class="form-control" type="number" min="1" max="10" />
+                                <span asp-validation-for="Points" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PlainSentence" class="form-label">
+                                <i class="fas fa-spell-check"></i> Предложение с правильной пунктуацией (необязательно)
+                            </label>
+                            <textarea asp-for="PlainSentence" class="form-control" rows="3"
+                                      placeholder="Когда солнце взошло, птицы запели, а цветы раскрылись, наступил новый день."></textarea>
+                            <span asp-validation-for="PlainSentence" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="fas fa-lightbulb"></i> Предложение с правильно расставленными знаками препинания для показа после теста
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Hint" class="form-label">
+                                <i class="fas fa-question-circle"></i> Подсказка (необязательно)
+                            </label>
+                            <textarea asp-for="Hint" class="form-control" rows="4"
+                                      placeholder="Объяснение правила пунктуации..."></textarea>
+                            <span asp-validation-for="Hint" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="fas fa-lightbulb"></i> Подсказка поможет ученикам понять правило пунктуации
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-success border-bottom pb-1 mb-3">
+                            <i class="fas fa-eye"></i> Предварительный просмотр
+                        </legend>
+
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6>Как будет выглядеть вопрос для ученика:</h6>
+                                <div class="question-preview mt-3 p-3 bg-white rounded border">
+                                    <p class="mb-2">
+                                        <strong>Вопрос №@ViewBag.NextOrderIndex:</strong>
+                                    </p>
+                                    <p class="mb-3">
+                                        Укажите номера позиций, где нужно поставить запятые:
+                                    </p>
+                                    <div class="mb-3 p-3 bg-light rounded">
+                                        <span id="preview-sentence">Когда солнце взошло¹ птицы запели² а цветы раскрылись³ наступил новый день.</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label">Ваш ответ (номера через запятую):</label>
+                                        <input type="text" class="form-control d-inline-block" style="width: 200px;" placeholder="1,3" disabled />
+                                    </div>
+                                    <div id="preview-hint" class="alert alert-info small" style="display: none;">
+                                        <i class="fas fa-lightbulb"></i> <strong>Подсказка:</strong>
+                                        <span id="hint-text">Здесь будет подсказка</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a asp-action="Details" asp-route-id="@ViewBag.Test.Id" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Отмена
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save"></i> Добавить вопрос
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/layout.js" asp-append-version="true"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sentenceInput = document.getElementById('SentenceWithNumbers');
+            const hintInput = document.getElementById('Hint');
+            const previewSentence = document.getElementById('preview-sentence');
+            const previewHint = document.getElementById('preview-hint');
+            const hintText = document.getElementById('hint-text');
+
+            // Обновление предварительного просмотра предложения
+            function updatePreviewSentence() {
+                const sentence = sentenceInput.value.trim();
+                if (sentence) {
+                    previewSentence.textContent = sentence;
+                } else {
+                    previewSentence.textContent = 'Когда солнце взошло¹ птицы запели² а цветы раскрылись³ наступил новый день.';
+                }
+            }
+
+            // Обновление предварительного просмотра подсказки
+            function updatePreviewHint() {
+                const hint = hintInput.value.trim();
+                if (hint) {
+                    hintText.textContent = hint;
+                    previewHint.style.display = 'block';
+                } else {
+                    previewHint.style.display = 'none';
+                }
+            }
+
+            // Обработчики событий
+            sentenceInput.addEventListener('input', updatePreviewSentence);
+            hintInput.addEventListener('input', updatePreviewHint);
+
+            // Инициализация
+            updatePreviewSentence();
+            updatePreviewHint();
+
+            // Валидация наличия номеров в предложении
+            sentenceInput.addEventListener('blur', function() {
+                const sentence = this.value.trim();
+                const superscriptNumbers = ['¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹'];
+                const hasNumbers = superscriptNumbers.some(num => sentence.includes(num));
+
+                if (sentence && !hasNumbers) {
+                    alert('Предложение должно содержать номера позиций (¹²³⁴⁵⁶⁷⁸⁹). Вы можете скопировать нужные символы из подсказки под полем.');
+                }
+            });
+        });
+    </script>
+}
