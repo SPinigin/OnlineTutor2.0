@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using OnlineTutor2.Data;
 using OnlineTutor2.Models;
 using OnlineTutor2.ViewModels;
+using System.Text.Json;
 
 namespace OnlineTutor2.Controllers
 {
@@ -73,6 +74,8 @@ namespace OnlineTutor2.Controllers
             return View(viewModel);
         }
 
+        #region Spelling Tests
+
         // GET: StudentTest/StartSpelling/5 - Начало теста на правописание
         public async Task<IActionResult> StartSpelling(int id)
         {
@@ -125,6 +128,160 @@ namespace OnlineTutor2.Controllers
 
             return RedirectToAction(nameof(TakeSpelling), new { id = testResult.Id });
         }
+
+        // GET: StudentTest/TakeSpelling/5 - Прохождение теста на правописание
+        public async Task<IActionResult> TakeSpelling(int id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+
+            if (student == null) return NotFound();
+
+            var testResult = await _context.SpellingTestResults
+                .Include(tr => tr.SpellingTest)
+                    .ThenInclude(st => st.Questions.OrderBy(q => q.OrderIndex))
+                .Include(tr => tr.Answers)
+                .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
+
+            if (testResult == null) return NotFound();
+
+            if (testResult.IsCompleted)
+            {
+                return RedirectToAction(nameof(SpellingResult), new { id = testResult.Id });
+            }
+
+            var timeElapsed = DateTime.Now - testResult.StartedAt;
+            var timeLimit = TimeSpan.FromMinutes(testResult.SpellingTest.TimeLimit);
+
+            if (timeElapsed >= timeLimit)
+            {
+                await CompleteSpellingTest(testResult);
+                return RedirectToAction(nameof(SpellingResult), new { id = testResult.Id });
+            }
+
+            var viewModel = new TakeSpellingTestViewModel
+            {
+                TestResult = testResult,
+                TimeRemaining = timeLimit - timeElapsed,
+                CurrentQuestionIndex = 0
+            };
+
+            return View(viewModel);
+        }
+
+        // POST: StudentTest/SubmitSpellingAnswer - Сохранение ответа на правописание
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitSpellingAnswer(SubmitAnswerViewModel model)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+
+            if (student == null) return Json(new { success = false, message = "Студент не найден" });
+
+            var testResult = await _context.SpellingTestResults
+                .Include(tr => tr.SpellingTest)
+                .Include(tr => tr.Answers)
+                .FirstOrDefaultAsync(tr => tr.Id == model.TestResultId && tr.StudentId == student.Id);
+
+            if (testResult == null || testResult.IsCompleted)
+                return Json(new { success = false, message = "Тест не найден или уже завершен" });
+
+            var question = await _context.SpellingQuestions
+                .FirstOrDefaultAsync(q => q.Id == model.QuestionId && q.SpellingTestId == testResult.SpellingTestId);
+
+            if (question == null)
+                return Json(new { success = false, message = "Вопрос не найден" });
+
+            var existingAnswer = testResult.Answers
+                .FirstOrDefault(a => a.SpellingQuestionId == model.QuestionId);
+
+            bool isCorrect = CheckSpellingAnswer(question.CorrectLetter, model.StudentAnswer);
+            int points = isCorrect ? question.Points : 0;
+
+            if (existingAnswer != null)
+            {
+                existingAnswer.StudentAnswer = model.StudentAnswer?.Trim();
+                existingAnswer.IsCorrect = isCorrect;
+                existingAnswer.Points = points;
+                existingAnswer.AnsweredAt = DateTime.Now;
+            }
+            else
+            {
+                var answer = new SpellingAnswer
+                {
+                    SpellingTestResultId = testResult.Id,
+                    SpellingQuestionId = question.Id,
+                    StudentAnswer = model.StudentAnswer?.Trim(),
+                    IsCorrect = isCorrect,
+                    Points = points,
+                    AnsweredAt = DateTime.Now
+                };
+
+                _context.SpellingAnswers.Add(answer);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Json(new
+            {
+                success = true,
+                isCorrect = isCorrect,
+                points = points,
+                correctAnswer = question.CorrectLetter
+            });
+        }
+
+        // POST: StudentTest/CompleteSpelling - Завершение теста на правописание
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CompleteSpelling(int testResultId)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+
+            if (student == null) return NotFound();
+
+            var testResult = await _context.SpellingTestResults
+                .Include(tr => tr.Answers)
+                .FirstOrDefaultAsync(tr => tr.Id == testResultId && tr.StudentId == student.Id);
+
+            if (testResult == null || testResult.IsCompleted) return NotFound();
+
+            await CompleteSpellingTest(testResult);
+
+            TempData["SuccessMessage"] = "Тест успешно завершен!";
+            return RedirectToAction(nameof(SpellingResult), new { id = testResult.Id });
+        }
+
+        // GET: StudentTest/SpellingResult/5 - Результат теста на правописание
+        public async Task<IActionResult> SpellingResult(int id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+
+            if (student == null) return NotFound();
+
+            var testResult = await _context.SpellingTestResults
+                .Include(tr => tr.SpellingTest)
+                .Include(tr => tr.Answers)
+                    .ThenInclude(a => a.Question)
+                .Include(tr => tr.Student)
+                    .ThenInclude(s => s.User)
+                .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
+
+            if (testResult == null) return NotFound();
+
+            return View("Result", testResult);
+        }
+
+        #endregion
+
+        #region Punctuation Tests
 
         // GET: StudentTest/StartPunctuation/5 - Начало теста на пунктуацию
         public async Task<IActionResult> StartPunctuation(int id)
@@ -179,47 +336,6 @@ namespace OnlineTutor2.Controllers
             return RedirectToAction(nameof(TakePunctuation), new { id = testResult.Id });
         }
 
-        // GET: StudentTest/TakeSpelling/5 - Прохождение теста на правописание
-        public async Task<IActionResult> TakeSpelling(int id)
-        {
-            var currentUser = await _userManager.GetUserAsync(User);
-            var student = await _context.Students
-                .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
-
-            if (student == null) return NotFound();
-
-            var testResult = await _context.SpellingTestResults
-                .Include(tr => tr.SpellingTest)
-                    .ThenInclude(st => st.Questions.OrderBy(q => q.OrderIndex))
-                .Include(tr => tr.Answers)
-                .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
-
-            if (testResult == null) return NotFound();
-
-            if (testResult.IsCompleted)
-            {
-                return RedirectToAction(nameof(SpellingTestResult), new { id = testResult.Id });
-            }
-
-            var timeElapsed = DateTime.Now - testResult.StartedAt;
-            var timeLimit = TimeSpan.FromMinutes(testResult.SpellingTest.TimeLimit);
-
-            if (timeElapsed >= timeLimit)
-            {
-                await CompleteSpellingTest(testResult);
-                return RedirectToAction(nameof(SpellingTestResult), new { id = testResult.Id });
-            }
-
-            var viewModel = new TakeSpellingTestViewModel
-            {
-                TestResult = testResult,
-                TimeRemaining = timeLimit - timeElapsed,
-                CurrentQuestionIndex = 0
-            };
-
-            return View(viewModel);
-        }
-
         // GET: StudentTest/TakePunctuation/5 - Прохождение теста на пунктуацию
         public async Task<IActionResult> TakePunctuation(int id)
         {
@@ -239,7 +355,7 @@ namespace OnlineTutor2.Controllers
 
             if (testResult.IsCompleted)
             {
-                return RedirectToAction(nameof(PunctuationTestResult), new { id = testResult.Id });
+                return RedirectToAction(nameof(PunctuationResult), new { id = testResult.Id });
             }
 
             var timeElapsed = DateTime.Now - testResult.StartedAt;
@@ -248,7 +364,7 @@ namespace OnlineTutor2.Controllers
             if (timeElapsed >= timeLimit)
             {
                 await CompletePunctuationTest(testResult);
-                return RedirectToAction(nameof(PunctuationTestResult), new { id = testResult.Id });
+                return RedirectToAction(nameof(PunctuationResult), new { id = testResult.Id });
             }
 
             var viewModel = new TakePunctuationTestViewModel
@@ -261,8 +377,156 @@ namespace OnlineTutor2.Controllers
             return View(viewModel);
         }
 
-        // Остальные методы (SubmitSpellingAnswer, SubmitPunctuationAnswer, Complete, Result, History и вспомогательные методы)
-        // ... (скопировать из существующих контроллеров)
+        // POST: StudentTest/SubmitPunctuationAnswer - Сохранение ответа на пунктуацию
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitPunctuationAnswer(SubmitAnswerViewModel model) // Используем ту же модель
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+
+            if (student == null) return Json(new { success = false, message = "Студент не найден" });
+
+            var testResult = await _context.PunctuationTestResults
+                .Include(tr => tr.PunctuationTest)
+                .Include(tr => tr.Answers)
+                .FirstOrDefaultAsync(tr => tr.Id == model.TestResultId && tr.StudentId == student.Id);
+
+            if (testResult == null || testResult.IsCompleted)
+                return Json(new { success = false, message = "Тест не найден или уже завершен" });
+
+            var question = await _context.PunctuationQuestions
+                .FirstOrDefaultAsync(q => q.Id == model.QuestionId && q.PunctuationTestId == testResult.PunctuationTestId);
+
+            if (question == null)
+                return Json(new { success = false, message = "Вопрос не найден" });
+
+            var existingAnswer = testResult.Answers
+                .FirstOrDefault(a => a.PunctuationQuestionId == model.QuestionId);
+
+            bool isCorrect = CheckPunctuationAnswer(question.CorrectPositions, model.StudentAnswer);
+            int points = isCorrect ? question.Points : 0;
+
+            if (existingAnswer != null)
+            {
+                existingAnswer.StudentAnswer = model.StudentAnswer?.Trim();
+                existingAnswer.IsCorrect = isCorrect;
+                existingAnswer.Points = points;
+                existingAnswer.AnsweredAt = DateTime.Now;
+            }
+            else
+            {
+                var answer = new PunctuationAnswer
+                {
+                    PunctuationTestResultId = testResult.Id,
+                    PunctuationQuestionId = question.Id,
+                    StudentAnswer = model.StudentAnswer?.Trim(),
+                    IsCorrect = isCorrect,
+                    Points = points,
+                    AnsweredAt = DateTime.Now
+                };
+
+                _context.PunctuationAnswers.Add(answer);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Json(new
+            {
+                success = true,
+                isCorrect = isCorrect,
+                points = points,
+                correctAnswer = question.CorrectPositions
+            });
+        }
+
+        // POST: StudentTest/CompletePunctuation - Завершение теста на пунктуацию
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CompletePunctuation(int testResultId)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+
+            if (student == null) return NotFound();
+
+            var testResult = await _context.PunctuationTestResults
+                .Include(tr => tr.Answers)
+                .FirstOrDefaultAsync(tr => tr.Id == testResultId && tr.StudentId == student.Id);
+
+            if (testResult == null || testResult.IsCompleted) return NotFound();
+
+            await CompletePunctuationTest(testResult);
+
+            TempData["SuccessMessage"] = "Тест успешно завершен!";
+            return RedirectToAction(nameof(PunctuationResult), new { id = testResult.Id });
+        }
+
+        // GET: StudentTest/PunctuationResult/5 - Результат теста на пунктуацию
+        public async Task<IActionResult> PunctuationResult(int id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+
+            if (student == null) return NotFound();
+
+            var testResult = await _context.PunctuationTestResults
+                .Include(tr => tr.PunctuationTest)
+                .Include(tr => tr.Answers)
+                    .ThenInclude(a => a.Question)
+                .Include(tr => tr.Student)
+                    .ThenInclude(s => s.User)
+                .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
+
+            if (testResult == null) return NotFound();
+
+            return View("Result", testResult);
+        }
+
+        #endregion
+
+        #region History and Common Actions
+
+        // GET: StudentTest/History - История прохождения всех тестов
+        public async Task<IActionResult> History(string? testType = null)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+
+            if (student == null) return NotFound();
+
+            var viewModel = new StudentTestHistoryViewModel
+            {
+                Student = student
+            };
+
+            if (testType == null || testType == "spelling")
+            {
+                viewModel.SpellingResults = await _context.SpellingTestResults
+                    .Include(tr => tr.SpellingTest)
+                    .Where(tr => tr.StudentId == student.Id && tr.IsCompleted)
+                    .OrderByDescending(tr => tr.CompletedAt)
+                    .ToListAsync();
+            }
+
+            if (testType == null || testType == "punctuation")
+            {
+                viewModel.PunctuationResults = await _context.PunctuationTestResults
+                    .Include(tr => tr.PunctuationTest)
+                    .Where(tr => tr.StudentId == student.Id && tr.IsCompleted)
+                    .OrderByDescending(tr => tr.CompletedAt)
+                    .ToListAsync();
+            }
+
+            ViewBag.TestType = testType;
+            return View(viewModel);
+        }
+
+        #endregion
 
         #region Private Methods
 
@@ -292,6 +556,47 @@ namespace OnlineTutor2.Controllers
                 return false;
 
             return true;
+        }
+
+        private bool CheckSpellingAnswer(string correctLetter, string studentAnswer)
+        {
+            if (string.IsNullOrWhiteSpace(studentAnswer) || string.IsNullOrWhiteSpace(correctLetter))
+                return false;
+
+            var correct = correctLetter.Trim().ToLowerInvariant();
+            var student = studentAnswer.Trim().ToLowerInvariant();
+
+            if (correct == student) return true;
+
+            if (correct.Contains(','))
+            {
+                var correctVariants = correct.Split(',').Select(v => v.Trim()).ToArray();
+                return correctVariants.Contains(student);
+            }
+
+            return false;
+        }
+
+        private bool CheckPunctuationAnswer(string correctPositions, string studentAnswer)
+        {
+            if (string.IsNullOrWhiteSpace(studentAnswer) || string.IsNullOrWhiteSpace(correctPositions))
+            {
+                return string.IsNullOrWhiteSpace(correctPositions) && string.IsNullOrWhiteSpace(studentAnswer);
+            }
+
+            var correctSet = correctPositions.Split(',')
+                .Select(p => p.Trim())
+                .Where(p => !string.IsNullOrEmpty(p))
+                .OrderBy(p => int.TryParse(p, out int num) ? num : 0)
+                .ToHashSet();
+
+            var studentSet = studentAnswer.Split(',')
+                .Select(p => p.Trim())
+                .Where(p => !string.IsNullOrEmpty(p))
+                .OrderBy(p => int.TryParse(p, out int num) ? num : 0)
+                .ToHashSet();
+
+            return correctSet.SetEquals(studentSet);
         }
 
         private async Task CompleteSpellingTest(SpellingTestResult testResult)
