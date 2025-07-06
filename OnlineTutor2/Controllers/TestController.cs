@@ -71,6 +71,16 @@ namespace OnlineTutor2.Controllers
                         .ToListAsync();
                     return View("SpellingTests", spellingTests);
 
+                case 2: // Тесты на пунктуацию
+                    var punctuationTests = await _context.PunctuationTests
+                        .Where(pt => pt.TeacherId == currentUser.Id && pt.TestCategoryId == id)
+                        .Include(pt => pt.Class)
+                        .Include(pt => pt.Questions)
+                        .Include(pt => pt.TestResults)
+                        .OrderByDescending(pt => pt.CreatedAt)
+                        .ToListAsync();
+                    return View("PunctuationTests", punctuationTests);
+
                 // добавить другие case для других типов тестов
                 default:
                     return View("EmptyCategory");
