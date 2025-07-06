@@ -26,6 +26,10 @@ namespace OnlineTutor2.Data
         public DbSet<SpellingQuestion> SpellingQuestions { get; set; }
         public DbSet<SpellingTestResult> SpellingTestResults { get; set; }
         public DbSet<SpellingAnswer> SpellingAnswers { get; set; }
+        public DbSet<PunctuationTest> PunctuationTests { get; set; }
+        public DbSet<PunctuationQuestion> PunctuationQuestions { get; set; }
+        public DbSet<PunctuationTestResult> PunctuationTestResults { get; set; }
+        public DbSet<PunctuationAnswer> PunctuationAnswers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
