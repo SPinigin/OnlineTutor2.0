@@ -26,7 +26,7 @@
                 <i class="fas fa-list"></i> Все тесты
             </a>
             <a asp-action="Index" asp-route-category="spelling" class="btn btn-@(currentCategory == "spelling" ? "primary" : "outline-primary")">
-                <i class="fas fa-spell-check"></i> Правописание
+                <i class="fas fa-spell-check"></i> Орфография
             </a>
             <a asp-action="Index" asp-route-category="punctuation" class="btn btn-@(currentCategory == "punctuation" ? "warning" : "outline-warning")">
                 <i class="fas fa-exclamation"></i> Пунктуация
@@ -47,7 +47,7 @@ else
 {
     @if (Model.SpellingTests.Any() && (string.IsNullOrEmpty(currentCategory) || currentCategory == "spelling"))
     {
-        <h4 class="mb-3"><i class="fas fa-spell-check text-primary"></i> Тесты на правописание</h4>
+        <h4 class="mb-3"><i class="fas fa-spell-check text-primary"></i> Тесты на орфографию</h4>
         <div class="row mb-5">
             @foreach (var test in Model.SpellingTests)
             {

@@ -20,7 +20,7 @@ namespace OnlineTutor2.Controllers
             _userManager = userManager;
         }
 
-        // GET: TestAnalytics/Spelling/5 - Аналитика теста на правописание
+        // GET: TestAnalytics/Spelling/5 - Аналитика теста на орфографию
         public async Task<IActionResult> Spelling(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -72,7 +72,7 @@ namespace OnlineTutor2.Controllers
             return View("RegularTestAnalytics", analytics);
         }
 
-        // Методы для тестов на правописание
+        // Методы для тестов на орфографию
         private async Task<SpellingTestAnalyticsViewModel> BuildSpellingAnalyticsAsync(SpellingTest test)
         {
             var analytics = new SpellingTestAnalyticsViewModel

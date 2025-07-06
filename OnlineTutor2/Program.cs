@@ -110,7 +110,7 @@ async Task SeedRoles(IServiceProvider serviceProvider)
 //        {
 //            new TestCategory
 //            {
-//                Name = "Тесты на правописание",
+//                Name = "Тесты на орфографию",
 //                Description = "Проверка знаний орфографии: безударные гласные, пропущенные буквы в словах",
 //                IconClass = "fas fa-spell-check",
 //                ColorClass = "bg-primary",

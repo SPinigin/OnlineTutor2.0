@@ -310,7 +310,7 @@ namespace OnlineTutor2.Controllers
                 {
                     Id = st.Id,
                     Title = st.Title,
-                    Type = "Правописание",
+                    Type = "Орфография",
                     TeacherName = st.Teacher.FullName,
                     ClassName = st.Class != null ? st.Class.Name : "Все ученики",
                     QuestionsCount = st.Questions.Count,
@@ -399,7 +399,7 @@ namespace OnlineTutor2.Controllers
                 {
                     Id = str.Id,
                     TestTitle = str.SpellingTest.Title,
-                    TestType = "Правописание",
+                    TestType = "Орфография",
                     StudentName = str.Student.User.FullName,
                     Score = str.Score,
                     MaxScore = str.MaxScore,

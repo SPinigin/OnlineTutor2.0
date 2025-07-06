@@ -34,12 +34,12 @@ namespace OnlineTutor2.Controllers
             {
                 switch (category.Id)
                 {
-                    case 1: // Тесты на правописание
+                    case 1: // Тесты на орфография
                         category.SpellingTests = await _context.SpellingTests
                             .Where(st => st.TeacherId == currentUser.Id && st.TestCategoryId == category.Id)
                             .ToListAsync();
                         break;
-                    case 2: // Тесты на пунктуацию
+                    case 5: // Тесты на пунктуацию
                         category.PunctuationTests = await _context.PunctuationTests
                             .Where(pt => pt.TeacherId == currentUser.Id && pt.TestCategoryId == category.Id)
                             .ToListAsync();
@@ -66,7 +66,7 @@ namespace OnlineTutor2.Controllers
             // В зависимости от категории загружаем соответствующие тесты
             switch (id)
             {
-                case 1: // Тесты на правописание
+                case 1: // Тесты на орфографию
                     var spellingTests = await _context.SpellingTests
                         .Where(st => st.TeacherId == currentUser.Id && st.TestCategoryId == id)
                         .Include(st => st.Class)

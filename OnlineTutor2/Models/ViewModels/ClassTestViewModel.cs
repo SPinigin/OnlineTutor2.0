@@ -34,7 +34,7 @@ namespace OnlineTutor2.ViewModels
                 CreatedAt = spellingTest.CreatedAt,
                 IsActive = spellingTest.IsActive,
                 TestType = "Spelling",
-                TypeDisplayName = "Правописание",
+                TypeDisplayName = "Орфография",
                 IconClass = "fas fa-spell-check",
                 ColorClass = "primary",
                 ControllerName = "SpellingTest",

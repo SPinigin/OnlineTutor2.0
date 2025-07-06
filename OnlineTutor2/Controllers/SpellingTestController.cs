@@ -510,7 +510,7 @@ namespace OnlineTutor2.Controllers
                 var templateBytes = await _questionImportService.GenerateTemplateAsync();
                 return File(templateBytes,
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "Шаблон_вопросов_правописание.xlsx");
+                    "Шаблон_вопросов_орфография.xlsx");
             }
             catch (Exception ex)
             {

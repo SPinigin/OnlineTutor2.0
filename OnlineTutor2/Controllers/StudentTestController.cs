@@ -40,7 +40,7 @@ namespace OnlineTutor2.Controllers
                 Student = student
             };
 
-            // Получаем тесты на правописание
+            // Получаем тесты на орфографию
             if (category == null || category == "spelling")
             {
                 viewModel.SpellingTests = await _context.SpellingTests
@@ -76,7 +76,7 @@ namespace OnlineTutor2.Controllers
 
         #region Spelling Tests
 
-        // GET: StudentTest/StartSpelling/5 - Начало теста на правописание
+        // GET: StudentTest/StartSpelling/5 - Начало теста на орфографию
         public async Task<IActionResult> StartSpelling(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -129,7 +129,7 @@ namespace OnlineTutor2.Controllers
             return RedirectToAction(nameof(TakeSpelling), new { id = testResult.Id });
         }
 
-        // GET: StudentTest/TakeSpelling/5 - Прохождение теста на правописание
+        // GET: StudentTest/TakeSpelling/5 - Прохождение теста на орфографию
         public async Task<IActionResult> TakeSpelling(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -170,7 +170,7 @@ namespace OnlineTutor2.Controllers
             return View(viewModel);
         }
 
-        // POST: StudentTest/SubmitSpellingAnswer - Сохранение ответа на правописание
+        // POST: StudentTest/SubmitSpellingAnswer - Сохранение ответа на орфографию
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitSpellingAnswer(SubmitAnswerViewModel model)
@@ -234,7 +234,7 @@ namespace OnlineTutor2.Controllers
             });
         }
 
-        // POST: StudentTest/CompleteSpelling - Завершение теста на правописание
+        // POST: StudentTest/CompleteSpelling - Завершение теста на орфографию
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CompleteSpelling(int testResultId)
@@ -271,7 +271,7 @@ namespace OnlineTutor2.Controllers
             }
         }
 
-        // GET: StudentTest/SpellingResult/5 - Результат теста на правописание
+        // GET: StudentTest/SpellingResult/5 - Результат теста на орфографию
         public async Task<IActionResult> SpellingResult(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);

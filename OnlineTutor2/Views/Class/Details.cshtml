@@ -152,7 +152,7 @@
                             @if (spellingTestsCount > 0)
                             {
                                 <button type="button" class="btn btn-outline-primary" onclick="filterTests('spelling')">
-                                    Правописание (@spellingTestsCount)
+                                    Орфография (@spellingTestsCount)
                                 </button>
                             }
                             @if (regularTestsCount > 0)
@@ -250,7 +250,7 @@
                         <p class="text-muted">Создайте первый тест для этого класса</p>
                         <div class="btn-group" role="group">
                             <a asp-controller="SpellingTest" asp-action="Create" class="btn btn-primary">
-                                <i class="fas fa-spell-check"></i> Тест на правописание
+                                <i class="fas fa-spell-check"></i> Тест на орфографию
                             </a>
                             <a asp-controller="Test" asp-action="Create" class="btn btn-outline-info">
                                 <i class="fas fa-tasks"></i> Обычный тест

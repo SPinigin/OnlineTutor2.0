@@ -35,7 +35,7 @@ namespace OnlineTutor2.Controllers
             // Получаем ID всех классов
             var classIds = classes.Select(c => c.Id).ToList();
 
-            // Получаем количество тестов на правописание для каждого класса
+            // Получаем количество тестов на орфографию для каждого класса
             var spellingTestsCounts = await _context.SpellingTests
                 .Where(st => classIds.Contains(st.ClassId.Value))
                 .GroupBy(st => st.ClassId)
@@ -87,7 +87,7 @@ namespace OnlineTutor2.Controllers
 
             if (@class == null) return NotFound();
 
-            // Получаем все тесты на правописание для этого класса
+            // Получаем все тесты на орфографию для этого класса
             var spellingTests = await _context.SpellingTests
                 .Include(st => st.Questions)
                 .Include(st => st.TestResults)
@@ -125,7 +125,7 @@ namespace OnlineTutor2.Controllers
                 });
             }
 
-            // Добавляем тесты на правописание
+            // Добавляем тесты на орфографию
             foreach (var spellingTest in spellingTests)
             {
                 allTests.Add(new
@@ -137,7 +137,7 @@ namespace OnlineTutor2.Controllers
                     CreatedAtFormatted = spellingTest.CreatedAt.ToString("dd.MM.yyyy"),
                     IsActive = spellingTest.IsActive,
                     TestType = "Spelling",
-                    TypeDisplayName = "Правописание",
+                    TypeDisplayName = "Орфография",
                     IconClass = "fas fa-spell-check",
                     ColorClass = "primary",
                     ControllerName = "SpellingTest",
