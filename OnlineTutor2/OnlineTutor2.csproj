@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Views\StudentPunctuationTest\**" />
+    <Content Remove="Views\StudentPunctuationTest\**" />
+    <EmbeddedResource Remove="Views\StudentPunctuationTest\**" />
+    <None Remove="Views\StudentPunctuationTest\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Remove="Views\SpellingTest\Analytics.cshtml" />
   </ItemGroup>
 
