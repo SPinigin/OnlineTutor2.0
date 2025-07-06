@@ -233,7 +233,7 @@ namespace OnlineTutor2.Data
             // Настройка связей для PunctuationTest
             modelBuilder.Entity<PunctuationTest>()
                 .HasOne(pt => pt.TestCategory)
-                .WithMany()
+                .WithMany(tc => tc.PunctuationTests)
                 .HasForeignKey(pt => pt.TestCategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
 
