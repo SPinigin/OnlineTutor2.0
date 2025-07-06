@@ -27,5 +27,6 @@ namespace OnlineTutor2.Models
 
         // Навигационные свойства
         public virtual ICollection<SpellingTest> SpellingTests { get; set; } = new List<SpellingTest>();
+        public virtual ICollection<PunctuationTest> PunctuationTests { get; set; } = new List<PunctuationTest>();
     }
 }
