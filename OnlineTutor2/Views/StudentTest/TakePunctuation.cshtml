@@ -143,7 +143,7 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times"></i> Продолжить тест
                 </button>
-                <form asp-action="Complete" method="post" class="d-inline">
+                <form asp-action="CompletePunctuation" method="post" class="d-inline">
                     <input type="hidden" name="testResultId" value="@Model.TestResult.Id" />
                     <button type="submit" class="btn btn-success">
                         <i class="fas fa-check"></i> Завершить тест
@@ -393,7 +393,7 @@
         function autoSubmitTest() {
             testCompleting = true;
             alert('Время вышло! Тест будет автоматически завершен.');
-            $('form[action*="Complete"]').submit();
+            $('form[action*="CompleteSpelling"]').submit();
         }
 
         window.addEventListener('beforeunload', function(e) {

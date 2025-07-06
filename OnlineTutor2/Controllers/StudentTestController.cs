@@ -239,22 +239,36 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CompleteSpelling(int testResultId)
         {
-            var currentUser = await _userManager.GetUserAsync(User);
-            var student = await _context.Students
-                .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+            try
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+                var student = await _context.Students
+                    .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
 
-            if (student == null) return NotFound();
+                if (student == null) return NotFound();
 
-            var testResult = await _context.SpellingTestResults
-                .Include(tr => tr.Answers)
-                .FirstOrDefaultAsync(tr => tr.Id == testResultId && tr.StudentId == student.Id);
+                var testResult = await _context.SpellingTestResults
+                    .Include(tr => tr.Answers)
+                    .FirstOrDefaultAsync(tr => tr.Id == testResultId && tr.StudentId == student.Id);
 
-            if (testResult == null || testResult.IsCompleted) return NotFound();
+                if (testResult == null) return NotFound();
 
-            await CompleteSpellingTest(testResult);
+                if (testResult.IsCompleted)
+                {
+                    // Уже завершен, просто перенаправляем на результат
+                    return RedirectToAction(nameof(SpellingResult), new { id = testResult.Id });
+                }
 
-            TempData["SuccessMessage"] = "Тест успешно завершен!";
-            return RedirectToAction(nameof(SpellingResult), new { id = testResult.Id });
+                await CompleteSpellingTest(testResult);
+
+                TempData["SuccessMessage"] = "Тест успешно завершен!";
+                return RedirectToAction("Result", new { id = testResult.Id });
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Произошла ошибка при завершении теста.";
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         // GET: StudentTest/SpellingResult/5 - Результат теста на правописание
@@ -268,6 +282,7 @@ namespace OnlineTutor2.Controllers
 
             var testResult = await _context.SpellingTestResults
                 .Include(tr => tr.SpellingTest)
+                    .ThenInclude(st => st.Questions.OrderBy(q => q.OrderIndex))
                 .Include(tr => tr.Answers)
                     .ThenInclude(a => a.Question)
                 .Include(tr => tr.Student)
@@ -446,22 +461,36 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CompletePunctuation(int testResultId)
         {
-            var currentUser = await _userManager.GetUserAsync(User);
-            var student = await _context.Students
-                .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+            try
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+                var student = await _context.Students
+                    .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
 
-            if (student == null) return NotFound();
+                if (student == null) return NotFound();
 
-            var testResult = await _context.PunctuationTestResults
-                .Include(tr => tr.Answers)
-                .FirstOrDefaultAsync(tr => tr.Id == testResultId && tr.StudentId == student.Id);
+                var testResult = await _context.PunctuationTestResults
+                    .Include(tr => tr.Answers)
+                    .FirstOrDefaultAsync(tr => tr.Id == testResultId && tr.StudentId == student.Id);
 
-            if (testResult == null || testResult.IsCompleted) return NotFound();
+                if (testResult == null) return NotFound();
 
-            await CompletePunctuationTest(testResult);
+                if (testResult.IsCompleted)
+                {
+                    // Уже завершен, просто перенаправляем на результат
+                    return RedirectToAction(nameof(PunctuationResult), new { id = testResult.Id });
+                }
 
-            TempData["SuccessMessage"] = "Тест успешно завершен!";
-            return RedirectToAction(nameof(PunctuationResult), new { id = testResult.Id });
+                await CompletePunctuationTest(testResult);
+
+                TempData["SuccessMessage"] = "Тест успешно завершен!";
+                return RedirectToAction("Result", new { id = testResult.Id });
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Произошла ошибка при завершении теста.";
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         // GET: StudentTest/PunctuationResult/5 - Результат теста на пунктуацию
@@ -475,6 +504,7 @@ namespace OnlineTutor2.Controllers
 
             var testResult = await _context.PunctuationTestResults
                 .Include(tr => tr.PunctuationTest)
+                    .ThenInclude(pt => pt.Questions.OrderBy(q => q.OrderIndex))
                 .Include(tr => tr.Answers)
                     .ThenInclude(a => a.Question)
                 .Include(tr => tr.Student)
@@ -484,6 +514,47 @@ namespace OnlineTutor2.Controllers
             if (testResult == null) return NotFound();
 
             return View("Result", testResult);
+        }
+
+        public async Task<IActionResult> Result(int id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+
+            if (student == null) return NotFound();
+
+            // Сначала пробуем найти результат spelling теста
+            var spellingResult = await _context.SpellingTestResults
+                .Include(tr => tr.SpellingTest)
+                    .ThenInclude(st => st.Questions.OrderBy(q => q.OrderIndex))
+                .Include(tr => tr.Answers)
+                    .ThenInclude(a => a.Question)
+                .Include(tr => tr.Student)
+                    .ThenInclude(s => s.User)
+                .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
+
+            if (spellingResult != null)
+            {
+                return View(spellingResult);
+            }
+
+            // Если не найден, пробуем punctuation тест
+            var punctuationResult = await _context.PunctuationTestResults
+                .Include(tr => tr.PunctuationTest)
+                    .ThenInclude(pt => pt.Questions.OrderBy(q => q.OrderIndex))
+                .Include(tr => tr.Answers)
+                    .ThenInclude(a => a.Question)
+                .Include(tr => tr.Student)
+                    .ThenInclude(s => s.User)
+                .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
+
+            if (punctuationResult != null)
+            {
+                return View(punctuationResult);
+            }
+
+            return NotFound();
         }
 
         #endregion
