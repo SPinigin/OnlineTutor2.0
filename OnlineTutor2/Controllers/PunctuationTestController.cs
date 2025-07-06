@@ -85,7 +85,7 @@ namespace OnlineTutor2.Controllers
                     Title = model.Title,
                     Description = model.Description,
                     TeacherId = currentUser.Id,
-                    TestCategoryId = 2, // Предполагаем что ID=2 для тестов пунктуации
+                    TestCategoryId = 5, // id=5 для тестов пунктуации
                     ClassId = model.ClassId,
                     TimeLimit = model.TimeLimit,
                     MaxAttempts = model.MaxAttempts,

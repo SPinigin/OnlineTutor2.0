@@ -39,7 +39,7 @@ namespace OnlineTutor2.Controllers
                             .Where(st => st.TeacherId == currentUser.Id && st.TestCategoryId == category.Id)
                             .ToListAsync();
                         break;
-                    case 2: // Тесты на пунктуацию - ДОБАВИТЬ
+                    case 2: // Тесты на пунктуацию
                         category.PunctuationTests = await _context.PunctuationTests
                             .Where(pt => pt.TeacherId == currentUser.Id && pt.TestCategoryId == category.Id)
                             .ToListAsync();
@@ -76,7 +76,7 @@ namespace OnlineTutor2.Controllers
                         .ToListAsync();
                     return View("SpellingTests", spellingTests);
 
-                case 2: // Тесты на пунктуацию
+                case 5: // Тесты на пунктуацию
                     var punctuationTests = await _context.PunctuationTests
                         .Where(pt => pt.TeacherId == currentUser.Id && pt.TestCategoryId == id)
                         .Include(pt => pt.Class)
