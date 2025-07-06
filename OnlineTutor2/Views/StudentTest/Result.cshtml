@@ -1,45 +1,110 @@
-﻿@model OnlineTutor2.Models.SpellingTestResult
+﻿@model object
 @{
     ViewData["Title"] = "Результат теста";
+
+    // Определяем тип результата
+    var isSpellingResult = Model is OnlineTutor2.Models.SpellingTestResult;
+    var isPunctuationResult = Model is OnlineTutor2.Models.PunctuationTestResult;
+
+    // Получаем данные в зависимости от типа
+    var percentage = 0.0;
+    var score = 0;
+    var maxScore = 0;
+    var attemptNumber = 0;
+    var completedAt = DateTime.Now;
+    var startedAt = DateTime.Now;
+    var testTitle = "";
+    var questionsCount = 0;
+    var correctAnswersCount = 0;
+    var incorrectAnswersCount = 0;
+    var showCorrectAnswers = false;
+    var testId = 0;
+    var maxAttempts = 0;
+
+    if (isSpellingResult)
+    {
+        var result = Model as OnlineTutor2.Models.SpellingTestResult;
+        percentage = result.Percentage;
+        score = result.Score;
+        maxScore = result.MaxScore;
+        attemptNumber = result.AttemptNumber;
+        completedAt = result.CompletedAt ?? DateTime.Now;
+        startedAt = result.StartedAt;
+        testTitle = result.SpellingTest.Title;
+        questionsCount = result.SpellingTest.Questions.Count;
+        correctAnswersCount = result.Answers.Count(a => a.IsCorrect);
+        incorrectAnswersCount = result.Answers.Count(a => !a.IsCorrect);
+        showCorrectAnswers = result.SpellingTest.ShowCorrectAnswers;
+        testId = result.SpellingTestId;
+        maxAttempts = result.SpellingTest.MaxAttempts;
+    }
+    else if (isPunctuationResult)
+    {
+        var result = Model as OnlineTutor2.Models.PunctuationTestResult;
+        percentage = result.Percentage;
+        score = result.Score;
+        maxScore = result.MaxScore;
+        attemptNumber = result.AttemptNumber;
+        completedAt = result.CompletedAt ?? DateTime.Now;
+        startedAt = result.StartedAt;
+        testTitle = result.PunctuationTest.Title;
+        questionsCount = result.PunctuationTest.Questions.Count;
+        correctAnswersCount = result.Answers.Count(a => a.IsCorrect);
+        incorrectAnswersCount = result.Answers.Count(a => !a.IsCorrect);
+        showCorrectAnswers = result.PunctuationTest.ShowCorrectAnswers;
+        testId = result.PunctuationTestId;
+        maxAttempts = result.PunctuationTest.MaxAttempts;
+    }
 }
 
 <div class="row justify-content-center">
     <div class="col-md-10">
         <div class="card mb-4">
-            <div class="card-header bg-@(Model.Percentage >= 80 ? "success" : Model.Percentage >= 60 ? "warning" : "danger") text-white text-center">
+            <div class="card-header bg-@(percentage >= 80 ? "success" : percentage >= 60 ? "warning" : "danger") text-white text-center">
                 <h4 class="mb-0">
-                    <i class="fas fa-@(Model.Percentage >= 80 ? "trophy" : Model.Percentage >= 60 ? "medal" : "times-circle")"></i>
-                    Тест завершен!
+                    <i class="fas fa-@(percentage >= 80 ? "trophy" : percentage >= 60 ? "medal" : "times-circle")"></i>
+                    @if (isSpellingResult)
+                    {
+                        <span>Тест на правописание завершен!</span>
+                    }
+                    else if (isPunctuationResult)
+                    {
+                        <span>Тест на пунктуацию завершен!</span>
+                    }
+                    else
+                    {
+                        <span>Тест завершен!</span>
+                    }
                 </h4>
             </div>
             <div class="card-body text-center">
-                <h2 class="display-4 text-@(Model.Percentage >= 80 ? "success" : Model.Percentage >= 60 ? "warning" : "danger")">
-                    @Model.Percentage.ToString("F1")%
+                <h2 class="display-4 text-@(percentage >= 80 ? "success" : percentage >= 60 ? "warning" : "danger")">
+                    @percentage.ToString("F1")%
                 </h2>
-                <p class="lead">@Model.Score из @Model.MaxScore баллов</p>
+                <p class="lead">@score из @maxScore баллов</p>
 
                 <div class="row mt-4">
                     <div class="col-md-3">
                         <div class="text-center">
-                            <h5 class="text-primary">@Model.SpellingTest.Questions.Count</h5>
+                            <h5 class="text-primary">@questionsCount</h5>
                             <small class="text-muted">Всего вопросов</small>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="text-center">
-                            <h5 class="text-success">@Model.Answers.Count(a => a.IsCorrect)</h5>
+                            <h5 class="text-success">@correctAnswersCount</h5>
                             <small class="text-muted">Правильных ответов</small>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="text-center">
-                            <h5 class="text-danger">@Model.Answers.Count(a => !a.IsCorrect)</h5>
+                            <h5 class="text-danger">@incorrectAnswersCount</h5>
                             <small class="text-muted">Неправильных ответов</small>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="text-center">
-                            <h5 class="text-info">@Model.AttemptNumber</h5>
+                            <h5 class="text-info">@attemptNumber</h5>
                             <small class="text-muted">Попытка</small>
                         </div>
                     </div>
@@ -48,19 +113,16 @@
                 <div class="mt-4">
                     <p class="text-muted">
                         <i class="fas fa-clock"></i> Время прохождения:
-                        @if (Model.CompletedAt.HasValue)
-                        {
-                            @((Model.CompletedAt.Value - Model.StartedAt).ToString(@"mm\:ss"))
-                        }
+                        @((completedAt - startedAt).ToString(@"mm\:ss"))
                     </p>
                     <p class="text-muted">
-                        <i class="fas fa-calendar"></i> Завершен: @Model.CompletedAt?.ToString("dd.MM.yyyy HH:mm")
+                        <i class="fas fa-calendar"></i> Завершен: @completedAt.ToString("dd.MM.yyyy HH:mm")
                     </p>
                 </div>
             </div>
         </div>
 
-        @if (Model.SpellingTest.ShowCorrectAnswers)
+        @if (showCorrectAnswers)
         {
             <div class="card">
                 <div class="card-header">
@@ -69,69 +131,151 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    @foreach (var question in Model.SpellingTest.Questions.OrderBy(q => q.OrderIndex))
+                    @if (isSpellingResult)
                     {
-                        var answer = Model.Answers.FirstOrDefault(a => a.SpellingQuestionId == question.Id);
-                        var isCorrect = answer?.IsCorrect ?? false;
+                        var spellingResult = Model as OnlineTutor2.Models.SpellingTestResult;
+                        @foreach (var question in spellingResult.SpellingTest.Questions.OrderBy(q => q.OrderIndex))
+                        {
+                            var answer = spellingResult.Answers.FirstOrDefault(a => a.SpellingQuestionId == question.Id);
+                            var isCorrect = answer?.IsCorrect ?? false;
 
-                        <div class="question-result mb-4 p-3 border rounded">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <span class="badge bg-@(isCorrect ? "success" : "danger") me-2">
-                                            @(Model.SpellingTest.Questions.OrderBy(q => q.OrderIndex).ToList().IndexOf(question) + 1)
-                                        </span>
-                                        <h6 class="mb-0">@question.WordWithGap</h6>
-                                    </div>
+                            <div class="question-result mb-4 p-3 border rounded">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="badge bg-@(isCorrect ? "success" : "danger") me-2">
+                                                @(spellingResult.SpellingTest.Questions.OrderBy(q => q.OrderIndex).ToList().IndexOf(question) + 1)
+                                            </span>
+                                            <h6 class="mb-0">@question.WordWithGap</h6>
+                                        </div>
 
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <small class="text-muted">Ваш ответ:</small>
-                                            <div class="fw-bold text-@(isCorrect ? "success" : "danger")">
-                                                @(answer?.StudentAnswer ?? "Не отвечено")
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <small class="text-muted">Ваш ответ:</small>
+                                                <div class="fw-bold text-@(isCorrect ? "success" : "danger")">
+                                                    @(answer?.StudentAnswer ?? "Не отвечено")
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <small class="text-muted">Правильный ответ:</small>
+                                                <div class="fw-bold text-success">
+                                                    @question.CorrectLetter
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <small class="text-muted">Правильный ответ:</small>
-                                            <div class="fw-bold text-success">
-                                                @question.CorrectLetter
-                                            </div>
-                                        </div>
-                                    </div>
 
-                                    <div class="mt-2">
-                                        <small class="text-muted">Полное слово:</small>
-                                        <span class="fw-bold">@question.FullWord</span>
-                                    </div>
-
-                                    @if (!string.IsNullOrEmpty(question.Hint))
-                                    {
                                         <div class="mt-2">
-                                            <small class="text-muted">Подсказка:</small>
-                                            <div class="small">@question.Hint</div>
+                                            <small class="text-muted">Полное слово:</small>
+                                            <span class="fw-bold">@question.FullWord</span>
                                         </div>
-                                    }
-                                </div>
-                                <div class="col-md-4 text-end">
-                                    <div class="result-icon">
-                                        @if (isCorrect)
+
+                                        @if (!string.IsNullOrEmpty(question.Hint))
                                         {
-                                            <i class="fas fa-check-circle text-success fa-2x"></i>
-                                            <div class="mt-1">
-                                                <span class="badge bg-success">+@question.Points баллов</span>
+                                            <div class="mt-2">
+                                                <small class="text-muted">Подсказка:</small>
+                                                <div class="small">@question.Hint</div>
                                             </div>
                                         }
-                                        else
-                                        {
-                                            <i class="fas fa-times-circle text-danger fa-2x"></i>
-                                            <div class="mt-1">
-                                                <span class="badge bg-danger">0 баллов</span>
-                                            </div>
-                                        }
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <div class="result-icon">
+                                            @if (isCorrect)
+                                            {
+                                                <i class="fas fa-check-circle text-success fa-2x"></i>
+                                                <div class="mt-1">
+                                                    <span class="badge bg-success">+@question.Points баллов</span>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-times-circle text-danger fa-2x"></i>
+                                                <div class="mt-1">
+                                                    <span class="badge bg-danger">0 баллов</span>
+                                                </div>
+                                            }
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        }
+                    }
+                    else if (isPunctuationResult)
+                    {
+                        var punctuationResult = Model as OnlineTutor2.Models.PunctuationTestResult;
+                        @foreach (var question in punctuationResult.PunctuationTest.Questions.OrderBy(q => q.OrderIndex))
+                        {
+                            var answer = punctuationResult.Answers.FirstOrDefault(a => a.PunctuationQuestionId == question.Id);
+                            var isCorrect = answer?.IsCorrect ?? false;
+
+                            <div class="question-result mb-4 p-3 border rounded">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="badge bg-@(isCorrect ? "success" : "danger") me-2">
+                                                @(punctuationResult.PunctuationTest.Questions.OrderBy(q => q.OrderIndex).ToList().IndexOf(question) + 1)
+                                            </span>
+                                            <h6 class="mb-0">Расставьте знаки препинания</h6>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <small class="text-muted">Предложение:</small>
+                                            <div class="p-2 bg-light rounded">
+                                                @question.SentenceWithNumbers
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <small class="text-muted">Ваш ответ:</small>
+                                                <div class="fw-bold text-@(isCorrect ? "success" : "danger")">
+                                                    @(string.IsNullOrEmpty(answer?.StudentAnswer) ? "Без запятых" : answer.StudentAnswer)
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <small class="text-muted">Правильный ответ:</small>
+                                                <div class="fw-bold text-success">
+                                                    @(string.IsNullOrEmpty(question.CorrectPositions) ? "Без запятых" : question.CorrectPositions)
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        @if (!string.IsNullOrEmpty(question.PlainSentence))
+                                        {
+                                            <div class="mt-2">
+                                                <small class="text-muted">Правильный вариант:</small>
+                                                <div class="fw-bold text-success">@question.PlainSentence</div>
+                                            </div>
+                                        }
+
+                                        @if (!string.IsNullOrEmpty(question.Hint))
+                                        {
+                                            <div class="mt-2">
+                                                <small class="text-muted">Подсказка:</small>
+                                                <div class="small">@question.Hint</div>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <div class="result-icon">
+                                            @if (isCorrect)
+                                            {
+                                                <i class="fas fa-check-circle text-success fa-2x"></i>
+                                                <div class="mt-1">
+                                                    <span class="badge bg-success">+@question.Points баллов</span>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-times-circle text-danger fa-2x"></i>
+                                                <div class="mt-1">
+                                                    <span class="badge bg-danger">0 баллов</span>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
                     }
                 </div>
             </div>
@@ -146,11 +290,20 @@
                     <a asp-action="History" class="btn btn-outline-info">
                         <i class="fas fa-history"></i> История результатов
                     </a>
-                    @if (Model.AttemptNumber < Model.SpellingTest.MaxAttempts)
+                    @if (attemptNumber < maxAttempts)
                     {
-                        <a asp-action="Start" asp-route-id="@Model.SpellingTestId" class="btn btn-outline-success">
-                            <i class="fas fa-redo"></i> Пройти еще раз
-                        </a>
+                        @if (isSpellingResult)
+                        {
+                            <a asp-action="StartSpelling" asp-route-id="@testId" class="btn btn-outline-success">
+                                <i class="fas fa-redo"></i> Пройти еще раз
+                            </a>
+                        }
+                        else if (isPunctuationResult)
+                        {
+                            <a asp-action="StartPunctuation" asp-route-id="@testId" class="btn btn-outline-success">
+                                <i class="fas fa-redo"></i> Пройти еще раз
+                            </a>
+                        }
                     }
                 </div>
             </div>

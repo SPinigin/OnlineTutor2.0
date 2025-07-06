@@ -73,8 +73,9 @@
                                 </button>
                             </div>
                             <div class="form-text">
-                                <i class="fas fa-info-circle"></i> Введите номера позиций через запятую без пробелов. Если запятые не нужны, оставьте поле пустым.
+                                <i class="fas fa-info-circle"></i> Введите номера позиций без пробелов и запятых. Если запятые не нужны, оставьте поле пустым. Пример: 135
                             </div>
+
                         </div>
 
                         @if (Model.TestResult.PunctuationTest.ShowHints && !string.IsNullOrEmpty(question.Hint))
@@ -299,9 +300,9 @@
             }
         }
 
-        function saveAnswer(questionId, answer) {
+                function saveAnswer(questionId, answer) {
             $.ajax({
-                url: '@Url.Action("SubmitAnswer")',
+                url: '@Url.Action("SubmitPunctuationAnswer")',
                 type: 'POST',
                 data: {
                     TestResultId: @Model.TestResult.Id,
