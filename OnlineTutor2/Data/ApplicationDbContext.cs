@@ -225,6 +225,58 @@ namespace OnlineTutor2.Data
                 .WithMany(sq => sq.StudentAnswers)
                 .HasForeignKey(sa => sa.SpellingQuestionId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Настройка связей для PunctuationTest
+            modelBuilder.Entity<PunctuationTest>()
+                .HasOne(pt => pt.TestCategory)
+                .WithMany()
+                .HasForeignKey(pt => pt.TestCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PunctuationTest>()
+                .HasOne(pt => pt.Teacher)
+                .WithMany()
+                .HasForeignKey(pt => pt.TeacherId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PunctuationTest>()
+                .HasOne(pt => pt.Class)
+                .WithMany()
+                .HasForeignKey(pt => pt.ClassId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Настройка связей для PunctuationQuestion
+            modelBuilder.Entity<PunctuationQuestion>()
+                .HasOne(pq => pq.PunctuationTest)
+                .WithMany(pt => pt.Questions)
+                .HasForeignKey(pq => pq.PunctuationTestId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Настройка связей для PunctuationTestResult
+            modelBuilder.Entity<PunctuationTestResult>()
+                .HasOne(ptr => ptr.PunctuationTest)
+                .WithMany(pt => pt.TestResults)
+                .HasForeignKey(ptr => ptr.PunctuationTestId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PunctuationTestResult>()
+                .HasOne(ptr => ptr.Student)
+                .WithMany()
+                .HasForeignKey(ptr => ptr.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Настройка связей для PunctuationAnswer
+            modelBuilder.Entity<PunctuationAnswer>()
+                .HasOne(pa => pa.TestResult)
+                .WithMany(ptr => ptr.Answers)
+                .HasForeignKey(pa => pa.PunctuationTestResultId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PunctuationAnswer>()
+                .HasOne(pa => pa.Question)
+                .WithMany(pq => pq.StudentAnswers)
+                .HasForeignKey(pa => pa.PunctuationQuestionId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
