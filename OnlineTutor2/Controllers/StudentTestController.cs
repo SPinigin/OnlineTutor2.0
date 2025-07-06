@@ -198,7 +198,7 @@ namespace OnlineTutor2.Controllers
 
             if (testResult.IsCompleted)
             {
-                return RedirectToAction(nameof(SpellingResult), new { id = testResult.Id });
+                return RedirectToAction(nameof(SpellingTestResult), new { id = testResult.Id });
             }
 
             var timeElapsed = DateTime.Now - testResult.StartedAt;
@@ -207,7 +207,7 @@ namespace OnlineTutor2.Controllers
             if (timeElapsed >= timeLimit)
             {
                 await CompleteSpellingTest(testResult);
-                return RedirectToAction(nameof(SpellingResult), new { id = testResult.Id });
+                return RedirectToAction(nameof(SpellingTestResult), new { id = testResult.Id });
             }
 
             var viewModel = new TakeSpellingTestViewModel
@@ -239,7 +239,7 @@ namespace OnlineTutor2.Controllers
 
             if (testResult.IsCompleted)
             {
-                return RedirectToAction(nameof(PunctuationResult), new { id = testResult.Id });
+                return RedirectToAction(nameof(PunctuationTestResult), new { id = testResult.Id });
             }
 
             var timeElapsed = DateTime.Now - testResult.StartedAt;
@@ -248,7 +248,7 @@ namespace OnlineTutor2.Controllers
             if (timeElapsed >= timeLimit)
             {
                 await CompletePunctuationTest(testResult);
-                return RedirectToAction(nameof(PunctuationResult), new { id = testResult.Id });
+                return RedirectToAction(nameof(PunctuationTestResult), new { id = testResult.Id });
             }
 
             var viewModel = new TakePunctuationTestViewModel
