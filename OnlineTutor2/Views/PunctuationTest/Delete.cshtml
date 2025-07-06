@@ -1,0 +1,251 @@
+﻿@model OnlineTutor2.Models.PunctuationTest
+@{
+    ViewData["Title"] = "Удаление теста";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-exclamation-triangle"></i> Подтверждение удаления
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-warning"></i>
+                    <strong>Внимание!</strong> Вы собираетесь удалить тест. Это действие нельзя отменить.
+                </div>
+
+                <h5>Вы действительно хотите удалить этот тест?</h5>
+
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2"
+                                     style="width: 60px; height: 60px;">
+                                    <i class="fas fa-spell-check text-white" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <span class="badge bg-@(Model.IsActive ? "success" : "secondary")">
+                                    @(Model.IsActive ? "Активный" : "Неактивный")
+                                </span>
+                            </div>
+                            <div class="col-md-9">
+                                <h6 class="card-title">@Model.Title</h6>
+                                @if (!string.IsNullOrEmpty(Model.Description))
+                                {
+                                    <p class="card-text text-muted">@Model.Description</p>
+                                }
+
+                                <div class="row">
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-clock"></i> Время: @Model.TimeLimit минут
+                                        </small>
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-redo"></i> Попытки: @Model.MaxAttempts
+                                        </small>
+                                        @if (Model.Class != null)
+                                        {
+                                            <small class="text-muted d-block">
+                                                <i class="fas fa-users"></i> Класс: @Model.Class.Name
+                                            </small>
+                                        }
+                                        else
+                                        {
+                                            <small class="text-muted d-block">
+                                                <i class="fas fa-globe"></i> Доступен всем
+                                            </small>
+                                        }
+                                    </div>
+                                    <div class="col-6">
+                                        @if (Model.StartDate.HasValue)
+                                        {
+                                            <small class="text-muted d-block">
+                                                <i class="fas fa-play"></i> Начало: @Model.StartDate.Value.ToString("dd.MM.yyyy HH:mm")
+                                            </small>
+                                        }
+                                        @if (Model.EndDate.HasValue)
+                                        {
+                                            <small class="text-muted d-block">
+                                                <i class="fas fa-stop"></i> Окончание: @Model.EndDate.Value.ToString("dd.MM.yyyy HH:mm")
+                                            </small>
+                                        }
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-calendar"></i> Создан: @Model.CreatedAt.ToString("dd.MM.yyyy")
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h5 class="text-danger">@(Model.Questions?.Count ?? 0)</h5>
+                            <small class="text-muted">вопросов</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h5 class="text-danger">@(Model.TestResults?.Count ?? 0)</h5>
+                            <small class="text-muted">результатов</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h5 class="text-danger">
+                                @(Model.TestResults?.SelectMany(tr => tr.Answers)?.Count() ?? 0)
+                            </h5>
+                            <small class="text-muted">ответов учеников</small>
+                        </div>
+                    </div>
+                </div>
+
+                @if (Model.TestResults?.Any() == true)
+                {
+                    <div class="alert alert-danger mt-3">
+                        <i class="fas fa-ban"></i>
+                        <strong>Удаление невозможно!</strong> Тест уже проходили ученики.
+                        Вместо удаления рекомендуется деактивировать тест.
+
+                        <div class="mt-2">
+                            <strong>Результаты учеников:</strong>
+                            <ul class="mb-0 mt-1">
+                                @foreach (var result in Model.TestResults.Take(5))
+                                {
+                                    <li>
+                                        @(result.Student?.User?.FullName ?? "Неизвестный ученик") -
+                                        @result.Percentage.ToString("F1")%
+                                        (@(result.CompletedAt?.ToString("dd.MM.yyyy") ?? "не завершен"))
+                                    </li>
+                                }
+                                @if (Model.TestResults.Count > 5)
+                                {
+                                    <li class="text-muted">...и еще @(Model.TestResults.Count - 5) результатов</li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                }
+                else if (Model.Questions?.Any() == true)
+                {
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Будет удалено:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Тест "@Model.Title"</li>
+                            <li>Все вопросы (@(Model.Questions?.Count ?? 0) шт.)</li>
+                            <li>Настройки и конфигурация теста</li>
+                        </ul>
+                    </div>
+                }
+
+                @if (Model.TestResults?.Any() == true)
+                {
+                    <div class="alert alert-info mt-3">
+                        <h6><i class="fas fa-lightbulb"></i> Рекомендуемые действия:</h6>
+                        <ul class="mb-0">
+                            <li><strong>Деактивировать тест</strong> - ученики не смогут его проходить, но результаты сохранятся</li>
+                            <li><strong>Скрыть от учеников</strong> - убрать назначение классу</li>
+                            <li><strong>Архивировать</strong> - изменить название, добавив "[АРХИВ]"</li>
+                        </ul>
+                    </div>
+                }
+
+                @if (Model.TestResults?.Any() != true)
+                {
+                    <div class="mt-4">
+                        <label for="confirmationText" class="form-label">
+                            <strong>Для подтверждения введите название теста:</strong>
+                        </label>
+                        <input type="text" id="confirmationText" class="form-control"
+                               placeholder="@Model.Title" autocomplete="off" />
+                        <div class="form-text">
+                            Введите: <strong>@Model.Title</strong>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="card-footer">
+                <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                    <div>
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info">
+                            <i class="fas fa-eye"></i> Просмотр
+                        </a>
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">
+                            <i class="fas fa-edit"></i> Редактировать
+                        </a>
+                    </div>
+                    <div>
+                        <a asp-controller="Test" asp-action="Category" asp-route-id="1" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Отмена
+                        </a>
+
+                        @if (Model.TestResults?.Any() == true)
+                        {
+                            <form asp-action="ToggleStatus" asp-route-id="@Model.Id" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-pause"></i> Деактивировать
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline" id="deleteForm">
+                                <button type="submit" class="btn btn-danger" id="deleteButton" disabled>
+                                    <i class="fas fa-trash"></i> Да, удалить тест
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/layout.js" asp-append-version="true"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const confirmationText = document.getElementById('confirmationText');
+            const deleteButton = document.getElementById('deleteButton');
+            const deleteForm = document.getElementById('deleteForm');
+            const expectedText = '@Model.Title';
+
+            if (confirmationText && deleteButton && deleteForm) {
+                confirmationText.addEventListener('input', function() {
+                    if (this.value.trim() === expectedText) {
+                        deleteButton.disabled = false;
+                        deleteButton.classList.remove('btn-outline-danger');
+                        deleteButton.classList.add('btn-danger');
+                    } else {
+                        deleteButton.disabled = true;
+                        deleteButton.classList.remove('btn-danger');
+                        deleteButton.classList.add('btn-outline-danger');
+                    }
+                });
+
+                // Предотвращаем случайную отправку формы
+                deleteForm.addEventListener('submit', function(e) {
+                    if (confirmationText.value.trim() !== expectedText) {
+                        e.preventDefault();
+                        alert('Введите точное название теста для подтверждения удаления');
+                        return false;
+                    }
+
+                    // Дополнительное подтверждение
+                    if (!confirm('Вы действительно хотите удалить этот тест? Это действие нельзя отменить!')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+            }
+        });
+    </script>
+}
