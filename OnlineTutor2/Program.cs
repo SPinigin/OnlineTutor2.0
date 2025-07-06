@@ -51,6 +51,7 @@ builder.Services.AddLogging(logging =>
 
 builder.Services.AddScoped<IStudentImportService, StudentImportService>();
 builder.Services.AddScoped<ISpellingQuestionImportService, SpellingQuestionImportService>();
+builder.Services.AddScoped<IPunctuationQuestionImportService, PunctuationQuestionImportService>();
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
