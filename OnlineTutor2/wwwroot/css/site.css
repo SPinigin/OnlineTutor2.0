@@ -377,3 +377,68 @@ body {
         display: none !important;
     }
 }
+
+/* Стили для модального окна аналитики */
+.result - display {
+    display: flex;
+    flex - direction: column;
+    align - items: flex - start;
+    gap: 2px;
+}
+
+    .result - display.badge {
+        font - size: 0.8rem;
+    }
+
+    .result - display small {
+        font - size: 0.7rem;
+        line - height: 1.2;
+    }
+
+.grade - badge {
+    display: inline - flex;
+    align - items: center;
+    justify - content: center;
+    width: 24px;
+    height: 24px;
+    border - radius: 50 %;
+    font - size: 0.75rem;
+    font - weight: bold;
+    color: white;
+}
+
+.grade - excellent {
+    background - color: #28a745;
+}
+
+.grade - good {
+    background - color: #17a2b8;
+}
+
+.grade - satisfactory {
+    background - color: #ffc107;
+    color: #212529;
+}
+
+.grade - unsatisfactory {
+    background - color: #dc3545;
+}
+
+.students - minimal {
+    display: flex;
+    flex - wrap: wrap;
+    gap: 3px;
+    margin - top: 4px;
+}
+
+.student - tag {
+    display: inline - block;
+    background: #f8f9fa;
+    color: #6c757d;
+    padding: 1px 6px;
+    border - radius: 8px;
+    font - size: 0.9rem;
+    line - height: 1.2;
+    border: 1px solid #e9ecef;
+}
+

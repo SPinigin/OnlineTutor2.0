@@ -512,8 +512,11 @@
     </div>
 </div>
 
+@await Html.PartialAsync("_StudentDetailsModal")
+
 @section Styles {
     <link rel="stylesheet" href="~/css/test-analytics.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 }
 
 @functions {

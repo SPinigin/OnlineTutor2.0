@@ -501,89 +501,11 @@
     </div>
 </div>
 
-<div class="modal fade" id="studentDetailsModal" tabindex="-1" aria-labelledby="studentModalName" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="studentModalName">
-                    <i class="fas fa-user-graduate text-primary"></i>
-                    Детальная информация об ученике
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-            </div>
-            <div class="modal-body">
-
-                <div id="studentModalLoading" class="text-center py-4">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Загрузка...</span>
-                    </div>
-                    <p class="mt-2 text-muted">Загрузка данных...</p>
-                </div>
-
-                <div id="studentModalContent" style="display: none;">
-
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h6 class="text-primary border-bottom pb-1">
-                                <i class="fas fa-info-circle"></i> Общая информация
-                            </h6>
-                            <dl class="row">
-                                <dt class="col-sm-4">Ученик:</dt>
-                                <dd class="col-sm-8" id="studentFullName">-</dd>
-                                <dt class="col-sm-4">Школа:</dt>
-                                <dd class="col-sm-8" id="studentSchool">-</dd>
-                                <dt class="col-sm-4">Класс:</dt>
-                                <dd class="col-sm-8" id="studentClass">-</dd>
-                            </dl>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-success border-bottom pb-1">
-                                <i class="fas fa-chart-line"></i> Статистика по тесту
-                            </h6>
-                            <dl class="row">
-                                <dt class="col-sm-5">Попыток:</dt>
-                                <dd class="col-sm-7" id="studentAttempts">-</dd>
-                                <dt class="col-sm-5">Лучший результат:</dt>
-                                <dd class="col-sm-7" id="studentBestResult">-</dd>
-                                <dt class="col-sm-5">Всего времени:</dt>
-                                <dd class="col-sm-7" id="studentTotalTime">-</dd>
-                            </dl>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <h6 class="text-info border-bottom pb-1">
-                            <i class="fas fa-list-alt"></i> История попыток
-                        </h6>
-                        <div id="studentAttemptsList">
-                        </div>
-                    </div>
-
-                    <div>
-                        <h6 class="text-warning border-bottom pb-1">
-                            <i class="fas fa-exclamation-triangle"></i> Анализ ошибок
-                        </h6>
-                        <div id="studentMistakes">
-                        </div>
-                    </div>
-                </div>
-
-                <div id="studentModalError" style="display: none;" class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span id="studentErrorMessage">Произошла ошибка при загрузке данных</span>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times"></i> Закрыть
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+@await Html.PartialAsync("_StudentDetailsModal")
 
 @section Styles {
     <link rel="stylesheet" href="~/css/test-analytics.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 }
 
 @functions {
