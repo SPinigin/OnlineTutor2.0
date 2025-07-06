@@ -142,7 +142,7 @@
                 <li><a asp-action="ImportQuestions" asp-route-id="@Model.Id" class="dropdown-item"><i class="fas fa-file-import"></i> Импорт</a></li>
                 <li><a asp-action="Edit" asp-route-id="@Model.Id" class="dropdown-item"><i class="fas fa-edit"></i> Редактировать</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" asp-controller="TestAnalytics" asp-action="Punctuation"><i class="fas fa-chart-bar"></i> Аналитика</a></li>
+                <li><a class="dropdown-item" asp-controller="TestAnalytics" asp-action="Punctuation" asp-route-id="@Model.Id"><i class="fas fa-chart-bar"></i> Аналитика</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="#"><i class="fas fa-copy"></i> Дублировать</a></li>
                 <li><a class="dropdown-item" href="#"><i class="fas fa-play"></i> Предварительный просмотр</a></li>
