@@ -255,6 +255,292 @@ namespace OnlineTutor2.Controllers
             return questionAnalytics;
         }
 
+        // GET: TestAnalytics/Punctuation/5 - Аналитика теста на пунктуацию
+        public async Task<IActionResult> Punctuation(int id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var test = await _context.PunctuationTests
+                .Include(pt => pt.Teacher)
+                .Include(pt => pt.Class)
+                    .ThenInclude(c => c.Students)
+                        .ThenInclude(s => s.User)
+                .Include(pt => pt.Questions.OrderBy(q => q.OrderIndex))
+                .Include(pt => pt.TestResults)
+                    .ThenInclude(tr => tr.Student)
+                        .ThenInclude(s => s.User)
+                .Include(pt => pt.TestResults)
+                    .ThenInclude(tr => tr.Answers)
+                        .ThenInclude(a => a.Question)
+                .FirstOrDefaultAsync(pt => pt.Id == id && pt.TeacherId == currentUser.Id);
+
+            if (test == null) return NotFound();
+
+            var analytics = await BuildPunctuationAnalyticsAsync(test);
+            return View("PunctuationAnalytics", analytics);
+        }
+
+        // Методы для тестов на пунктуацию
+        private async Task<PunctuationTestAnalyticsViewModel> BuildPunctuationAnalyticsAsync(PunctuationTest test)
+        {
+            var analytics = new PunctuationTestAnalyticsViewModel
+            {
+                Test = test
+            };
+
+            var allStudents = new List<Student>();
+            if (test.Class != null)
+            {
+                allStudents = test.Class.Students.ToList();
+            }
+            else
+            {
+                var teacherClassIds = await _context.Classes
+                    .Where(c => c.TeacherId == test.TeacherId)
+                    .Select(c => c.Id)
+                    .ToListAsync();
+
+                allStudents = await _context.Students
+                    .Include(s => s.User)
+                    .Where(s => s.ClassId.HasValue && teacherClassIds.Contains(s.ClassId.Value))
+                    .ToListAsync();
+            }
+
+            analytics.Statistics = BuildPunctuationStatistics(test, allStudents);
+            analytics.StudentResults = BuildPunctuationStudentResults(test, allStudents);
+            analytics.QuestionAnalytics = BuildPunctuationQuestionAnalytics(test);
+
+            return analytics;
+        }
+
+        private TestStatistics BuildPunctuationStatistics(PunctuationTest test, List<Student> allStudents)
+        {
+            var completedResults = test.TestResults.Where(tr => tr.IsCompleted).ToList();
+            var inProgressResults = test.TestResults.Where(tr => !tr.IsCompleted).ToList();
+            var studentsWithResults = test.TestResults.Select(tr => tr.StudentId).Distinct().Count();
+
+            var stats = new TestStatistics
+            {
+                TotalStudents = allStudents.Count,
+                StudentsCompleted = completedResults.Select(tr => tr.StudentId).Distinct().Count(),
+                StudentsInProgress = inProgressResults.Select(tr => tr.StudentId).Distinct().Count(),
+                StudentsNotStarted = allStudents.Count - studentsWithResults
+            };
+
+            if (completedResults.Any())
+            {
+                stats.AverageScore = Math.Round(completedResults.Average(tr => tr.Score), 1);
+                stats.AveragePercentage = Math.Round(completedResults.Average(tr => tr.Percentage), 1);
+                stats.HighestScore = completedResults.Max(tr => tr.Score);
+                stats.LowestScore = completedResults.Min(tr => tr.Score);
+                stats.FirstCompletion = completedResults.Min(tr => tr.CompletedAt);
+                stats.LastCompletion = completedResults.Max(tr => tr.CompletedAt);
+
+                var completionTimes = completedResults
+                    .Where(tr => tr.CompletedAt.HasValue)
+                    .Select(tr => tr.CompletedAt.Value - tr.StartedAt)
+                    .ToList();
+
+                if (completionTimes.Any())
+                {
+                    var averageTicks = (long)completionTimes.Average(ts => ts.Ticks);
+                    stats.AverageCompletionTime = new TimeSpan(averageTicks);
+                }
+
+                stats.GradeDistribution = new Dictionary<string, int>
+                {
+                    ["Отлично (80-100%)"] = completedResults.Count(tr => tr.Percentage >= 80),
+                    ["Хорошо (60-79%)"] = completedResults.Count(tr => tr.Percentage >= 60 && tr.Percentage < 80),
+                    ["Удовлетворительно (40-59%)"] = completedResults.Count(tr => tr.Percentage >= 40 && tr.Percentage < 60),
+                    ["Неудовлетворительно (0-39%)"] = completedResults.Count(tr => tr.Percentage < 40)
+                };
+            }
+
+            return stats;
+        }
+
+        private List<PunctuationStudentResultViewModel> BuildPunctuationStudentResults(PunctuationTest test, List<Student> allStudents)
+        {
+            var studentResults = new List<PunctuationStudentResultViewModel>();
+
+            foreach (var student in allStudents)
+            {
+                var results = test.TestResults.Where(tr => tr.StudentId == student.Id).ToList();
+                var completedResults = results.Where(tr => tr.IsCompleted).ToList();
+
+                var studentResult = new PunctuationStudentResultViewModel
+                {
+                    Student = student,
+                    Results = results,
+                    AttemptsUsed = results.Count,
+                    HasCompleted = completedResults.Any(),
+                    IsInProgress = results.Any(tr => !tr.IsCompleted)
+                };
+
+                if (completedResults.Any())
+                {
+                    studentResult.BestResult = completedResults.OrderByDescending(tr => tr.Percentage).First();
+                    studentResult.LatestResult = completedResults.OrderByDescending(tr => tr.CompletedAt).First();
+
+                    var totalTime = completedResults
+                        .Where(tr => tr.CompletedAt.HasValue)
+                        .Sum(tr => (tr.CompletedAt.Value - tr.StartedAt).Ticks);
+
+                    if (totalTime > 0)
+                    {
+                        studentResult.TotalTimeSpent = new TimeSpan(totalTime);
+                    }
+                }
+
+                studentResults.Add(studentResult);
+            }
+
+            return studentResults.OrderBy(sr => sr.Student.User.LastName).ToList();
+        }
+
+        private List<PunctuationQuestionAnalyticsViewModel> BuildPunctuationQuestionAnalytics(PunctuationTest test)
+        {
+            var questionAnalytics = new List<PunctuationQuestionAnalyticsViewModel>();
+
+            foreach (var question in test.Questions.OrderBy(q => q.OrderIndex))
+            {
+                var answers = test.TestResults
+                    .SelectMany(tr => tr.Answers)
+                    .Where(a => a.PunctuationQuestionId == question.Id)
+                    .ToList();
+
+                var analytics = new PunctuationQuestionAnalyticsViewModel
+                {
+                    Question = question,
+                    TotalAnswers = answers.Count,
+                    CorrectAnswers = answers.Count(a => a.IsCorrect),
+                    IncorrectAnswers = answers.Count(a => !a.IsCorrect)
+                };
+
+                if (answers.Any())
+                {
+                    analytics.SuccessRate = Math.Round((double)analytics.CorrectAnswers / analytics.TotalAnswers * 100, 1);
+                    // Анализ частых ошибок
+                    var incorrectAnswers = answers
+                        .Where(a => !a.IsCorrect)
+                        .GroupBy(a => a.StudentAnswer ?? "Пустой ответ")
+                        .Select(g => new CommonMistakeViewModel
+                        {
+                            IncorrectAnswer = g.Key,
+                            Count = g.Count(),
+                            Percentage = Math.Round((double)g.Count() / analytics.IncorrectAnswers * 100, 1),
+                            StudentNames = g.Select(a => a.TestResult.Student.User.FullName).ToList()
+                        })
+                        .OrderByDescending(m => m.Count)
+                        .Take(5)
+                        .ToList();
+
+                    analytics.CommonMistakes = incorrectAnswers;
+                }
+
+                questionAnalytics.Add(analytics);
+            }
+
+            // Отмечаем самые сложные и легкие вопросы
+            if (questionAnalytics.Any(qa => qa.TotalAnswers > 0))
+            {
+                var lowestSuccessRate = questionAnalytics.Where(qa => qa.TotalAnswers > 0).Min(qa => qa.SuccessRate);
+                var highestSuccessRate = questionAnalytics.Where(qa => qa.TotalAnswers > 0).Max(qa => qa.SuccessRate);
+
+                foreach (var qa in questionAnalytics)
+                {
+                    if (qa.TotalAnswers > 0)
+                    {
+                        qa.IsMostDifficult = qa.SuccessRate == lowestSuccessRate;
+                        qa.IsEasiest = qa.SuccessRate == highestSuccessRate;
+                    }
+                }
+            }
+
+            return questionAnalytics;
+        }
+
+        // Метод для получения детальной информации о студенте (пунктуация)
+        [HttpGet]
+        public async Task<IActionResult> GetPunctuationStudentDetails(int studentId, int testId)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            // Проверяем права доступа к тесту
+            var test = await _context.PunctuationTests
+                .FirstOrDefaultAsync(pt => pt.Id == testId && pt.TeacherId == currentUser.Id);
+
+            if (test == null)
+                return NotFound();
+
+            var student = await _context.Students
+                .Include(s => s.User)
+                .Include(s => s.Class)
+                .FirstOrDefaultAsync(s => s.Id == studentId);
+
+            if (student == null)
+                return NotFound();
+
+            var results = await _context.PunctuationTestResults
+                .Include(tr => tr.Answers)
+                    .ThenInclude(a => a.Question)
+                .Where(tr => tr.PunctuationTestId == testId && tr.StudentId == studentId && tr.IsCompleted)
+                .OrderByDescending(tr => tr.CompletedAt)
+                .ToListAsync();
+
+            var bestResult = results.OrderByDescending(r => r.Percentage).FirstOrDefault();
+
+            var mistakes = results
+                .SelectMany(r => r.Answers)
+                .Where(a => !a.IsCorrect)
+                .GroupBy(a => new {
+                    a.StudentAnswer,
+                    a.Question.CorrectPositions,
+                    a.Question.SentenceWithNumbers
+                })
+                .Select(g => new
+                {
+                    IncorrectAnswer = g.Key.StudentAnswer ?? "Пустой ответ",
+                    CorrectAnswer = g.Key.CorrectPositions ?? "Без запятых",
+                    SentenceWithNumbers = g.Key.SentenceWithNumbers,
+                    Count = g.Count()
+                })
+                .OrderByDescending(m => m.Count)
+                .Take(10)
+                .ToList();
+
+            var totalTime = results
+                .Where(r => r.CompletedAt.HasValue)
+                .Sum(r => (r.CompletedAt.Value - r.StartedAt).Ticks);
+
+            var response = new
+            {
+                FullName = student.User.FullName,
+                School = student.School,
+                ClassName = student.Class?.Name,
+                AttemptsUsed = results.Count,
+                MaxAttempts = test.MaxAttempts,
+                BestResult = bestResult != null ? new
+                {
+                    Percentage = bestResult.Percentage,
+                    Score = bestResult.Score,
+                    MaxScore = bestResult.MaxScore
+                } : null,
+                TotalTimeSpent = totalTime > 0 ? new TimeSpan(totalTime).ToString(@"hh\:mm\:ss") : null,
+                Attempts = results.Select(r => new
+                {
+                    AttemptNumber = r.AttemptNumber,
+                    Percentage = r.Percentage,
+                    Score = r.Score,
+                    MaxScore = r.MaxScore,
+                    Duration = r.CompletedAt.HasValue ? (r.CompletedAt.Value - r.StartedAt).ToString(@"mm\:ss") : null,
+                    CompletedAt = r.CompletedAt
+                }).ToList(),
+                Mistakes = mistakes
+            };
+
+            return Json(response);
+        }
+
         // Методы для обычных тестов
         private async Task<RegularTestAnalyticsViewModel> BuildRegularTestAnalyticsAsync(Test test)
         {

@@ -1,4 +1,4 @@
-﻿@model OnlineTutor2.ViewModels.SpellingTestAnalyticsViewModel
+﻿@model OnlineTutor2.ViewModels.PunctuationTestAnalyticsViewModel
 @{
     ViewData["Title"] = $"Аналитика теста: {Model.Test.Title}";
 }
@@ -8,19 +8,19 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-controller="Test" asp-action="Category" asp-route-id="1">Тесты на правописание</a>
+                    <a asp-controller="Test" asp-action="Category" asp-route-id="2">Тесты на пунктуацию</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a asp-controller="SpellingTest" asp-action="Details" asp-route-id="@Model.Test.Id">@Model.Test.Title</a>
+                    <a asp-controller="PunctuationTest" asp-action="Details" asp-route-id="@Model.Test.Id">@Model.Test.Title</a>
                 </li>
                 <li class="breadcrumb-item active">Аналитика</li>
             </ol>
         </nav>
-        <h2><i class="fas fa-chart-bar text-primary"></i> Аналитика теста на правописание</h2>
+        <h2><i class="fas fa-chart-bar text-warning"></i> Аналитика теста на пунктуацию</h2>
         <p class="text-muted">Детальный анализ результатов и статистика прохождения</p>
     </div>
     <div>
-        <a asp-controller="SpellingTest" asp-action="Details" asp-route-id="@Model.Test.Id" class="btn btn-outline-secondary">
+        <a asp-controller="PunctuationTest" asp-action="Details" asp-route-id="@Model.Test.Id" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left"></i> Назад к тесту
         </a>
     </div>
@@ -85,18 +85,17 @@
 
 <div class="card mb-4 border-1 shadow-sm">
     <div class="card-header bg-white border-0 py-3">
-        <h6 class="mb-0 text-primary">
+        <h6 class="mb-0 text-warning">
             <i class="fas fa-info-circle me-2"></i>Информация о тесте
         </h6>
     </div>
     <div class="card-body py-3">
         <div class="row">
-
             <div class="col-md-4">
                 <div class="info-column">
                     <div class="test-info-item mb-2">
-                        <i class="fas fa-spell-check text-primary"></i>
-                        <span class="info-label">Тест на правописание</span>
+                        <i class="fas fa-exclamation text-warning"></i>
+                        <span class="info-label">Тест на пунктуацию</span>
                     </div>
                     @if (!string.IsNullOrEmpty(Model.Test.Description))
                     {
@@ -197,7 +196,7 @@
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="questions-tab" data-bs-toggle="tab" data-bs-target="#questions" type="button" role="tab">
-            <i class="fas fa-spell-check"></i> Анализ теста (@Model.QuestionAnalytics.Count)
+            <i class="fas fa-exclamation"></i> Анализ теста (@Model.QuestionAnalytics.Count)
         </button>
     </li>
 </ul>
@@ -206,7 +205,6 @@
 
     <div class="tab-pane fade show active" id="overview" role="tabpanel">
         <div class="row mt-4">
-
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
@@ -402,7 +400,7 @@
                                         @if (studentResult.Results.Any())
                                         {
                                             <button type="button" class="btn btn-outline-info btn-sm"
-                                                    onclick="showStudentDetails(@studentResult.Student.Id, '@studentResult.Student.User.FullName')">
+                                                    onclick="showPunctuationStudentDetails(@studentResult.Student.Id, '@studentResult.Student.User.FullName')">
                                                 <i class="fas fa-eye"></i> Детали
                                             </button>
                                         }
@@ -423,16 +421,15 @@
                 var questionIndex = Model.QuestionAnalytics.IndexOf(qa) + 1;
 
                 <div class="card mb-3 border-0 shadow-sm @(qa.IsMostDifficult ? "border-start border-danger border-3" : qa.IsEasiest ? "border-start border-success border-3" : "")">
-
                     <div class="card-header bg-transparent border-0 py-3">
                         <div class="row align-items-center">
                             <div class="col">
                                 <div class="d-flex align-items-center gap-3">
-                                    <span class="badge bg-primary fs-6 px-3 py-2">@questionIndex</span>
+                                    <span class="badge bg-warning fs-6 px-3 py-2">@questionIndex</span>
                                     <div>
-                                        <h6 class="mb-1 fw-bold text-primary">@qa.Question.WordWithGap</h6>
+                                        <h6 class="mb-1 fw-bold text-warning">Расстановка знаков препинания</h6>
                                         <small class="text-muted">
-                                            @qa.Question.CorrectLetter → @qa.Question.FullWord (@qa.Question.Points б.)
+                                            Правильно: @(string.IsNullOrEmpty(qa.Question.CorrectPositions) ? "Без запятых" : qa.Question.CorrectPositions) (@qa.Question.Points б.)
                                         </small>
                                     </div>
                                 </div>
@@ -455,129 +452,62 @@
                         </div>
                     </div>
 
-                    @if (!string.IsNullOrEmpty(qa.Question.Hint))
-                    {
-                        <div class="card-body py-2 bg-light">
-                            <small class="text-muted">
-                                <i class="fas fa-lightbulb me-1"></i>@qa.Question.Hint
-                            </small>
+                    <div class="card-body pt-2 pb-3">
+                        <div class="mb-3 p-3 bg-light rounded">
+                            <h6 class="mb-2 text-warning">Предложение:</h6>
+                            <div class="sentence-display">@qa.Question.SentenceWithNumbers</div>
                         </div>
-                    }
 
-                    @if (qa.CommonMistakes.Any())
-                    {
-                        <div class="card-body pt-2">
-                            <div class="row g-2">
-                                @foreach (var mistake in qa.CommonMistakes.Take(4))
-                                {
-                                    <div class="col-md-6">
-                                        <div class="p-2 bg-light rounded border-start border-danger border-2">
-                                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <span class="fw-bold text-danger">"@mistake.IncorrectAnswer"</span>
-                                                <small class="badge bg-danger">@mistake.Count</small>
-                                            </div>
+                        @if (!string.IsNullOrEmpty(qa.Question.PlainSentence))
+                        {
+                            <div class="mb-3 p-3 bg-success bg-opacity-10 rounded border-start border-success border-3">
+                                <h6 class="mb-2 text-success">Правильный вариант:</h6>
+                                <div class="fw-bold">@qa.Question.PlainSentence</div>
+                            </div>
+                        }
 
-                                            <div class="students-minimal">
-                                                @foreach (var name in mistake.StudentNames)
-                                                {
-                                                    <span class="student-tag">@name</span>
-                                                }
+                        @if (!string.IsNullOrEmpty(qa.Question.Hint))
+                        {
+                            <div class="mb-3 p-3 bg-info bg-opacity-10 rounded border-start border-info border-3">
+                                <h6 class="mb-2 text-info"><i class="fas fa-lightbulb"></i> Подсказка:</h6>
+                                <small>@qa.Question.Hint</small>
+                            </div>
+                        }
+
+                        @if (qa.CommonMistakes.Any())
+                        {
+                            <div class="mt-3">
+                                <h6 class="text-danger"><i class="fas fa-exclamation-triangle"></i> Частые ошибки:</h6>
+                                <div class="row g-2">
+                                    @foreach (var mistake in qa.CommonMistakes.Take(4))
+                                    {
+                                        <div class="col-md-6">
+                                            <div class="p-2 bg-light rounded border-start border-danger border-2">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span class="fw-bold text-danger">"@mistake.IncorrectAnswer"</span>
+                                                    <small class="badge bg-danger">@mistake.Count</small>
+                                                </div>
+                                                <div class="students-minimal">
+                                                    @foreach (var name in mistake.StudentNames)
+                                                    {
+                                                        <span class="student-tag">@name</span>
+                                                    }
+                                                </div>
                                             </div>
                                         </div>
+                                    }
+                                </div>
+                                @if (qa.CommonMistakes.Count > 4)
+                                {
+                                    <div class="text-center mt-2">
+                                        <small class="text-muted">и еще @(qa.CommonMistakes.Count - 4) вариантов ошибок</small>
                                     </div>
                                 }
                             </div>
-                            @if (qa.CommonMistakes.Count > 4)
-                            {
-                                <div class="text-center mt-2">
-                                    <small class="text-muted">и еще @(qa.CommonMistakes.Count - 4) вариантов ошибок</small>
-                                </div>
-                            }
-                        </div>
-                    }
+                        }
+                    </div>
                 </div>
             }
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="studentDetailsModal" tabindex="-1" aria-labelledby="studentModalName" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="studentModalName">
-                    <i class="fas fa-user-graduate text-primary"></i>
-                    Детальная информация об ученике
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-            </div>
-            <div class="modal-body">
-
-                <div id="studentModalLoading" class="text-center py-4">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Загрузка...</span>
-                    </div>
-                    <p class="mt-2 text-muted">Загрузка данных...</p>
-                </div>
-
-                <div id="studentModalContent" style="display: none;">
-
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h6 class="text-primary border-bottom pb-1">
-                                <i class="fas fa-info-circle"></i> Общая информация
-                            </h6>
-                            <dl class="row">
-                                <dt class="col-sm-4">Ученик:</dt>
-                                <dd class="col-sm-8" id="studentFullName">-</dd>
-                                <dt class="col-sm-4">Школа:</dt>
-                                <dd class="col-sm-8" id="studentSchool">-</dd>
-                                <dt class="col-sm-4">Класс:</dt>
-                                <dd class="col-sm-8" id="studentClass">-</dd>
-                            </dl>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-success border-bottom pb-1">
-                                <i class="fas fa-chart-line"></i> Статистика по тесту
-                            </h6>
-                            <dl class="row">
-                                <dt class="col-sm-5">Попыток:</dt>
-                                <dd class="col-sm-7" id="studentAttempts">-</dd>
-                                <dt class="col-sm-5">Лучший результат:</dt>
-                                <dd class="col-sm-7" id="studentBestResult">-</dd>
-                                <dt class="col-sm-5">Всего времени:</dt>
-                                <dd class="col-sm-7" id="studentTotalTime">-</dd>
-                            </dl>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <h6 class="text-info border-bottom pb-1">
-                            <i class="fas fa-list-alt"></i> История попыток
-                        </h6>
-                        <div id="studentAttemptsList">
-                        </div>
-                    </div>
-
-                    <div>
-                        <h6 class="text-warning border-bottom pb-1">
-                            <i class="fas fa-exclamation-triangle"></i> Анализ ошибок
-                        </h6>
-                        <div id="studentMistakes">
-                        </div>
-                    </div>
-                </div>
-
-                <div id="studentModalError" style="display: none;" class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span id="studentErrorMessage">Произошла ошибка при загрузке данных</span>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times"></i> Закрыть
-                </button>
-            </div>
         </div>
     </div>
 </div>
@@ -613,16 +543,21 @@
     <script src="~/js/test-analytics.js" asp-append-version="true"></script>
 
     <script>
-        // Специфичная функция для правописания
-        function showStudentDetails(studentId, studentName) {
-            loadSpellingStudentDetails(studentId, studentName, @Model.Test.Id);
+        // Специфичная функция для пунктуации
+        function showPunctuationStudentDetails(studentId, studentName) {
+            loadPunctuationStudentDetails(studentId, studentName, @Model.Test.Id);
         }
 
-        // Загрузка данных для правописания (специфичный URL и обработка)
-        function loadSpellingStudentDetails(studentId, studentName, testId) {
-            console.log('Loading spelling student details for:', studentId, 'test:', testId);
+        // Для совместимости
+        function showStudentDetails(studentId, studentName) {
+            showPunctuationStudentDetails(studentId, studentName);
+        }
 
-            // Используем общие методы из test-analytics.js
+        // Загрузка данных для пунктуации (специфичный URL и обработка)
+        function loadPunctuationStudentDetails(studentId, studentName, testId) {
+            console.log('Loading punctuation student details for:', studentId, 'test:', testId);
+
+            // Используем общие методы
             window.testAnalytics.resetModalState();
 
             const nameElement = document.getElementById('studentModalName');
@@ -633,8 +568,8 @@
             window.testAnalytics.showLoading();
             $('#studentDetailsModal').modal('show');
 
-            // СПЕЦИФИЧНЫЙ URL для правописания
-            fetch(`/TestAnalytics/GetStudentDetails?studentId=${studentId}&testId=${testId}`, {
+            // СПЕЦИФИЧНЫЙ URL для пунктуации
+            fetch(`/TestAnalytics/GetPunctuationStudentDetails?studentId=${studentId}&testId=${testId}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -647,22 +582,22 @@
                 return response.json();
             })
             .then(data => {
-                console.log('Spelling data received:', data);
-                displaySpellingStudentDetails(data);
+                console.log('Punctuation data received:', data);
+                displayPunctuationStudentDetails(data);
             })
             .catch(error => {
-                console.error('Error loading spelling student details:', error);
+                console.error('Error loading punctuation student details:', error);
                 window.testAnalytics.showError(error.message);
             });
         }
 
-        // СПЕЦИФИЧНОЕ отображение данных для правописания
-        function displaySpellingStudentDetails(data) {
+        // СПЕЦИФИЧНОЕ отображение данных для пунктуации
+        function displayPunctuationStudentDetails(data) {
             // Используем общий метод для основных данных
             window.testAnalytics.displayBasicStudentInfo(data);
 
-            // СПЕЦИФИЧНАЯ логика для правописания
-            displaySpellingMistakesAnalysis(data.mistakes || []);
+            // СПЕЦИФИЧНАЯ логика для пунктуации
+            displayPunctuationMistakesAnalysis(data.mistakes || []);
 
             // Показываем контент
             const contentElement = document.getElementById('studentModalContent');
@@ -671,8 +606,8 @@
             }
         }
 
-        // СПЕЦИФИЧНЫЙ анализ ошибок для правописания
-        function displaySpellingMistakesAnalysis(mistakes) {
+        // СПЕЦИФИЧНЫЙ анализ ошибок для пунктуации
+        function displayPunctuationMistakesAnalysis(mistakes) {
             const container = document.getElementById('studentMistakes');
             if (!container) return;
 
@@ -691,7 +626,7 @@
                         </div>
                         <div class="mt-1">
                             <small class="text-muted d-block">Правильно: <strong class="text-success">${mistake.correctAnswer}</strong></small>
-                            <small class="text-muted">Слово: ${mistake.fullWord}</small>
+                            <small class="text-muted">Предложение: ${mistake.sentenceWithNumbers}</small>
                         </div>
                     </div>
                 </div>`;
