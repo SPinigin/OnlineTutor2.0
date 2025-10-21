@@ -200,22 +200,27 @@ else
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <a asp-action="Details" asp-route-id="@student.Id" 
+                                        <a asp-action="Details" asp-route-id="@student.Id"
                                            class="btn btn-outline-info btn-sm" title="Подробности">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a asp-action="Edit" asp-route-id="@student.Id" 
+                                        <a asp-action="Edit" asp-route-id="@student.Id"
                                            class="btn btn-outline-primary btn-sm" title="Редактировать">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" 
-                                                    data-bs-toggle="dropdown" title="Дополнительно">
+                                            <button type="button"
+                                                    class="btn btn-outline-secondary btn-sm dropdown-toggle"
+                                                    data-bs-toggle="dropdown"
+                                                    data-bs-auto-close="true"
+                                                    data-bs-boundary="viewport"
+                                                    aria-expanded="false"
+                                                    title="Дополнительно">
                                                 <i class="fas fa-ellipsis-v"></i>
                                             </button>
-                                            <ul class="dropdown-menu">
+                                            <ul class="dropdown-menu dropdown-menu-end">
                                                 <li>
-                                                    <button type="button" class="dropdown-item" 
+                                                    <button type="button" class="dropdown-item"
                                                             onclick="showAssignClassModal(@student.Id, '@student.User.FullName', @(student.ClassId?.ToString() ?? "null"))">
                                                         <i class="fas fa-users"></i> Назначить в класс
                                                     </button>
@@ -273,6 +278,31 @@ else
 </div>
 
 @section Scripts {
+    <style>
+        /* Исправление overflow для dropdown меню в таблице */
+        .table-responsive {
+            overflow: visible !important;
+        }
+
+        /* Альтернатива: если нужно сохранить горизонтальный скролл */
+        .table-responsive-fix {
+            overflow-x: auto;
+            overflow-y: visible;
+        }
+
+        /* Убираем появление вертикального скролла при открытии dropdown */
+        .table-responsive:has(.dropdown-menu.show) {
+            overflow: visible !important;
+        }
+
+        /* Для мобильных устройств */
+        @@media (max-width: 768px) {
+            .table-responsive {
+                overflow-x: auto;
+            }
+        }
+    </style>
+
     <script src="~/js/layout.js" asp-append-version="true"></script>
     <script>
         function showAssignClassModal(studentId, studentName, currentClassId) {
@@ -304,6 +334,20 @@ else
                 if (sortSelect) {
                     sortSelect.value = currentSort;
                 }
+            }
+
+            // Улучшенная обработка dropdown в table-responsive
+            const tableResponsive = document.querySelector('.table-responsive');
+            if (tableResponsive) {
+                // При открытии dropdown временно меняем overflow
+                tableResponsive.addEventListener('show.bs.dropdown', function() {
+                    this.style.overflow = 'visible';
+                });
+
+                // При закрытии возвращаем overflow обратно
+                tableResponsive.addEventListener('hide.bs.dropdown', function() {
+                    this.style.overflow = '';
+                });
             }
         });
     </script>
