@@ -124,8 +124,12 @@
                     <label for="confirmationText" class="form-label">
                         <strong>Для подтверждения введите фамилию ученика:</strong>
                     </label>
-                    <input type="text" id="confirmationText" class="form-control"
-                           placeholder="@Model.User.LastName" autocomplete="off" />
+                    <input type="text"
+                           id="confirmationText"
+                           class="form-control"
+                           placeholder="@Model.User.LastName"
+                           autocomplete="off"
+                           data-expected-text="@Model.User.LastName" />
                     <div class="form-text">
                         Введите: <strong>@Model.User.LastName</strong>
                     </div>
@@ -140,7 +144,7 @@
                         <a asp-action="Index" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Отмена
                         </a>
-                        <button type="submit" class="btn btn-danger" id="deleteButton" disabled>
+                        <button type="submit" class="btn btn-outline-danger" id="deleteButton" disabled>
                             <i class="fas fa-trash"></i> Да, удалить ученика
                         </button>
                     </div>
@@ -151,11 +155,13 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/layout.js" asp-append-version="true"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const confirmationText = document.getElementById('confirmationText');
             const deleteButton = document.getElementById('deleteButton');
-            const expectedText = '@Model.User.LastName';
+            // Безопасное получение ожидаемого текста из data-атрибута
+            const expectedText = confirmationText.getAttribute('data-expected-text');
 
             confirmationText.addEventListener('input', function() {
                 if (this.value.trim() === expectedText) {
