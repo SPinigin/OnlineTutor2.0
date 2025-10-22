@@ -362,8 +362,8 @@ namespace OnlineTutor2.Controllers
             await _context.SaveChangesAsync();
 
             var message = classId.HasValue
-                ? $"Ученик назначен в класс успешно!"
-                : "Ученик исключен из класса!";
+                ? $"Ученик назначен в онлайн-класс успешно!"
+                : "Ученик исключен из онлайн-класса!";
 
             TempData["SuccessMessage"] = message;
             return RedirectToAction(nameof(Index));

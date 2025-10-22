@@ -80,12 +80,10 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label asp-for="StudentNumber" class="form-label">
-                                    <i class="fas fa-id-card"></i> Номер ученика
+                                    <i class="fas fa-id-card"></i> ID ученика
                                 </label>
                                 <input asp-for="StudentNumber" class="form-control" readonly />
-                                <div class="form-text">
-                                    <i class="fas fa-info-circle"></i> Автоматически сгенерированный номер
-                                </div>
+
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label asp-for="Grade" class="form-label">
@@ -112,7 +110,7 @@
 
                         <div class="mb-3">
                             <label asp-for="ClassId" class="form-label">
-                                <i class="fas fa-users"></i> Назначен в класс
+                                <i class="fas fa-users"></i> Назначен в онлайн-класс
                             </label>
                             <select asp-for="ClassId" class="form-select" asp-items="@ViewBag.Classes">
                                 <option value="">Без назначения в класс</option>
