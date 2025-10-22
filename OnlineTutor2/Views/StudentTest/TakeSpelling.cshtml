@@ -303,7 +303,7 @@
 
         function saveAnswer(questionId, answer) {
             $.ajax({
-                url: '@Url.Action("SubmitAnswer")',
+                url: '@Url.Action("SubmitSpellingAnswer")',
                 type: 'POST',
                 data: {
                     TestResultId: @Model.TestResult.Id,
@@ -315,10 +315,15 @@
                     if (response.success) {
                         answers[questionId] = answer;
                         updateProgress();
+                    } else {
+                        console.error('Ошибка сохранения:', response.message);
+                        // Можно показать уведомление пользователю
                     }
                 },
-                error: function() {
-                    console.error('Ошибка сохранения ответа');
+                error: function(xhr, status, error) {
+                    console.error('Ошибка AJAX-запроса:', error);
+                    console.error('Статус:', xhr.status);
+                    console.error('Ответ сервера:', xhr.responseText);
                 }
             });
         }
