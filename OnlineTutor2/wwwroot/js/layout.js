@@ -45,7 +45,6 @@ function adjustBodyPadding() {
     });
 
     $('.main-content').css({
-        'min-height': 'calc(100vh - ' + (topPadding + bottomPadding + 15) + 'px)',
         'padding-bottom': '10px'
     });
 }
