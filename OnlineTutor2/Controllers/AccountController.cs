@@ -141,6 +141,7 @@ namespace OnlineTutor2.Controllers
                         // Если произошла ошибка при создании профиля, удаляем пользователя
                         await _userManager.DeleteAsync(user);
                         ModelState.AddModelError(string.Empty, "Произошла ошибка при создании профиля. Попробуйте еще раз.");
+                        Console.WriteLine(ex);
                         return View(model);
                     }
                 }

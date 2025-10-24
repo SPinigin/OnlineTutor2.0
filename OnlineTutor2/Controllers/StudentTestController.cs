@@ -267,6 +267,7 @@ namespace OnlineTutor2.Controllers
             catch (Exception ex)
             {
                 TempData["ErrorMessage"] = "Произошла ошибка при завершении теста.";
+                Console.WriteLine(ex);
                 return RedirectToAction(nameof(Index));
             }
         }
