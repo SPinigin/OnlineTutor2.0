@@ -34,30 +34,81 @@ else
                         {
                             <p class="card-text text-muted">@category.Description</p>
                         }
-
+                        @* to do!!! когда будут готовы все категории тестов *@ 
                         <div class="mt-auto">
                             <div class="row text-center">
                                 <div class="col-6">
                                     <div class="d-flex flex-column">
-                                        <span class="h4 text-primary mb-0">@category.SpellingTests.Count</span>
+                                        <span class="h4 text-primary mb-0">
+                                            @if (category.Id == 1)
+                                            {
+                                                @category.SpellingTests.Count
+                                            }
+                                            @* else if (category.Id == 2)
+                                            {
+                                                @category.PunctuationTests.Count
+                                            }
+                                            else if (category.Id == 3)
+                                            {
+                                                @category.PunctuationTests.Count
+                                            }
+                                            else if (category.Id == 4)
+                                            {
+                                                @category.PunctuationTests.Count
+                                            } *@
+                                            else if (category.Id == 5)
+                                            {
+                                                @category.PunctuationTests.Count
+                                            }
+                                            @* else if (category.Id == 6)
+                                            {
+                                                @category.PunctuationTests.Count
+                                            } *@
+                                            else
+                                            {
+                                                <text>0</text>
+                                            }
+                                        </span>
                                         <small class="text-muted">тестов</small>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="d-flex flex-column">
                                         <span class="h4 text-success mb-0">
-                                            @category.SpellingTests.SelectMany(st => st.TestResults).Count()
+                                            @if (category.Id == 1)
+                                            {
+                                                @category.SpellingTests.SelectMany(st => st.TestResults).Count()
+                                            }
+                                            @* else if (category.Id == 2)
+                                            {
+                                                @category.PunctuationTests.SelectMany(pt => pt.TestResults).Count()
+                                            }
+                                            else if (category.Id == 3)
+                                            {
+                                                @category.PunctuationTests.SelectMany(pt => pt.TestResults).Count()
+                                            }
+                                            else if (category.Id == 4)
+                                            {
+                                                @category.PunctuationTests.SelectMany(pt => pt.TestResults).Count()
+                                            } *@
+                                            else if (category.Id == 5)
+                                            {
+                                                @category.PunctuationTests.SelectMany(pt => pt.TestResults).Count()
+                                            }
+                                            @* else if (category.Id == 6)
+                                            {
+                                                @category.PunctuationTests.SelectMany(pt => pt.TestResults).Count()
+                                            } *@
+                                            else
+                                            {
+                                                <text>0</text>
+                                            }
                                         </span>
                                         <small class="text-muted">прохождений</small>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="card-footer text-center">
-                        <small class="text-muted">
-                            <i class="fas fa-mouse-pointer"></i> Нажмите для входа в категорию
-                        </small>
                     </div>
                 </div>
             </div>
