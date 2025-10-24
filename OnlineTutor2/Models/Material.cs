@@ -23,7 +23,7 @@ namespace OnlineTutor2.Models
 
         public MaterialType Type { get; set; }
 
-        public int ClassId { get; set; }
+        public int? ClassId { get; set; }
 
         public string UploadedById { get; set; }
 
