@@ -1,0 +1,208 @@
+﻿@model OnlineTutor2.Models.PunctuationQuestion
+@{
+    ViewData["Title"] = "Редактирование вопроса";
+    var test = ViewBag.Test as OnlineTutor2.Models.PunctuationTest;
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">
+                    <i class="fas fa-edit"></i> Редактирование вопроса на пунктуацию
+                </h4>
+            </div>
+            <div class="card-body">
+                <form asp-action="EditQuestion" method="post">
+                    <input asp-for="Id" type="hidden" />
+                    <input asp-for="PunctuationTestId" type="hidden" />
+                    <input asp-for="OrderIndex" type="hidden" />
+
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> Редактирование вопроса в тесте:</h6>
+                        <strong>@test.Title</strong>
+                        <br><small class="text-muted">Вопрос №@Model.OrderIndex</small>
+                    </div>
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-warning border-bottom pb-1 mb-3">
+                            <i class="fas fa-exclamation"></i> Информация о вопросе
+                        </legend>
+
+                        <div class="mb-3">
+                            <label asp-for="SentenceWithNumbers" class="form-label">
+                                <i class="fas fa-sort-numeric-down"></i> Предложение с номерами позиций <span class="text-danger">*</span>
+                            </label>
+                            <textarea asp-for="SentenceWithNumbers" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="SentenceWithNumbers" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="fas fa-lightbulb"></i> Укажите предложение с цифрами в местах возможной постановки запятых
+                                <br>Пример: В лесу(1) где росли высокие деревья(2) было тихо.
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="CorrectPositions" class="form-label">
+                                    <i class="fas fa-check-circle"></i> Правильные позиции запятых
+                                </label>
+                                <input asp-for="CorrectPositions" class="form-control" placeholder="1,2" />
+                                <span asp-validation-for="CorrectPositions" class="text-danger"></span>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle"></i> Укажите номера через запятую (например: 1,3) или оставьте пустым, если запятые не нужны
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Points" class="form-label">
+                                    <i class="fas fa-trophy"></i> Баллы за правильный ответ
+                                </label>
+                                <input asp-for="Points" class="form-control" type="number" min="1" max="10" />
+                                <span asp-validation-for="Points" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PlainSentence" class="form-label">
+                                <i class="fas fa-paragraph"></i> Предложение с правильной пунктуацией <span class="text-danger">*</span>
+                            </label>
+                            <textarea asp-for="PlainSentence" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="PlainSentence" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="fas fa-lightbulb"></i> Укажите, как должно выглядеть предложение с правильной пунктуацией
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Hint" class="form-label">
+                                <i class="fas fa-question-circle"></i> Подсказка (необязательно)
+                            </label>
+                            <textarea asp-for="Hint" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Hint" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="fas fa-lightbulb"></i> Подсказка поможет ученикам понять правило пунктуации
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-success border-bottom pb-1 mb-3">
+                            <i class="fas fa-eye"></i> Предварительный просмотр
+                        </legend>
+
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6>Как будет выглядеть вопрос для ученика:</h6>
+                                <div class="question-preview mt-3 p-3 bg-white rounded border">
+                                    <p class="mb-2">
+                                        <strong>Вопрос №@Model.OrderIndex:</strong>
+                                    </p>
+                                    <p class="mb-3">
+                                        Расставьте запятые в предложении, выбрав правильные позиции:
+                                    </p>
+                                    <div class="p-3 bg-light rounded mb-3">
+                                        <span id="preview-sentence" class="text-primary fw-bold">
+                                            @Model.SentenceWithNumbers
+                                        </span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label">Введите номера позиций через запятую:</label>
+                                        <input type="text" class="form-control d-inline-block" style="width: 200px;"
+                                               placeholder="@(!string.IsNullOrEmpty(Model.CorrectPositions) ? Model.CorrectPositions : "1,2,3")" disabled />
+                                    </div>
+                                    <div id="preview-hint" class="alert alert-warning small mt-3"
+                                         style="@(string.IsNullOrEmpty(Model.Hint) ? "display: none;" : "")">
+                                        <i class="fas fa-lightbulb"></i> <strong>Подсказка:</strong>
+                                        <span id="hint-text">@Model.Hint</span>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(Model.PlainSentence))
+                                    {
+                                        <div class="alert alert-success small mt-3">
+                                            <strong>Правильный вариант:</strong><br>
+                                            <span id="preview-plain">@Model.PlainSentence</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a asp-action="Details" asp-route-id="@test.Id" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Отмена
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save"></i> Сохранить изменения
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .question-preview {
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+    </style>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sentenceInput = document.getElementById('SentenceWithNumbers');
+            const plainSentenceInput = document.getElementById('PlainSentence');
+            const hintInput = document.getElementById('Hint');
+            const previewSentence = document.getElementById('preview-sentence');
+            const previewPlain = document.getElementById('preview-plain');
+            const previewHint = document.getElementById('preview-hint');
+            const hintText = document.getElementById('hint-text');
+
+            // Обновление предварительного просмотра предложения
+            function updatePreviewSentence() {
+                const sentence = sentenceInput.value.trim();
+                if (sentence) {
+                    previewSentence.textContent = sentence;
+                }
+            }
+
+            // Обновление предварительного просмотра правильного варианта
+            function updatePreviewPlain() {
+                const plain = plainSentenceInput.value.trim();
+                if (plain && previewPlain) {
+                    previewPlain.textContent = plain;
+                }
+            }
+
+            // Обновление предварительного просмотра подсказки
+            function updatePreviewHint() {
+                const hint = hintInput.value.trim();
+                if (hint) {
+                    hintText.textContent = hint;
+                    previewHint.style.display = 'block';
+                } else {
+                    previewHint.style.display = 'none';
+                }
+            }
+
+            // Обработчики событий
+            if (sentenceInput) {
+                sentenceInput.addEventListener('input', updatePreviewSentence);
+            }
+
+            if (plainSentenceInput) {
+                plainSentenceInput.addEventListener('input', updatePreviewPlain);
+            }
+
+            if (hintInput) {
+                hintInput.addEventListener('input', updatePreviewHint);
+            }
+        });
+    </script>
+}
