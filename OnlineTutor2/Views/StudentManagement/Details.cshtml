@@ -53,7 +53,7 @@
                             <dd class="col-sm-8">@Model.User.DateOfBirth.ToString("dd.MM.yyyy")</dd>
 
                             <dt class="col-sm-4">
-                                <i class="fas fa-id-card text-muted"></i> Номер ученика:
+                                <i class="fas fa-id-card text-muted"></i> ID ученика:
                             </dt>
                             <dd class="col-sm-8">
                                 @if (!string.IsNullOrEmpty(Model.StudentNumber))
@@ -222,7 +222,7 @@
         <div class="card mb-4">
             <div class="card-header">
                 <h6 class="mb-0">
-                    <i class="fas fa-users"></i> Назначение в класс
+                    <i class="fas fa-users"></i> Назначение в онлайн-класс
                 </h6>
             </div>
             <div class="card-body">
@@ -310,7 +310,7 @@
 
                     <button type="button" class="btn btn-outline-info"
                             onclick="showAssignClassModal(@Model.Id, '@Model.User.FullName', @(Model.ClassId?.ToString() ?? "null"))">
-                        <i class="fas fa-users"></i> Изменить класс
+                        <i class="fas fa-users"></i> Изменить онлайн-класс
                     </button>
 
                     <hr class="my-2">
