@@ -213,28 +213,39 @@
                         <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Распределение результатов</h5>
                     </div>
                     <div class="card-body">
-                        @foreach (var grade in Model.Statistics.GradeDistribution)
+                        @if (Model.Statistics.StudentsCompleted > 0 && Model.Statistics.GradeDistribution.Any())
                         {
-                            var percentage = Model.Statistics.StudentsCompleted > 0
-                            ? Math.Round((double)grade.Value / Model.Statistics.StudentsCompleted * 100, 1)
-                            : 0;
-                            var colorClass = grade.Key.Contains("Отлично") ? "success" :
-                            grade.Key.Contains("Хорошо") ? "info" :
-                            grade.Key.Contains("Удовлетворительно") ? "warning" : "danger";
+                            @foreach (var grade in Model.Statistics.GradeDistribution)
+                            {
+                                var percentage = Model.Statistics.StudentsCompleted > 0
+                                ? Math.Round((double)grade.Value / Model.Statistics.StudentsCompleted * 100, 1)
+                                : 0;
+                                var colorClass = grade.Key.Contains("Отлично") ? "success" :
+                                grade.Key.Contains("Хорошо") ? "info" :
+                                grade.Key.Contains("Удовлетворительно") ? "warning" : "danger";
 
-                            <div class="mb-3">
-                                <div class="d-flex justify-content-between">
-                                    <span>@grade.Key</span>
-                                    <span><strong>@grade.Value</strong> (@percentage%)</span>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>@grade.Key</span>
+                                        <span><strong>@grade.Value</strong> (@(percentage)%)</span>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-@colorClass" style="width: @(percentage)%"></div>
+                                    </div>
                                 </div>
-                                <div class="progress">
-                                    <div class="progress-bar bg-@colorClass" style="width: @percentage%"></div>
-                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-center py-3">
+                                <i class="fas fa-chart-bar text-muted" style="font-size: 2rem;"></i>
+                                <p class="text-muted mt-2">Пока нет завершенных попыток</p>
                             </div>
                         }
                     </div>
                 </div>
             </div>
+
 
             <div class="col-md-6">
                 <div class="card">
