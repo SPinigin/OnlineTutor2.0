@@ -1,0 +1,473 @@
+﻿@model OnlineTutor2.ViewModels.TakeOrthoeopyTestViewModel
+@{
+    ViewData["Title"] = $"Прохождение теста: {Model.TestResult.OrthoeopyTest.Title}";
+}
+
+<div class="test-container">
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h5 class="mb-0">
+                        <i class="fas fa-volume-up"></i> @Model.TestResult.OrthoeopyTest.Title
+                    </h5>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div id="timer" class="h5 mb-0">
+                        <i class="fas fa-clock"></i>
+                        <span id="timeRemaining">@($"{Model.TimeRemaining.Minutes:D2}:{Model.TimeRemaining.Seconds:D2}")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="progress mb-2">
+                <div class="progress-bar bg-success" role="progressbar" style="width: 0%" id="progressBar"></div>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span class="small text-muted">
+                    Попытка @Model.TestResult.AttemptNumber из @Model.TestResult.OrthoeopyTest.MaxAttempts
+                </span>
+                <span class="small text-muted">
+                    Вопрос <span id="currentQuestion">1</span> из @Model.TestResult.OrthoeopyTest.Questions.Count
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div id="questionsContainer">
+        @for (int i = 0; i < Model.TestResult.OrthoeopyTest.Questions.Count; i++)
+        {
+            var question = Model.TestResult.OrthoeopyTest.Questions.ElementAt(i);
+            var existingAnswer = Model.TestResult.Answers.FirstOrDefault(a => a.OrthoeopyQuestionId == question.Id);
+
+            // Генерируем варианты ударений для слова
+            var syllableCount = CountSyllables(question.Word);
+            var stressVariants = GenerateStressVariants(question.Word, syllableCount, question.StressPosition);
+
+            <div class="question-card @(i == 0 ? "active" : "d-none")" data-question-index="@i" data-question-id="@question.Id">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="question-header mb-4">
+                            <h6 class="text-success">
+                                <i class="fas fa-question-circle"></i> Вопрос @(i + 1)
+                                <span class="badge bg-info ms-2">@question.Points баллов</span>
+                            </h6>
+                        </div>
+
+                        <div class="question-content mb-4">
+                            <p class="h5 mb-3">
+                                Выберите правильное ударение в слове:
+                            </p>
+                            <div class="word-container text-center mb-4 p-4 bg-light rounded">
+                                <span class="word-display h3 text-success fw-bold">@question.Word</span>
+                            </div>
+                        </div>
+
+                        <div class="answer-options mb-4">
+                            <div class="btn-group-vertical w-100" role="group">
+                                @foreach (var variant in stressVariants)
+                                {
+                                    var isSelected = existingAnswer?.SelectedStressPosition == variant.Position;
+
+                                    <button type="button"
+                                            class="btn btn-outline-success text-start stress-option @(isSelected ? "active" : "")"
+                                            data-question-id="@question.Id"
+                                            data-stress-position="@variant.Position"
+                                            onclick="selectStress(@question.Id, @variant.Position)">
+                                        <div class="d-flex align-items-center">
+                                            <span class="option-radio me-3">
+                                                <i class="@(isSelected ? "fas fa-dot-circle" : "far fa-circle")"></i>
+                                            </span>
+                                            <span class="h5 mb-0">@variant.WordVariant</span>
+                                        </div>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+
+                        @if (Model.TestResult.OrthoeopyTest.ShowHints && !string.IsNullOrEmpty(question.Hint))
+                        {
+                            <div class="hint-container mb-4" style="display: none;">
+                                <div class="alert alert-info">
+                                    <h6><i class="fas fa-lightbulb"></i> Подсказка:</h6>
+                                    <p class="mb-0">@question.Hint</p>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <button type="button" class="btn btn-outline-info btn-sm" onclick="toggleHint(@i)">
+                                    <i class="fas fa-lightbulb"></i> Показать подсказку
+                                </button>
+                            </div>
+                        }
+
+                        <div class="question-feedback" style="display: none;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-outline-secondary" id="prevButton" onclick="previousQuestion()" disabled>
+                        <i class="fas fa-arrow-left"></i> Предыдущий
+                    </button>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button type="button" class="btn btn-success" id="nextButton" onclick="nextQuestion()">
+                        Следующий <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button type="button" class="btn btn-primary d-none" id="finishButton" onclick="showFinishModal()">
+                        <i class="fas fa-check"></i> Завершить тест
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="finishTestModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-check text-success"></i> Завершить тест
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Внимание!</strong> После завершения теста вы не сможете изменить ответы.
+                </div>
+                <p>Вы ответили на <span id="answeredCount">0</span> из @Model.TestResult.OrthoeopyTest.Questions.Count вопросов.</p>
+                <p>Вы уверены, что хотите завершить тест?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Продолжить тест
+                </button>
+                <form asp-action="CompleteOrthoepy" method="post" class="d-inline">
+                    <input type="hidden" name="testResultId" value="@Model.TestResult.Id" />
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check"></i> Завершить тест
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .test-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .word-display {
+            letter-spacing: 2px;
+        }
+
+        .stress-option {
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+            border-width: 2px;
+        }
+
+            .stress-option:hover {
+                background-color: #d4edda;
+                border-color: #28a745;
+                transform: translateX(5px);
+            }
+
+            .stress-option.active {
+                background-color: #28a745;
+                color: white;
+                border-color: #28a745;
+            }
+
+                .stress-option.active:hover {
+                    background-color: #218838;
+                }
+
+        .option-radio {
+            font-size: 1.2rem;
+        }
+
+        .question-card {
+            transition: all 0.3s ease;
+        }
+
+            .question-card.active {
+                animation: fadeIn 0.3s ease;
+            }
+
+        @@keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        #timer {
+            font-family: 'Courier New', monospace;
+        }
+
+        .timer-warning {
+            color: #ffc107 !important;
+        }
+
+        .timer-danger {
+            color: #dc3545 !important;
+            animation: blink 1s infinite;
+        }
+
+        @@keyframes blink {
+            0%, 50% {
+                opacity: 1;
+            }
+
+            51%, 100% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        let currentQuestionIndex = 0;
+        let totalQuestions = @Model.TestResult.OrthoeopyTest.Questions.Count;
+        let timeRemaining = @((int)Model.TimeRemaining.TotalSeconds);
+        let answers = {};
+        let timerInterval;
+        let testCompleting = false;
+
+        $(document).ready(function() {
+            initializeTest();
+            startTimer();
+            loadExistingAnswers();
+
+            $('form[action*="Complete"]').on('submit', function() {
+                testCompleting = true;
+            });
+        });
+
+        function initializeTest() {
+            updateProgress();
+            updateNavigation();
+        }
+
+        function loadExistingAnswers() {
+            @foreach (var answer in Model.TestResult.Answers)
+            {
+                    if (answer.SelectedStressPosition.HasValue)
+                    {
+                            <text>
+                            answers[@answer.OrthoeopyQuestionId] = @answer.SelectedStressPosition.Value;
+                            </text>
+                    }
+            }
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(function() {
+                timeRemaining--;
+                updateTimerDisplay();
+
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    autoSubmitTest();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            $('#timeRemaining').text(display);
+
+            const timerElement = $('#timer');
+            if (timeRemaining <= 60) {
+                timerElement.addClass('timer-danger');
+            } else if (timeRemaining <= 300) {
+                timerElement.addClass('timer-warning');
+            }
+        }
+
+        function selectStress(questionId, stressPosition) {
+            // Снимаем выделение со всех вариантов текущего вопроса
+            $(`.stress-option[data-question-id="${questionId}"]`).removeClass('active');
+            $(`.stress-option[data-question-id="${questionId}"] .option-radio i`)
+                .removeClass('fa-dot-circle').addClass('fa-circle');
+
+            // Выделяем выбранный вариант
+            const selectedButton = $(`.stress-option[data-question-id="${questionId}"][data-stress-position="${stressPosition}"]`);
+            selectedButton.addClass('active');
+            selectedButton.find('.option-radio i').removeClass('fa-circle').addClass('fa-dot-circle');
+
+            // Сохраняем ответ
+            saveAnswer(questionId, stressPosition);
+        }
+
+        function saveAnswer(questionId, stressPosition) {
+            $.ajax({
+                url: '@Url.Action("SubmitOrthoeopyAnswer")',
+                type: 'POST',
+                data: {
+                    TestResultId: @Model.TestResult.Id,
+                    QuestionId: questionId,
+                    SelectedStressPosition: stressPosition,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        answers[questionId] = stressPosition;
+                        updateProgress();
+                    } else {
+                        console.error('Ошибка сохранения:', response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Ошибка AJAX-запроса:', error);
+                    console.error('Статус:', xhr.status);
+                    console.error('Ответ сервера:', xhr.responseText);
+                }
+            });
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < totalQuestions - 1) {
+                showQuestion(currentQuestionIndex + 1);
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestionIndex > 0) {
+                showQuestion(currentQuestionIndex - 1);
+            }
+        }
+
+        function showQuestion(index) {
+            $('.question-card').addClass('d-none').removeClass('active');
+            $(`.question-card[data-question-index="${index}"]`).removeClass('d-none').addClass('active');
+
+            currentQuestionIndex = index;
+            updateProgress();
+            updateNavigation();
+        }
+
+        function updateProgress() {
+            const answeredCount = Object.keys(answers).length;
+            const percentage = (answeredCount / totalQuestions) * 100;
+
+            $('#progressBar').css('width', percentage + '%');
+            $('#currentQuestion').text(currentQuestionIndex + 1);
+            $('#answeredCount').text(answeredCount);
+        }
+
+        function updateNavigation() {
+            $('#prevButton').prop('disabled', currentQuestionIndex === 0);
+
+            if (currentQuestionIndex === totalQuestions - 1) {
+                $('#nextButton').addClass('d-none');
+                $('#finishButton').removeClass('d-none');
+            } else {
+                $('#nextButton').removeClass('d-none');
+                $('#finishButton').addClass('d-none');
+            }
+        }
+
+        function toggleHint(questionIndex) {
+            const hintContainer = $(`.question-card[data-question-index="${questionIndex}"] .hint-container`);
+            const button = $(`.question-card[data-question-index="${questionIndex}"] .btn-outline-info`);
+
+            if (hintContainer.is(':visible')) {
+                hintContainer.slideUp();
+                button.html('<i class="fas fa-lightbulb"></i> Показать подсказку');
+            } else {
+                hintContainer.slideDown();
+                button.html('<i class="fas fa-lightbulb"></i> Скрыть подсказку');
+            }
+        }
+
+        function showFinishModal() {
+            const modal = new bootstrap.Modal(document.getElementById('finishTestModal'));
+            modal.show();
+        }
+
+        function autoSubmitTest() {
+            testCompleting = true;
+            alert('Время вышло! Тест будет автоматически завершен.');
+            $('form[action*="CompleteOrthoepy"]').submit();
+        }
+
+        window.addEventListener('beforeunload', function(e) {
+            if (testCompleting) {
+                return;
+            }
+
+            e.preventDefault();
+            e.returnValue = '';
+        });
+
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (settings.type === 'POST') {
+                    xhr.setRequestHeader("RequestVerificationToken",
+                        $('input[name="__RequestVerificationToken"]').val());
+                }
+            }
+        });
+    </script>
+    @Html.AntiForgeryToken()
+}
+
+@functions {
+    private int CountSyllables(string word)
+    {
+        // Простой подсчет гласных как слогов
+        var vowels = new[] { 'а', 'е', 'ё', 'и', 'о', 'у', 'ы', 'э', 'ю', 'я',
+                            'А', 'Е', 'Ё', 'И', 'О', 'У', 'Ы', 'Э', 'Ю', 'Я' };
+        return word.Count(c => vowels.Contains(c));
+    }
+
+    private List<(int Position, string WordVariant)> GenerateStressVariants(string word, int syllableCount, int correctPosition)
+    {
+        var variants = new List<(int, string)>();
+        var vowels = new[] { 'а', 'е', 'ё', 'и', 'о', 'у', 'ы', 'э', 'ю', 'я' };
+
+        // Находим позиции гласных
+        var vowelPositions = new List<int>();
+        for (int i = 0; i < word.Length; i++)
+        {
+            if (vowels.Contains(char.ToLower(word[i])))
+            {
+                vowelPositions.Add(i);
+            }
+        }
+
+        // Создаем варианты с ударением на каждой гласной
+        for (int syllable = 1; syllable <= vowelPositions.Count; syllable++)
+        {
+            var vowelIndex = vowelPositions[syllable - 1];
+            var variant = word.Insert(vowelIndex + 1, "́"); // Вставляем символ ударения после гласной
+            variants.Add((syllable, variant));
+        }
+
+        return variants;
+    }
+}

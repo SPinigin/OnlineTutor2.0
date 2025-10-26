@@ -561,6 +561,229 @@ namespace OnlineTutor2.Controllers
 
         #endregion
 
+        #region Orthoepy Tests
+
+        // GET: StudentTest/StartOrthoepy/5 - Начало теста на орфоэпию
+        public async Task<IActionResult> StartOrthoepy(int id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+
+            if (student == null) return NotFound();
+
+            var test = await _context.OrthoeopyTests
+                .Include(ot => ot.Questions.OrderBy(q => q.OrderIndex))
+                .Include(ot => ot.TestResults.Where(tr => tr.StudentId == student.Id))
+                .FirstOrDefaultAsync(ot => ot.Id == id && ot.IsActive);
+
+            if (test == null) return NotFound();
+
+            if (!IsOrthoeopyTestAvailable(test, student))
+            {
+                TempData["ErrorMessage"] = "Тест недоступен для прохождения.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var attemptCount = test.TestResults.Count(tr => tr.StudentId == student.Id);
+            if (attemptCount >= test.MaxAttempts)
+            {
+                TempData["ErrorMessage"] = $"Превышено максимальное количество попыток ({test.MaxAttempts}).";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var ongoingResult = test.TestResults
+                .FirstOrDefault(tr => tr.StudentId == student.Id && !tr.IsCompleted);
+
+            if (ongoingResult != null)
+            {
+                return RedirectToAction(nameof(TakeOrthoepy), new { id = ongoingResult.Id });
+            }
+
+            var testResult = new OrthoeopyTestResult
+            {
+                OrthoeopyTestId = test.Id,
+                StudentId = student.Id,
+                StartedAt = DateTime.Now,
+                AttemptNumber = attemptCount + 1,
+                MaxScore = test.Questions.Sum(q => q.Points),
+                IsCompleted = false
+            };
+
+            _context.OrthoeopyTestResults.Add(testResult);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(TakeOrthoepy), new { id = testResult.Id });
+        }
+
+        // GET: StudentTest/TakeOrthoepy/5 - Прохождение теста на орфоэпию
+        public async Task<IActionResult> TakeOrthoepy(int id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+
+            if (student == null) return NotFound();
+
+            var testResult = await _context.OrthoeopyTestResults
+                .Include(tr => tr.OrthoeopyTest)
+                    .ThenInclude(ot => ot.Questions.OrderBy(q => q.OrderIndex))
+                .Include(tr => tr.Answers)
+                .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
+
+            if (testResult == null) return NotFound();
+
+            if (testResult.IsCompleted)
+            {
+                return RedirectToAction(nameof(OrthoeopyResult), new { id = testResult.Id });
+            }
+
+            var timeElapsed = DateTime.Now - testResult.StartedAt;
+            var timeLimit = TimeSpan.FromMinutes(testResult.OrthoeopyTest.TimeLimit);
+
+            if (timeElapsed >= timeLimit)
+            {
+                await CompleteOrthoeopyTest(testResult);
+                return RedirectToAction(nameof(OrthoeopyResult), new { id = testResult.Id });
+            }
+
+            var viewModel = new TakeOrthoeopyTestViewModel
+            {
+                TestResult = testResult,
+                TimeRemaining = timeLimit - timeElapsed,
+                CurrentQuestionIndex = 0
+            };
+
+            return View(viewModel);
+        }
+
+        // POST: StudentTest/SubmitOrthoeopyAnswer - Сохранение ответа на орфоэпию
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitOrthoeopyAnswer(int TestResultId, int QuestionId, int SelectedStressPosition)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+
+            if (student == null) return Json(new { success = false, message = "Студент не найден" });
+
+            var testResult = await _context.OrthoeopyTestResults
+                .Include(tr => tr.OrthoeopyTest)
+                .Include(tr => tr.Answers)
+                .FirstOrDefaultAsync(tr => tr.Id == TestResultId && tr.StudentId == student.Id);
+
+            if (testResult == null || testResult.IsCompleted)
+                return Json(new { success = false, message = "Тест не найден или уже завершен" });
+
+            var question = await _context.OrthoeopyQuestions
+                .FirstOrDefaultAsync(q => q.Id == QuestionId && q.OrthoeopyTestId == testResult.OrthoeopyTestId);
+
+            if (question == null)
+                return Json(new { success = false, message = "Вопрос не найден" });
+
+            var existingAnswer = testResult.Answers
+                .FirstOrDefault(a => a.OrthoeopyQuestionId == QuestionId);
+
+            bool isCorrect = question.StressPosition == SelectedStressPosition;
+            int points = isCorrect ? question.Points : 0;
+
+            if (existingAnswer != null)
+            {
+                existingAnswer.SelectedStressPosition = SelectedStressPosition;
+                existingAnswer.IsCorrect = isCorrect;
+                existingAnswer.Points = points;
+                existingAnswer.AnsweredAt = DateTime.Now;
+            }
+            else
+            {
+                var answer = new OrthoeopyAnswer
+                {
+                    OrthoeopyTestResultId = testResult.Id,
+                    OrthoeopyQuestionId = question.Id,
+                    SelectedStressPosition = SelectedStressPosition,
+                    IsCorrect = isCorrect,
+                    Points = points,
+                    AnsweredAt = DateTime.Now
+                };
+
+                _context.OrthoeopyAnswers.Add(answer);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Json(new
+            {
+                success = true,
+                isCorrect = isCorrect,
+                points = points,
+                correctPosition = question.StressPosition
+            });
+        }
+
+        // POST: StudentTest/CompleteOrthoepy - Завершение теста на орфоэпию
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CompleteOrthoepy(int testResultId)
+        {
+            try
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+                var student = await _context.Students
+                    .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+
+                if (student == null) return NotFound();
+
+                var testResult = await _context.OrthoeopyTestResults
+                    .Include(tr => tr.Answers)
+                    .FirstOrDefaultAsync(tr => tr.Id == testResultId && tr.StudentId == student.Id);
+
+                if (testResult == null) return NotFound();
+
+                if (testResult.IsCompleted)
+                {
+                    return RedirectToAction(nameof(OrthoeopyResult), new { id = testResult.Id });
+                }
+
+                await CompleteOrthoeopyTest(testResult);
+
+                TempData["SuccessMessage"] = "Тест успешно завершен!";
+                return RedirectToAction("Result", new { id = testResult.Id });
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Произошла ошибка при завершении теста.";
+                Console.WriteLine(ex);
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        // GET: StudentTest/OrthoeopyResult/5 - Результат теста на орфоэпию
+        public async Task<IActionResult> OrthoeopyResult(int id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+
+            if (student == null) return NotFound();
+
+            var testResult = await _context.OrthoeopyTestResults
+                .Include(tr => tr.OrthoeopyTest)
+                    .ThenInclude(ot => ot.Questions.OrderBy(q => q.OrderIndex))
+                .Include(tr => tr.Answers)
+                    .ThenInclude(a => a.Question)
+                .Include(tr => tr.Student)
+                    .ThenInclude(s => s.User)
+                .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
+
+            if (testResult == null) return NotFound();
+
+            return View("Result", testResult);
+        }
+
+        #endregion
+
+
         #region History and Common Actions
 
         // GET: StudentTest/History - История прохождения всех тестов
@@ -618,6 +841,20 @@ namespace OnlineTutor2.Controllers
         }
 
         private bool IsPunctuationTestAvailable(PunctuationTest test, Student student)
+        {
+            if (test.ClassId.HasValue && test.ClassId != student.ClassId)
+                return false;
+
+            if (test.StartDate.HasValue && test.StartDate > DateTime.Now)
+                return false;
+
+            if (test.EndDate.HasValue && test.EndDate < DateTime.Now)
+                return false;
+
+            return true;
+        }
+
+        private bool IsOrthoeopyTestAvailable(OrthoeopyTest test, Student student)
         {
             if (test.ClassId.HasValue && test.ClassId != student.ClassId)
                 return false;
@@ -690,6 +927,18 @@ namespace OnlineTutor2.Controllers
         }
 
         private async Task CompletePunctuationTest(PunctuationTestResult testResult)
+        {
+            testResult.CompletedAt = DateTime.Now;
+            testResult.IsCompleted = true;
+            testResult.Score = testResult.Answers.Sum(a => a.Points);
+            testResult.Percentage = testResult.MaxScore > 0
+                ? Math.Round((double)testResult.Score / testResult.MaxScore * 100, 2)
+                : 0;
+
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task CompleteOrthoeopyTest(OrthoeopyTestResult testResult)
         {
             testResult.CompletedAt = DateTime.Now;
             testResult.IsCompleted = true;
