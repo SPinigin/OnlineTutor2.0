@@ -30,6 +30,11 @@ namespace OnlineTutor2.Data
         public DbSet<PunctuationQuestion> PunctuationQuestions { get; set; }
         public DbSet<PunctuationTestResult> PunctuationTestResults { get; set; }
         public DbSet<PunctuationAnswer> PunctuationAnswers { get; set; }
+        public DbSet<OrthoeopyTest> OrthoeopyTests { get; set; }
+        public DbSet<OrthoeopyQuestion> OrthoeopyQuestions { get; set; }
+        public DbSet<OrthoeopyTestResult> OrthoeopyTestResults { get; set; }
+        public DbSet<OrthoeopyAnswer> OrthoeopyAnswers { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -280,6 +285,58 @@ namespace OnlineTutor2.Data
                 .HasOne(pa => pa.Question)
                 .WithMany(pq => pq.StudentAnswers)
                 .HasForeignKey(pa => pa.PunctuationQuestionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Настройка связей для OrthoeopyTest
+            modelBuilder.Entity<OrthoeopyTest>()
+                .HasOne(ot => ot.TestCategory)
+                .WithMany(tc => tc.OrthoeopyTests)
+                .HasForeignKey(ot => ot.TestCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<OrthoeopyTest>()
+                .HasOne(ot => ot.Teacher)
+                .WithMany()
+                .HasForeignKey(ot => ot.TeacherId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<OrthoeopyTest>()
+                .HasOne(ot => ot.Class)
+                .WithMany()
+                .HasForeignKey(ot => ot.ClassId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Настройка связей для OrthoeopyQuestion
+            modelBuilder.Entity<OrthoeopyQuestion>()
+                .HasOne(oq => oq.OrthoeopyTest)
+                .WithMany(ot => ot.Questions)
+                .HasForeignKey(oq => oq.OrthoeopyTestId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Настройка связей для OrthoeopyTestResult
+            modelBuilder.Entity<OrthoeopyTestResult>()
+                .HasOne(otr => otr.OrthoeopyTest)
+                .WithMany(ot => ot.TestResults)
+                .HasForeignKey(otr => otr.OrthoeopyTestId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<OrthoeopyTestResult>()
+                .HasOne(otr => otr.Student)
+                .WithMany()
+                .HasForeignKey(otr => otr.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Настройка связей для OrthoeopyAnswer
+            modelBuilder.Entity<OrthoeopyAnswer>()
+                .HasOne(oa => oa.TestResult)
+                .WithMany(otr => otr.Answers)
+                .HasForeignKey(oa => oa.OrthoeopyTestResultId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<OrthoeopyAnswer>()
+                .HasOne(oa => oa.Question)
+                .WithMany(oq => oq.StudentAnswers)
+                .HasForeignKey(oa => oa.OrthoeopyQuestionId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }
