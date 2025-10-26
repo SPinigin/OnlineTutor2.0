@@ -7,5 +7,6 @@ namespace OnlineTutor2.ViewModels
         public Student Student { get; set; } = null!;
         public IEnumerable<SpellingTest> SpellingTests { get; set; } = new List<SpellingTest>();
         public IEnumerable<PunctuationTest> PunctuationTests { get; set; } = new List<PunctuationTest>();
+        public IEnumerable<OrthoeopyTest> OrthoeopyTests { get; set; } = new List<OrthoeopyTest>();
     }
 }

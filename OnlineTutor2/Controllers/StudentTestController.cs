@@ -70,6 +70,21 @@ namespace OnlineTutor2.Controllers
                     .ToListAsync();
             }
 
+            // Получаем тесты на орфоэпию
+            if (category == null || category == "orthoepy")
+            {
+                viewModel.OrthoeopyTests = await _context.OrthoeopyTests
+                    .Include(ot => ot.Class)
+                    .Include(ot => ot.Questions)
+                    .Include(ot => ot.TestResults.Where(tr => tr.StudentId == student.Id))
+                    .Where(ot => ot.IsActive &&
+                               (ot.ClassId == null || ot.ClassId == student.ClassId) &&
+                               (ot.StartDate == null || ot.StartDate <= DateTime.Now) &&
+                               (ot.EndDate == null || ot.EndDate >= DateTime.Now))
+                    .OrderBy(ot => ot.Title)
+                    .ToListAsync();
+            }
+
             ViewBag.CurrentCategory = category;
             return View(viewModel);
         }
@@ -526,7 +541,7 @@ namespace OnlineTutor2.Controllers
 
             if (student == null) return NotFound();
 
-            // Сначала пробуем найти результат spelling теста
+            // Пробуем найти результат spelling теста
             var spellingResult = await _context.SpellingTestResults
                 .Include(tr => tr.SpellingTest)
                     .ThenInclude(st => st.Questions.OrderBy(q => q.OrderIndex))
@@ -541,7 +556,7 @@ namespace OnlineTutor2.Controllers
                 return View(spellingResult);
             }
 
-            // Если не найден, пробуем punctuation тест
+            // Пробуем найти punctuation тест
             var punctuationResult = await _context.PunctuationTestResults
                 .Include(tr => tr.PunctuationTest)
                     .ThenInclude(pt => pt.Questions.OrderBy(q => q.OrderIndex))
@@ -554,6 +569,21 @@ namespace OnlineTutor2.Controllers
             if (punctuationResult != null)
             {
                 return View(punctuationResult);
+            }
+
+            // Пробуем найти orthoepy тест
+            var orthoeopyResult = await _context.OrthoeopyTestResults
+                .Include(tr => tr.OrthoeopyTest)
+                    .ThenInclude(ot => ot.Questions.OrderBy(q => q.OrderIndex))
+                .Include(tr => tr.Answers)
+                    .ThenInclude(a => a.Question)
+                .Include(tr => tr.Student)
+                    .ThenInclude(s => s.User)
+                .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
+
+            if (orthoeopyResult != null)
+            {
+                return View(orthoeopyResult);
             }
 
             return NotFound();
@@ -813,6 +843,15 @@ namespace OnlineTutor2.Controllers
             {
                 viewModel.PunctuationResults = await _context.PunctuationTestResults
                     .Include(tr => tr.PunctuationTest)
+                    .Where(tr => tr.StudentId == student.Id && tr.IsCompleted)
+                    .OrderByDescending(tr => tr.CompletedAt)
+                    .ToListAsync();
+            }
+
+            if (testType == null || testType == "orthoepy")
+            {
+                viewModel.OrthoeopyResults = await _context.OrthoeopyTestResults
+                    .Include(tr => tr.OrthoeopyTest)
                     .Where(tr => tr.StudentId == student.Id && tr.IsCompleted)
                     .OrderByDescending(tr => tr.CompletedAt)
                     .ToListAsync();
