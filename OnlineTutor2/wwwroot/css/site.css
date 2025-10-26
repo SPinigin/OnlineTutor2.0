@@ -437,3 +437,17 @@ body {
     border: 1px solid #e9ecef;
 }
 
+/* —тили дл€ карточек тестов - одинакова€ высота */
+.test-card .card {
+    height: 100%;
+}
+
+.test-card .card-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.test-card .dates-block {
+    min-height: 42px;
+    margin-bottom: 1rem;
+}

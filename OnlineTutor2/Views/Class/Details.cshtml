@@ -136,6 +136,7 @@
                     var allTests = ViewBag.AllTests as List<object> ?? new List<object>();
                     var allTestsCount = ViewBag.AllTestsCount as int? ?? 0;
                     var spellingTestsCount = ViewBag.SpellingTestsCount as int? ?? 0;
+                    var punctuationTestsCount = ViewBag.PunctuationTestsCount as int? ?? 0;
                     var regularTestsCount = ViewBag.RegularTestsCount as int? ?? 0;
                 }
             
@@ -155,6 +156,12 @@
                                     Орфография (@spellingTestsCount)
                                 </button>
                             }
+                            @if (punctuationTestsCount > 0)
+                            {
+                                <button type="button" class="btn btn-outline-success" onclick="filterTests('punctuation')">
+                                    Пунктуация (@punctuationTestsCount)
+                                </button>
+                            }
                             @if (regularTestsCount > 0)
                             {
                                 <button type="button" class="btn btn-outline-info" onclick="filterTests('regular')">
@@ -168,7 +175,7 @@
                         @foreach (dynamic test in allTests)
                         {
                             <div class="col-md-6 mb-3 test-card" data-test-type="@test.TestType.ToString().ToLower()">
-                                <div class="card border-@test.ColorClass">
+                                <div class="card border-@test.ColorClass h-100">
                                     <div class="card-header bg-@test.ColorClass text-white d-flex justify-content-between align-items-center">
                                         <h6 class="mb-0">
                                             <i class="@test.IconClass"></i> @test.Title
@@ -199,10 +206,9 @@
                                                 <div class="fw-bold text-success">@test.ResultsCount</div>
                                             </div>
                                         </div>
-                                    
-                                        @if (test.StartDateFormatted != null || test.EndDateFormatted != null)
-                                        {
-                                            <div class="mb-3">
+                                        <div class="dates-block mb-3">
+                                            @if (test.StartDateFormatted != null || test.EndDateFormatted != null)
+                                            {
                                                 @if (test.StartDateFormatted != null)
                                                 {
                                                     <small class="text-muted d-block">
@@ -215,8 +221,8 @@
                                                         <i class="fas fa-stop"></i> Окончание: @test.EndDateFormatted
                                                     </small>
                                                 }
-                                            </div>
-                                        }
+                                            }
+                                        </div>
                                         <div class="d-flex justify-content-between align-items-center">
                                             <small class="text-muted">
                                                 <i class="fas fa-calendar"></i> @test.CreatedAtFormatted
@@ -264,7 +270,7 @@
 
     <div class="tab-pane fade" id="materials" role="tabpanel">
         <div class="card border-0">
-            <div class="card-body">
+            <div class="card-body d-flex flex-column">
                 @if (Model.Materials.Any())
                 {
                     <div class="list-group">
