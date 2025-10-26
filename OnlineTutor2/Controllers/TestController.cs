@@ -44,7 +44,11 @@ namespace OnlineTutor2.Controllers
                             .Where(pt => pt.TeacherId == currentUser.Id && pt.TestCategoryId == category.Id)
                             .ToListAsync();
                         break;
-                        // Здесь добавить другие типы тестов
+                    case 6: // Тесты на орфоэпию
+                        category.OrthoeopyTests = await _context.OrthoeopyTests
+                            .Where(ot => ot.TeacherId == currentUser.Id && ot.TestCategoryId == category.Id)
+                            .ToListAsync();
+                        break;
                 }
             }
 
