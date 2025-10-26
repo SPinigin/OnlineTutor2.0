@@ -42,6 +42,13 @@ namespace OnlineTutor2.Controllers
                 .Select(g => new { ClassId = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.ClassId.Value, x => x.Count);
 
+            // Получаем количество тестов на пунктуацию для каждого класса
+            var punctuationTestsCounts = await _context.PunctuationTests
+                .Where(pt => classIds.Contains(pt.ClassId.Value))
+                .GroupBy(pt => pt.ClassId)
+                .Select(g => new { ClassId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.ClassId.Value, x => x.Count);
+
             // добавить другие типы тестов:
             // var grammarTestsCounts = await _context.GrammarTests...
             // var essayTestsCounts = await _context.EssayTests...
@@ -53,6 +60,7 @@ namespace OnlineTutor2.Controllers
             {
                 var regularTestsCount = @class.Tests.Count;
                 var spellingTestsCount = spellingTestsCounts.ContainsKey(@class.Id) ? spellingTestsCounts[@class.Id] : 0;
+                var punctuationTestsCount = punctuationTestsCounts.ContainsKey(@class.Id) ? punctuationTestsCounts[@class.Id] : 0;
 
                 // добавить:
                 // var grammarTestsCount = grammarTestsCounts.ContainsKey(@class.Id) ? grammarTestsCounts[@class.Id] : 0;
@@ -93,6 +101,14 @@ namespace OnlineTutor2.Controllers
                 .Include(st => st.TestResults)
                 .Include(st => st.TestCategory)
                 .Where(st => st.ClassId == id)
+                .ToListAsync();
+
+            // Получаем все тесты на пунктуацию для этого класса
+            var punctuationTests = await _context.PunctuationTests
+                .Include(pt => pt.Questions)
+                .Include(pt => pt.TestResults)
+                .Include(pt => pt.TestCategory)
+                .Where(pt => pt.ClassId == id)
                 .ToListAsync();
 
             // Создаем объединенный список всех тестов
@@ -152,12 +168,40 @@ namespace OnlineTutor2.Controllers
                 });
             }
 
+            // Добавляем тесты на пунктуацию
+            foreach (var punctuationTest in punctuationTests)
+            {
+                allTests.Add(new
+                {
+                    Id = punctuationTest.Id,
+                    Title = punctuationTest.Title,
+                    Description = punctuationTest.Description,
+                    CreatedAt = punctuationTest.CreatedAt,
+                    CreatedAtFormatted = punctuationTest.CreatedAt.ToString("dd.MM.yyyy"),
+                    IsActive = punctuationTest.IsActive,
+                    TestType = "Punctuation",
+                    TypeDisplayName = "Пунктуация",
+                    IconClass = "fas fa-quote-right",
+                    ColorClass = "success",
+                    ControllerName = "PunctuationTest",
+                    QuestionsCount = punctuationTest.Questions?.Count ?? 0,
+                    TimeLimit = punctuationTest.TimeLimit,
+                    ResultsCount = punctuationTest.TestResults?.Count ?? 0,
+                    MaxAttempts = punctuationTest.MaxAttempts,
+                    StartDate = punctuationTest.StartDate,
+                    StartDateFormatted = punctuationTest.StartDate?.ToString("dd.MM.yyyy HH:mm"),
+                    EndDate = punctuationTest.EndDate,
+                    EndDateFormatted = punctuationTest.EndDate?.ToString("dd.MM.yyyy HH:mm")
+                });
+            }
+
             // Сортируем по дате создания (новые первыми)
             allTests = allTests.OrderByDescending(t => ((dynamic)t).CreatedAt).ToList();
 
             ViewBag.AllTests = allTests;
             ViewBag.AllTestsCount = allTests.Count;
             ViewBag.SpellingTestsCount = spellingTests.Count;
+            ViewBag.PunctuationTestsCount = punctuationTests.Count;
             ViewBag.RegularTestsCount = @class.Tests.Count;
 
             return View(@class);
