@@ -63,7 +63,6 @@ namespace OnlineTutor2.Controllers
 
             ViewBag.Category = category;
 
-            // В зависимости от категории загружаем соответствующие тесты
             switch (id)
             {
                 case 1: // Тесты на орфографию
@@ -86,10 +85,18 @@ namespace OnlineTutor2.Controllers
                         .ToListAsync();
                     return View("PunctuationTests", punctuationTests);
 
-                // добавить другие case для других типов тестов
+                case 6: // Тесты на орфоэпию
+                    var orthoeopyTests = await _context.OrthoeopyTests
+                        .Where(ot => ot.TeacherId == currentUser.Id && ot.TestCategoryId == id)
+                        .Include(ot => ot.Class)
+                        .Include(ot => ot.Questions)
+                        .Include(ot => ot.TestResults)
+                        .OrderByDescending(ot => ot.CreatedAt)
+                        .ToListAsync();
+                    return View("OrthoeopyTests", orthoeopyTests);
+
                 default:
                     return View("EmptyCategory");
             }
         }
-    }
 }
