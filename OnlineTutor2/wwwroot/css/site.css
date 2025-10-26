@@ -162,7 +162,6 @@ body {
 @media (max-width: 768px) {
     body {
         padding-top: 70px;
-        padding-bottom: 160px;
     }
 
     .footer-compact {
@@ -189,10 +188,6 @@ body {
 }
 
 @media (max-width: 576px) {
-    body {
-        padding-bottom: 180px;
-    }
-
     .main-content {
         min-height: calc(100vh - 250px);
     }
