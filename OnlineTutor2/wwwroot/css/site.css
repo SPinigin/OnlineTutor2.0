@@ -452,6 +452,7 @@ body {
     margin-bottom: 1rem;
 }
 
+/* Стили для категорий тестов */
 .test-category-card {
     cursor: pointer;
     transition: all 0.3s ease;
