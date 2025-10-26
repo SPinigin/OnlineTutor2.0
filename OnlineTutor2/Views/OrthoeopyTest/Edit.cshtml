@@ -1,0 +1,147 @@
+﻿@model OnlineTutor2.ViewModels.CreateOrthoeopyTestViewModel
+@{
+    ViewData["Title"] = "Редактирование теста";
+    var testId = ViewBag.TestId;
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-edit"></i> Редактирование теста на орфоэпию
+                </h4>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" asp-route-id="@testId" method="post">
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-primary border-bottom pb-1 mb-3">
+                            <i class="fas fa-info-circle"></i> Основная информация
+                        </legend>
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label">
+                                <i class="fas fa-heading"></i> Название теста <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Title" class="form-control" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">
+                                <i class="fas fa-align-left"></i> Описание
+                            </label>
+                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-primary border-bottom pb-1 mb-3">
+                            <i class="fas fa-users"></i> Назначение
+                        </legend>
+
+                        <div class="mb-3">
+                            <label asp-for="ClassId" class="form-label">
+                                <i class="fas fa-graduation-cap"></i> Назначить классу
+                            </label>
+                            <select asp-for="ClassId" asp-items="@ViewBag.Classes" class="form-select">
+                                <option value="">Доступен всем ученикам</option>
+                            </select>
+                            <span asp-validation-for="ClassId" class="text-danger"></span>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-primary border-bottom pb-1 mb-3">
+                            <i class="fas fa-cogs"></i> Настройки теста
+                        </legend>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TimeLimit" class="form-label">
+                                    <i class="fas fa-clock"></i> Время на выполнение (минут)
+                                </label>
+                                <input asp-for="TimeLimit" class="form-control" type="number" min="5" max="180" />
+                                <span asp-validation-for="TimeLimit" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="MaxAttempts" class="form-label">
+                                    <i class="fas fa-redo"></i> Максимальное количество попыток
+                                </label>
+                                <input asp-for="MaxAttempts" class="form-control" type="number" min="1" max="10" />
+                                <span asp-validation-for="MaxAttempts" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="StartDate" class="form-label">
+                                    <i class="fas fa-play"></i> Дата начала (необязательно)
+                                </label>
+                                <input asp-for="StartDate" class="form-control" type="datetime-local" />
+                                <span asp-validation-for="StartDate" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="EndDate" class="form-label">
+                                    <i class="fas fa-stop"></i> Дата окончания (необязательно)
+                                </label>
+                                <input asp-for="EndDate" class="form-control" type="datetime-local" />
+                                <span asp-validation-for="EndDate" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-primary border-bottom pb-1 mb-3">
+                            <i class="fas fa-sliders-h"></i> Дополнительные настройки
+                        </legend>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check form-switch">
+                                    <input asp-for="ShowHints" class="form-check-input" />
+                                    <label asp-for="ShowHints" class="form-check-label">
+                                        <i class="fas fa-question-circle"></i> Показывать подсказки
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check form-switch">
+                                    <input asp-for="ShowCorrectAnswers" class="form-check-input" />
+                                    <label asp-for="ShowCorrectAnswers" class="form-check-label">
+                                        <i class="fas fa-check-circle"></i> Показывать правильные ответы
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check form-switch">
+                                    <input asp-for="IsActive" class="form-check-input" />
+                                    <label asp-for="IsActive" class="form-check-label">
+                                        <i class="fas fa-toggle-on"></i> Тест активен
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a asp-action="Details" asp-route-id="@testId" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Отмена
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Сохранить изменения
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/layout.js" asp-append-version="true"></script>
+}
