@@ -65,7 +65,8 @@ namespace OnlineTutor2.ViewModels
         public int StressPosition { get; set; }
         public string WordWithStress { get; set; } = string.Empty;
         public string? Hint { get; set; }
-        public bool IsValid { get; set; } = true;
+        public string? WrongStressPositions { get; set; }
+        public bool IsValid { get; set; }
         public List<string> Errors { get; set; } = new();
     }
 
