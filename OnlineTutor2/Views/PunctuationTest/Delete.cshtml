@@ -100,7 +100,7 @@
                             <h5 class="text-danger">
                                 @(Model.TestResults?.SelectMany(tr => tr.Answers)?.Count() ?? 0)
                             </h5>
-                            <small class="text-muted">ответов учеников</small>
+                            <small class="text-muted">ответов</small>
                         </div>
                     </div>
                 </div>
@@ -209,8 +209,6 @@
 </div>
 
 @section Scripts {
-    <script src="~/js/layout.js" asp-append-version="true"></script>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const confirmationText = document.getElementById('confirmationText');
