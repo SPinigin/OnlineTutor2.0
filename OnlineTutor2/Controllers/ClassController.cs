@@ -66,7 +66,7 @@ namespace OnlineTutor2.Controllers
                 // var grammarTestsCount = grammarTestsCounts.ContainsKey(@class.Id) ? grammarTestsCounts[@class.Id] : 0;
                 // var essayTestsCount = essayTestsCounts.ContainsKey(@class.Id) ? essayTestsCounts[@class.Id] : 0;
 
-                var totalCount = regularTestsCount + spellingTestsCount; // + grammarTestsCount + essayTestsCount;
+                var totalCount = regularTestsCount + spellingTestsCount + punctuationTestsCount; // + grammarTestsCount + essayTestsCount;
 
                 totalTestsCounts[@class.Id] = totalCount;
             }
