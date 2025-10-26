@@ -451,3 +451,19 @@ body {
     min-height: 42px;
     margin-bottom: 1rem;
 }
+
+.test-category-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+    .test-category-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    .test-category-card .card-header {
+        padding: 30px 20px;
+    }
