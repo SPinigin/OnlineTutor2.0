@@ -31,6 +31,9 @@
             <a asp-action="Index" asp-route-category="punctuation" class="btn btn-@(currentCategory == "punctuation" ? "warning" : "outline-warning")">
                 <i class="fas fa-exclamation"></i> Пунктуация
             </a>
+            <a asp-action="Index" asp-route-category="orthoepy" class="btn btn-@(currentCategory == "orthoepy" ? "success" : "outline-success")">
+                <i class="fas fa-volume-up"></i> Орфоэпия
+            </a>
         </div>
     </div>
 </div>
@@ -252,6 +255,110 @@ else
             }
         </div>
     }
+
+    @if (Model.OrthoeopyTests.Any() && (string.IsNullOrEmpty(currentCategory) || currentCategory == "orthoepy"))
+    {
+        <h4 class="mb-3"><i class="fas fa-volume-up text-success"></i> Тесты на орфоэпию</h4>
+        <div class="row">
+            @foreach (var test in Model.OrthoeopyTests)
+            {
+                var studentResults = test.TestResults.Where(tr => tr.StudentId == Model.Student.Id).ToList();
+                var completedResults = studentResults.Where(tr => tr.IsCompleted).ToList();
+                var ongoingResult = studentResults.FirstOrDefault(tr => !tr.IsCompleted);
+                var attemptsUsed = studentResults.Count;
+                var canStart = attemptsUsed < test.MaxAttempts && ongoingResult == null;
+                var bestResult = completedResults.OrderByDescending(tr => tr.Percentage).FirstOrDefault();
+
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="card-title mb-0">
+                                    <i class="fas fa-volume-up text-success"></i> @test.Title
+                                </h6>
+                                @if (bestResult != null)
+                                {
+                                    <span class="badge bg-@(bestResult.Percentage >= 80 ? "success" : bestResult.Percentage >= 60 ? "warning" : "danger")">
+                                        @bestResult.Percentage.ToString("F1")%
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            @if (!string.IsNullOrEmpty(test.Description))
+                            {
+                                <p class="card-text text-muted small">@test.Description</p>
+                            }
+
+                            <div class="row text-center mb-3">
+                                <div class="col-4">
+                                    <div class="d-flex flex-column">
+                                        <span class="h6 text-success mb-0">@test.Questions.Count</span>
+                                        <small class="text-muted">вопросов</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="d-flex flex-column">
+                                        <span class="h6 text-info mb-0">@test.TimeLimit</span>
+                                        <small class="text-muted">минут</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="d-flex flex-column">
+                                        <span class="h6 text-primary mb-0">@attemptsUsed/@test.MaxAttempts</span>
+                                        <small class="text-muted">попыток</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if (completedResults.Any())
+                            {
+                                <div class="mb-3">
+                                    <h6 class="small">Результаты:</h6>
+                                    @foreach (var result in completedResults.OrderByDescending(r => r.CompletedAt).Take(3))
+                                    {
+                                        <div class="d-flex justify-content-between small">
+                                            <span>Попытка @result.AttemptNumber:</span>
+                                            <span class="badge bg-@(result.Percentage >= 80 ? "success" : result.Percentage >= 60 ? "warning" : "danger")">
+                                                @result.Percentage.ToString("F1")%
+                                            </span>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                        <div class="card-footer">
+                            @if (ongoingResult != null)
+                            {
+                                <a asp-action="TakeOrthoepy" asp-route-id="@ongoingResult.Id" class="btn btn-warning w-100">
+                                    <i class="fas fa-play"></i> Продолжить тест
+                                </a>
+                            }
+                            else if (canStart)
+                            {
+                                <button type="button" class="btn btn-success w-100"
+                                        onclick="confirmStartTest(@test.Id, '@test.Title', @test.TimeLimit, 'orthoepy')">
+                                    <i class="fas fa-play"></i> Начать тест
+                                </button>
+                            }
+                            else if (attemptsUsed >= test.MaxAttempts)
+                            {
+                                <button type="button" class="btn btn-secondary w-100" disabled>
+                                    <i class="fas fa-ban"></i> Попытки исчерпаны
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-outline-secondary w-100" disabled>
+                                    <i class="fas fa-clock"></i> Недоступен
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
 }
 
 <div class="modal fade" id="confirmStartModal" tabindex="-1">
@@ -279,6 +386,15 @@ else
                         <li>Пример ответа: 135</li>
                     </ul>
                 </div>
+                <div id="orthoeopyInfo" class="alert alert-success" style="display: none;">
+                    <h6><i class="fas fa-info-circle"></i> Особенности теста на орфоэпию:</h6>
+                    <ul class="mb-0">
+                        <li>В каждом вопросе нужно выбрать правильное ударение в слове</li>
+                        <li>Будут предложены варианты с ударением на разных слогах</li>
+                        <li>Выберите один правильный вариант</li>
+                        <li>Обратите внимание на символ ударения: ́</li>
+                    </ul>
+                </div>
                 <p class="text-warning">
                     <i class="fas fa-exclamation-triangle"></i>
                     Убедитесь, что у вас есть стабильное интернет-соединение и достаточно времени.
@@ -302,13 +418,20 @@ else
             document.getElementById('testTitle').textContent = testTitle;
             document.getElementById('testTime').textContent = timeLimit;
 
-            // Показываем/скрываем информацию о пунктуации
             const punctuationInfo = document.getElementById('punctuationInfo');
+            const orthoeopyInfo = document.getElementById('orthoeopyInfo');
+
+            // Скрываем все информационные блоки
+            if (punctuationInfo) punctuationInfo.style.display = 'none';
+            if (orthoeopyInfo) orthoeopyInfo.style.display = 'none';
+
             if (testType === 'punctuation') {
-                punctuationInfo.style.display = 'block';
+                if (punctuationInfo) punctuationInfo.style.display = 'block';
                 document.getElementById('startTestButton').href = '@Url.Action("StartPunctuation")/' + testId;
+            } else if (testType === 'orthoepy') {
+                if (orthoeopyInfo) orthoeopyInfo.style.display = 'block';
+                document.getElementById('startTestButton').href = '@Url.Action("StartOrthoepy")/' + testId;
             } else {
-                punctuationInfo.style.display = 'none';
                 document.getElementById('startTestButton').href = '@Url.Action("StartSpelling")/' + testId;
             }
 
