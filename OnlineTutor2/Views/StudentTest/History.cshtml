@@ -23,6 +23,9 @@
             <a asp-action="History" asp-route-testType="punctuation" class="btn btn-@(testType == "punctuation" ? "warning" : "outline-warning")">
                 <i class="fas fa-exclamation"></i> Пунктуация
             </a>
+            <a asp-action="History" asp-route-testType="orthoepy" class="btn btn-@(testType == "orthoepy" ? "success" : "outline-success")">
+                <i class="fas fa-volume-up"></i> Орфоэпия
+            </a>
         </div>
     </div>
 </div>
