@@ -48,14 +48,16 @@
                                 <label asp-for="StartDateTime" class="form-label">
                                     <i class="fas fa-play-circle"></i> Начало <span class="text-danger">*</span>
                                 </label>
-                                <input asp-for="StartDateTime" class="form-control" type="datetime-local" />
+                                <input asp-for="StartDateTime" class="form-control" type="datetime-local"
+                                       step="60" value="@Model.StartDateTime.ToString("yyyy-MM-ddTHH:mm")" />
                                 <span asp-validation-for="StartDateTime" class="text-danger"></span>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label asp-for="EndDateTime" class="form-label">
                                     <i class="fas fa-stop-circle"></i> Окончание <span class="text-danger">*</span>
                                 </label>
-                                <input asp-for="EndDateTime" class="form-control" type="datetime-local" />
+                                <input asp-for="EndDateTime" class="form-control" type="datetime-local"
+                                       step="60" value="@Model.EndDateTime.ToString("yyyy-MM-ddTHH:mm")" />
                                 <span asp-validation-for="EndDateTime" class="text-danger"></span>
                             </div>
                         </div>

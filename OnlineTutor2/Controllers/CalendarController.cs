@@ -130,6 +130,24 @@ namespace OnlineTutor2.Controllers
                     }
                 }
 
+                model.StartDateTime = new DateTime(
+                    model.StartDateTime.Year,
+                    model.StartDateTime.Month,
+                    model.StartDateTime.Day,
+                    model.StartDateTime.Hour,
+                    model.StartDateTime.Minute,
+                    0
+                );
+
+                model.EndDateTime = new DateTime(
+                    model.EndDateTime.Year,
+                    model.EndDateTime.Month,
+                    model.EndDateTime.Day,
+                    model.EndDateTime.Hour,
+                    model.EndDateTime.Minute,
+                    0
+                );
+
                 var calendarEvent = new CalendarEvent
                 {
                     Title = model.Title,
@@ -218,6 +236,24 @@ namespace OnlineTutor2.Controllers
                     await LoadSelectLists();
                     return View(model);
                 }
+
+                model.StartDateTime = new DateTime(
+                    model.StartDateTime.Year,
+                    model.StartDateTime.Month,
+                    model.StartDateTime.Day,
+                    model.StartDateTime.Hour,
+                    model.StartDateTime.Minute,
+                    0
+                );
+
+                model.EndDateTime = new DateTime(
+                    model.EndDateTime.Year,
+                    model.EndDateTime.Month,
+                    model.EndDateTime.Day,
+                    model.EndDateTime.Hour,
+                    model.EndDateTime.Minute,
+                    0
+                );
 
                 try
                 {

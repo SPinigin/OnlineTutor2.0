@@ -15,10 +15,12 @@ namespace OnlineTutor2.ViewModels
 
         [Required(ErrorMessage = "Дата и время начала обязательны")]
         [Display(Name = "Начало занятия")]
+        [DataType(DataType.DateTime)]
         public DateTime StartDateTime { get; set; }
 
         [Required(ErrorMessage = "Дата и время окончания обязательны")]
         [Display(Name = "Окончание занятия")]
+        [DataType(DataType.DateTime)]
         public DateTime EndDateTime { get; set; }
 
         [Display(Name = "Класс")]
