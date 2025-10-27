@@ -578,14 +578,10 @@ namespace OnlineTutor2.Controllers
 
             ViewBag.Colors = new[]
             {
-                new { Value = "#007bff", Text = "Синий", Class = "primary" },
-                new { Value = "#28a745", Text = "Зеленый", Class = "success" },
-                new { Value = "#dc3545", Text = "Красный", Class = "danger" },
-                new { Value = "#ffc107", Text = "Желтый", Class = "warning" },
-                new { Value = "#17a2b8", Text = "Бирюзовый", Class = "info" },
-                new { Value = "#6610f2", Text = "Фиолетовый", Class = "purple" },
-                new { Value = "#e83e8c", Text = "Розовый", Class = "pink" },
-                new { Value = "#6c757d", Text = "Серый", Class = "secondary" }
+                new { Value = "#007bff", Text = "Blue", Class = "primary" },
+                new { Value = "#28a745", Text = "Green", Class = "success" },
+                new { Value = "#dc3545", Text = "Red", Class = "danger" },
+                new { Value = "#6c757d", Text = "Grey", Class = "secondary" }
             };
         }
     }
