@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using OnlineTutor2.Attributes;
 
 namespace OnlineTutor2.ViewModels
 {
@@ -39,6 +40,7 @@ namespace OnlineTutor2.ViewModels
         [Display(Name = "Повторяющееся событие")]
         public bool IsRecurring { get; set; }
 
+        [RequiredIf(nameof(IsRecurring), true, ErrorMessage = "Выберите периодичность повторения")]
         [Display(Name = "Повторять")]
         public string RecurrencePattern { get; set; }
     }

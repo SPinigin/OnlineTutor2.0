@@ -168,6 +168,7 @@
             const studentSelect = document.getElementById('studentSelect');
             const isRecurringCheckbox = document.getElementById('isRecurring');
             const recurrenceGroup = document.getElementById('recurrenceGroup');
+            const recurrenceSelect = document.querySelector('select[name="RecurrencePattern"]');
 
             // Взаимоисключающий выбор класса и ученика
             classSelect.addEventListener('change', function() {
@@ -190,7 +191,14 @@
 
             // Показ/скрытие поля повторения
             isRecurringCheckbox.addEventListener('change', function() {
-                recurrenceGroup.style.display = this.checked ? 'block' : 'none';
+                if (this.checked) {
+                    recurrenceGroup.style.display = 'block';
+                    recurrenceSelect.required = true;
+                } else {
+                    recurrenceGroup.style.display = 'none';
+                    recurrenceSelect.required = false;
+                    recurrenceSelect.value = '';
+                }
             });
 
             // Инициализация при загрузке
@@ -202,6 +210,9 @@
             }
             if (isRecurringCheckbox.checked) {
                 recurrenceGroup.style.display = 'block';
+                recurrenceSelect.required = true;
+            } else {
+                recurrenceSelect.required = false;
             }
         });
     </script>

@@ -130,6 +130,12 @@ namespace OnlineTutor2.Controllers
                     }
                 }
 
+                // Дополнительная валидация повторяющихся событий
+                if (model.IsRecurring && string.IsNullOrWhiteSpace(model.RecurrencePattern))
+                {
+                    ModelState.AddModelError("RecurrencePattern", "Выберите периодичность повторения для повторяющегося события");
+                }
+
                 model.StartDateTime = new DateTime(
                     model.StartDateTime.Year,
                     model.StartDateTime.Month,
@@ -235,6 +241,12 @@ namespace OnlineTutor2.Controllers
                     ModelState.AddModelError("EndDateTime", "Время окончания должно быть позже времени начала");
                     await LoadSelectLists();
                     return View(model);
+                }
+
+                // Дополнительная валидация повторяющихся событий
+                if (model.IsRecurring && string.IsNullOrWhiteSpace(model.RecurrencePattern))
+                {
+                    ModelState.AddModelError("RecurrencePattern", "Выберите периодичность повторения для повторяющегося события");
                 }
 
                 model.StartDateTime = new DateTime(

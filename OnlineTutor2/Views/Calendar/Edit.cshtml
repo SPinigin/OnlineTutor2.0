@@ -137,6 +137,26 @@
                                       placeholder="Заметки о проведенном занятии"></textarea>
                             <span asp-validation-for="Notes" class="text-danger"></span>
                         </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsRecurring" class="form-check-input" id="isRecurring" />
+                                <label asp-for="IsRecurring" class="form-check-label">
+                                    <i class="fas fa-repeat"></i> Повторяющееся занятие
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="recurrenceGroup" style="@(Model.IsRecurring ? "display: block;" : "display: none;")">
+                            <label asp-for="RecurrencePattern" class="form-label">
+                                <i class="fas fa-calendar-week"></i> Повторять
+                            </label>
+                            <select asp-for="RecurrencePattern" asp-items="@ViewBag.RecurrencePatterns" class="form-select">
+                                <option value="">Выберите...</option>
+                            </select>
+                            <span asp-validation-for="RecurrencePattern" class="text-danger"></span>
+                        </div>
+
                     </fieldset>
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
@@ -163,6 +183,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             const classSelect = document.getElementById('classSelect');
             const studentSelect = document.getElementById('studentSelect');
+            const isRecurringCheckbox = document.getElementById('isRecurring');
+            const recurrenceGroup = document.getElementById('recurrenceGroup');
+            const recurrenceSelect = document.querySelector('select[name="RecurrencePattern"]');
 
             // Взаимоисключающий выбор
             classSelect.addEventListener('change', function() {
@@ -183,12 +206,32 @@
                 }
             });
 
+            // Показ/скрытие поля повторения
+            if (isRecurringCheckbox) {
+                isRecurringCheckbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        recurrenceGroup.style.display = 'block';
+                        recurrenceSelect.required = true;
+                    } else {
+                        recurrenceGroup.style.display = 'none';
+                        recurrenceSelect.required = false;
+                        recurrenceSelect.value = '';
+                    }
+                });
+            }
+
             // Инициализация
             if (classSelect.value) {
                 studentSelect.disabled = true;
             }
             if (studentSelect.value) {
                 classSelect.disabled = true;
+            }
+            if (isRecurringCheckbox && isRecurringCheckbox.checked) {
+                recurrenceGroup.style.display = 'block';
+                recurrenceSelect.required = true;
+            } else if (recurrenceSelect) {
+                recurrenceSelect.required = false;
             }
         });
     </script>
