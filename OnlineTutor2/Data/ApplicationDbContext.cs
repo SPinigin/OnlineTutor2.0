@@ -34,6 +34,7 @@ namespace OnlineTutor2.Data
         public DbSet<OrthoeopyQuestion> OrthoeopyQuestions { get; set; }
         public DbSet<OrthoeopyTestResult> OrthoeopyTestResults { get; set; }
         public DbSet<OrthoeopyAnswer> OrthoeopyAnswers { get; set; }
+        public DbSet<CalendarEvent> CalendarEvents { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
