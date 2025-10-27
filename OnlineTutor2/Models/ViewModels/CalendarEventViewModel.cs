@@ -71,5 +71,7 @@ namespace OnlineTutor2.ViewModels
         public bool IsCompleted { get; set; }
         public string? Notes { get; set; }
         public DateTime CreatedAt { get; set; }
+        public bool IsRecurring { get; set; }
+        public string? RecurrencePattern { get; set; }
     }
 }

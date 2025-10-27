@@ -107,6 +107,35 @@
                                 <i class="fas fa-broadcast-tower"></i> Сейчас идет
                             </span>
                         }
+
+                        @if (Model.IsRecurring)
+                        {
+                        <dt class="col-sm-3">
+                            <i class="fas fa-repeat text-primary"></i> Повторение:
+                        </dt>
+                        <dd class="col-sm-9">
+                            <span class="badge bg-primary">
+                                @switch (Model.RecurrencePattern?.ToLower())
+                                {
+                                    case "daily":
+                                        <text>Ежедневно</text>
+                                        break;
+                                    case "weekly":
+                                        <text>Еженедельно</text>
+                                        break;
+                                    case "biweekly":
+                                        <text>Раз в две недели</text>
+                                        break;
+                                    case "monthly":
+                                        <text>Ежемесячно</text>
+                                        break;
+                                    default:
+                                        <text>@Model.RecurrencePattern</text>
+                                        break;
+                                }
+                            </span>
+                        </dd>
+                    }
                     </dd>
 
                     @if (!string.IsNullOrEmpty(Model.Notes))

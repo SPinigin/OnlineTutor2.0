@@ -102,8 +102,19 @@
                 width: 20px;
                 text-align: center;
             }
+
+        /* Стиль для повторяющихся событий */
+        .fc-event.recurring-event {
+            border-left: 4px solid #ffc107 !important;
+        }
+
+            .fc-event.recurring-event:before {
+                content: "↻ ";
+                font-weight: bold;
+            }
     </style>
 }
+
 
 @section Scripts {
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
@@ -140,43 +151,74 @@
                         alert('Ошибка загрузки событий!');
                     }
                 },
-                eventClick: function(info) {
-                    var event = info.event;
+        eventClick: function(info) {
+            var event = info.event;
 
-                    document.getElementById('eventModalTitle').textContent = event.title;
+            var originalTitle = event.extendedProps.originalTitle || event.title;
+            document.getElementById('eventModalTitle').textContent = originalTitle;
 
-                    var modalBody = '';
+            var modalBody = '';
 
-                    if (event.extendedProps.description) {
-                        modalBody += '<div class="event-info-item"><i class="fas fa-align-left text-muted"></i> <strong>Описание:</strong><br><span class="ms-4">' + event.extendedProps.description + '</span></div>';
-                    }
+            // Показываем, что это экземпляр повторяющегося события
+            if (event.extendedProps.isRecurringInstance) {
+                modalBody += '<div class="alert alert-info"><i class="fas fa-repeat"></i> Это повторяющееся занятие</div>';
+            }
 
-                    modalBody += '<div class="event-info-item"><i class="fas fa-clock text-primary"></i> <strong>Начало:</strong> ' + formatDateTime(event.start) + '</div>';
-                    modalBody += '<div class="event-info-item"><i class="fas fa-clock text-danger"></i> <strong>Окончание:</strong> ' + formatDateTime(event.end) + '</div>';
+            if (event.extendedProps.description) {
+                modalBody += '<div class="event-info-item"><i class="fas fa-align-left text-muted"></i> <strong>Описание:</strong><br><span class="ms-4">' + event.extendedProps.description + '</span></div>';
+            }
 
-                    if (event.extendedProps.className) {
-                        modalBody += '<div class="event-info-item"><i class="fas fa-users text-success"></i> <strong>Класс:</strong> ' + event.extendedProps.className + '</div>';
-                    }
+            modalBody += '<div class="event-info-item"><i class="fas fa-clock text-primary"></i> <strong>Начало:</strong> ' + formatDateTime(event.start) + '</div>';
+            modalBody += '<div class="event-info-item"><i class="fas fa-clock text-danger"></i> <strong>Окончание:</strong> ' + formatDateTime(event.end) + '</div>';
 
-                    if (event.extendedProps.studentName) {
-                        modalBody += '<div class="event-info-item"><i class="fas fa-user-graduate text-info"></i> <strong>Ученик:</strong> ' + event.extendedProps.studentName + '</div>';
-                    }
+            if (event.extendedProps.className) {
+                modalBody += '<div class="event-info-item"><i class="fas fa-users text-success"></i> <strong>Класс:</strong> <span class="badge bg-success">' + event.extendedProps.className + '</span></div>';
+            }
 
-                    if (event.extendedProps.location) {
-                        modalBody += '<div class="event-info-item"><i class="fas fa-map-marker-alt text-warning"></i> <strong>Место:</strong> ' + event.extendedProps.location + '</div>';
-                    }
+            if (event.extendedProps.studentName) {
+                modalBody += '<div class="event-info-item"><i class="fas fa-user-graduate text-info"></i> <strong>Ученик:</strong> <span class="badge bg-info">' + event.extendedProps.studentName + '</span></div>';
+            }
 
-                    if (event.extendedProps.isCompleted) {
-                        modalBody += '<div class="alert alert-success mt-2"><i class="fas fa-check-circle"></i> Занятие завершено</div>';
-                    }
+            if (event.extendedProps.location) {
+                modalBody += '<div class="event-info-item"><i class="fas fa-map-marker-alt text-warning"></i> <strong>Место:</strong> ' + event.extendedProps.location + '</div>';
+            }
 
-                    document.getElementById('eventModalBody').innerHTML = modalBody;
+            if (event.extendedProps.isCompleted) {
+                modalBody += '<div class="alert alert-success mt-2"><i class="fas fa-check-circle"></i> Занятие завершено</div>';
 
-                    document.getElementById('eventEditBtn').href = '@Url.Action("Edit", "Calendar")/' + event.id;
-                    document.getElementById('eventDetailsBtn').href = '@Url.Action("Details", "Calendar")/' + event.id;
+                if (event.extendedProps.notes) {
+                    modalBody += '<div class="event-info-item"><i class="fas fa-sticky-note text-warning"></i> <strong>Заметки:</strong><br><span class="ms-4">' + event.extendedProps.notes + '</span></div>';
+                }
+            }
 
-                    eventModal.show();
-                },
+            document.getElementById('eventModalBody').innerHTML = modalBody;
+
+            document.getElementById('eventEditBtn').href = '@Url.Action("Edit", "Calendar")/' + event.id;
+            document.getElementById('eventDetailsBtn').href = '@Url.Action("Details", "Calendar")/' + event.id;
+
+            eventModal.show();
+            },
+
+        eventDidMount: function(info) {
+            // Добавляем тултип с полной информацией
+            var tooltipText = info.event.extendedProps.originalTitle || info.event.title;
+            if (info.event.extendedProps.isRecurringInstance) {
+                tooltipText = '↻ ' + tooltipText + ' (повторяется)';
+                info.el.classList.add('recurring-event');
+            }
+            if (info.event.extendedProps.className) {
+                tooltipText += '\nКласс: ' + info.event.extendedProps.className;
+            }
+            if (info.event.extendedProps.studentName) {
+                tooltipText += '\nУченик: ' + info.event.extendedProps.studentName;
+            }
+            if (info.event.extendedProps.location) {
+                tooltipText += '\nМесто: ' + info.event.extendedProps.location;
+            }
+
+            info.el.setAttribute('title', tooltipText);
+        },
+
                 dateClick: function(info) {
                     var dateStr = info.dateStr;
                     window.location.href = '@Url.Action("Create", "Calendar")?date=' + dateStr;

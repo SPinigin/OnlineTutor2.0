@@ -332,7 +332,9 @@ namespace OnlineTutor2.Controllers
                 Color = calendarEvent.Color,
                 IsCompleted = calendarEvent.IsCompleted,
                 Notes = calendarEvent.Notes,
-                CreatedAt = calendarEvent.CreatedAt
+                CreatedAt = calendarEvent.CreatedAt,
+                IsRecurring = calendarEvent.IsRecurring,
+                RecurrencePattern = calendarEvent.RecurrencePattern 
             };
 
             return View(model);
@@ -386,20 +388,48 @@ namespace OnlineTutor2.Controllers
                     .ThenInclude(s => s.User)
                 .AsQueryable();
 
-            if (start.HasValue)
-                query = query.Where(e => e.EndDateTime >= start.Value);
+            // Расширяем диапазон поиска для повторяющихся событий
+            var searchStart = start ?? DateTime.Now.AddMonths(-3);
+            var searchEnd = end ?? DateTime.Now.AddMonths(6);
 
-            if (end.HasValue)
-                query = query.Where(e => e.StartDateTime <= end.Value);
+            // Получаем события, которые попадают в диапазон или повторяются
+            var events = await query
+                .Where(e => e.EndDateTime >= searchStart || e.IsRecurring)
+                .Where(e => e.StartDateTime <= searchEnd)
+                .ToListAsync();
 
-            var events = await query.ToListAsync();
+            var result = new List<object>();
 
-            var result = events.Select(e => new
+            foreach (var e in events)
+            {
+                if (e.IsRecurring && !string.IsNullOrEmpty(e.RecurrencePattern))
+                {
+                    // Генерируем повторяющиеся события
+                    var recurringEvents = GenerateRecurringEvents(e, searchStart, searchEnd);
+                    result.AddRange(recurringEvents);
+                }
+                else
+                {
+                    // Обычное событие
+                    result.Add(CreateEventObject(e));
+                }
+            }
+
+            return Json(result);
+        }
+
+        // Метод для создания объекта события
+        private object CreateEventObject(CalendarEvent e, DateTime? overrideStart = null, DateTime? overrideEnd = null)
+        {
+            var startTime = overrideStart ?? e.StartDateTime;
+            var endTime = overrideEnd ?? e.EndDateTime;
+
+            return new
             {
                 id = e.Id,
-                title = GetEventTitle(e), // Измененное название
-                start = e.StartDateTime.ToString("yyyy-MM-ddTHH:mm:ss"),
-                end = e.EndDateTime.ToString("yyyy-MM-ddTHH:mm:ss"),
+                title = GetEventTitle(e),
+                start = startTime.ToString("yyyy-MM-ddTHH:mm:ss"),
+                end = endTime.ToString("yyyy-MM-ddTHH:mm:ss"),
                 description = e.Description,
                 className = e.Class?.Name,
                 studentName = e.Student?.User.FullName,
@@ -409,17 +439,66 @@ namespace OnlineTutor2.Controllers
                 borderColor = e.Color,
                 textColor = "#ffffff",
                 isCompleted = e.IsCompleted,
+                isRecurring = e.IsRecurring,
                 extendedProps = new
                 {
                     classId = e.ClassId,
                     studentId = e.StudentId,
                     location = e.Location,
                     notes = e.Notes,
-                    originalTitle = e.Title
+                    originalTitle = e.Title,
+                    isRecurringInstance = overrideStart.HasValue
                 }
-            });
+            };
+        }
 
-            return Json(result);
+        // Генерация повторяющихся событий
+        private List<object> GenerateRecurringEvents(CalendarEvent calendarEvent, DateTime rangeStart, DateTime rangeEnd)
+        {
+            var events = new List<object>();
+            var duration = calendarEvent.EndDateTime - calendarEvent.StartDateTime;
+
+            var currentDate = calendarEvent.StartDateTime;
+
+            // Защита от бесконечного цикла
+            var maxIterations = 365; // максимум 365 повторений
+            var iterations = 0;
+
+            while (currentDate <= rangeEnd && iterations < maxIterations)
+            {
+                iterations++;
+
+                // Проверяем, попадает ли событие в запрошенный диапазон
+                if (currentDate >= rangeStart && currentDate <= rangeEnd)
+                {
+                    var eventEnd = currentDate.Add(duration);
+                    events.Add(CreateEventObject(calendarEvent, currentDate, eventEnd));
+                }
+
+                // Вычисляем следующую дату на основе паттерна
+                currentDate = GetNextOccurrence(currentDate, calendarEvent.RecurrencePattern);
+
+                // Если следующая дата раньше текущей, значит ошибка - выходим
+                if (currentDate <= calendarEvent.StartDateTime)
+                {
+                    break;
+                }
+            }
+
+            return events;
+        }
+
+        // Вычисление следующего повторения
+        private DateTime GetNextOccurrence(DateTime currentDate, string recurrencePattern)
+        {
+            return recurrencePattern?.ToLower() switch
+            {
+                "daily" => currentDate.AddDays(1),
+                "weekly" => currentDate.AddDays(7),
+                "biweekly" => currentDate.AddDays(14),
+                "monthly" => currentDate.AddMonths(1),
+                _ => currentDate.AddDays(7) // По умолчанию еженедельно
+            };
         }
 
         // Вспомогательный метод для формирования названия события
@@ -429,15 +508,15 @@ namespace OnlineTutor2.Controllers
 
             if (calendarEvent.Class != null)
             {
-                // Для класса: "Урок русского языка - 5А"
-                return $"{title} - {calendarEvent.Class.Name}";
+                // Для класса только название класса: "5А"
+                return $"{calendarEvent.Class.Name}";
             }
             else if (calendarEvent.Student != null)
             {
-                // Для ученика: "Урок русского языка - Иванов И."
+                // Для ученика только фамилия: Пинигин С."
                 var lastName = calendarEvent.Student.User.LastName;
                 var firstNameInitial = calendarEvent.Student.User.FirstName?.FirstOrDefault();
-                return $"{title} - {lastName} {firstNameInitial}.";
+                return $"{lastName} {firstNameInitial}.";
             }
 
             return title;
