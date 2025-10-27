@@ -41,7 +41,7 @@ namespace OnlineTutor2.Models
         public bool IsRecurring { get; set; } // Повторяющееся событие
 
         [StringLength(100)]
-        public string RecurrencePattern { get; set; } // Паттерн повторения
+        public string? RecurrencePattern { get; set; } // Паттерн повторения
 
         public bool IsCompleted { get; set; } // Занятие завершено
 

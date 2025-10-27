@@ -2,6 +2,7 @@
 
 namespace OnlineTutor2.Attributes
 {
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
     public class RequiredIfAttribute : ValidationAttribute
     {
         private readonly string _dependentProperty;
@@ -11,23 +12,38 @@ namespace OnlineTutor2.Attributes
         {
             _dependentProperty = dependentProperty;
             _targetValue = targetValue;
+            ErrorMessage = ErrorMessage ?? "Это поле обязательно";
         }
 
         protected override ValidationResult IsValid(object value, ValidationContext validationContext)
         {
             var propertyInfo = validationContext.ObjectType.GetProperty(_dependentProperty);
+
             if (propertyInfo == null)
             {
-                return new ValidationResult($"Свойство {_dependentProperty} не найдено");
+                return ValidationResult.Success; // Если свойство не найдено, пропускаем валидацию
             }
 
             var dependentValue = propertyInfo.GetValue(validationContext.ObjectInstance);
 
-            if (dependentValue != null && dependentValue.Equals(_targetValue))
+            // Проверяем, соответствует ли зависимое значение целевому
+            bool shouldValidate = false;
+
+            if (_targetValue is bool targetBool && dependentValue is bool dependentBool)
             {
-                if (value == null || string.IsNullOrWhiteSpace(value.ToString()))
+                shouldValidate = targetBool == dependentBool;
+            }
+            else
+            {
+                shouldValidate = Equals(dependentValue, _targetValue);
+            }
+
+            if (shouldValidate)
+            {
+                // Если условие выполнено, проверяем значение
+                if (value == null || (value is string str && string.IsNullOrWhiteSpace(str)))
                 {
-                    return new ValidationResult(ErrorMessage ?? $"Поле обязательно");
+                    return new ValidationResult(ErrorMessage);
                 }
             }
 

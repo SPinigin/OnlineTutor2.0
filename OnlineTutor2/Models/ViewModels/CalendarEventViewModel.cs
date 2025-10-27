@@ -12,7 +12,7 @@ namespace OnlineTutor2.ViewModels
 
         [StringLength(1000, ErrorMessage = "Описание не должно превышать 1000 символов")]
         [Display(Name = "Описание")]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         [Required(ErrorMessage = "Дата и время начала обязательны")]
         [Display(Name = "Начало занятия")]
@@ -32,17 +32,17 @@ namespace OnlineTutor2.ViewModels
 
         [StringLength(200)]
         [Display(Name = "Место проведения")]
-        public string Location { get; set; }
+        public string? Location { get; set; }
 
         [Display(Name = "Цвет")]
-        public string Color { get; set; }
+        public string? Color { get; set; }
 
         [Display(Name = "Повторяющееся событие")]
         public bool IsRecurring { get; set; }
 
         [RequiredIf(nameof(IsRecurring), true, ErrorMessage = "Выберите периодичность повторения")]
         [Display(Name = "Повторять")]
-        public string RecurrencePattern { get; set; }
+        public string? RecurrencePattern { get; set; }
     }
 
     public class EditCalendarEventViewModel : CreateCalendarEventViewModel
@@ -54,22 +54,22 @@ namespace OnlineTutor2.ViewModels
 
         [StringLength(500)]
         [Display(Name = "Заметки")]
-        public string Notes { get; set; }
+        public string? Notes { get; set; } // Nullable!
     }
 
     public class CalendarEventDetailsViewModel
     {
         public int Id { get; set; }
         public string Title { get; set; }
-        public string Description { get; set; }
+        public string? Description { get; set; }
         public DateTime StartDateTime { get; set; }
         public DateTime EndDateTime { get; set; }
-        public string ClassName { get; set; }
-        public string StudentName { get; set; }
-        public string Location { get; set; }
-        public string Color { get; set; }
+        public string? ClassName { get; set; }
+        public string? StudentName { get; set; }
+        public string? Location { get; set; }
+        public string? Color { get; set; }
         public bool IsCompleted { get; set; }
-        public string Notes { get; set; }
+        public string? Notes { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 }
