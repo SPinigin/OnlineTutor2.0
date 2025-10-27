@@ -397,7 +397,7 @@ namespace OnlineTutor2.Controllers
             var result = events.Select(e => new
             {
                 id = e.Id,
-                title = e.Title,
+                title = GetEventTitle(e), // Измененное название
                 start = e.StartDateTime.ToString("yyyy-MM-ddTHH:mm:ss"),
                 end = e.EndDateTime.ToString("yyyy-MM-ddTHH:mm:ss"),
                 description = e.Description,
@@ -414,11 +414,33 @@ namespace OnlineTutor2.Controllers
                     classId = e.ClassId,
                     studentId = e.StudentId,
                     location = e.Location,
-                    notes = e.Notes
+                    notes = e.Notes,
+                    originalTitle = e.Title
                 }
             });
 
             return Json(result);
+        }
+
+        // Вспомогательный метод для формирования названия события
+        private string GetEventTitle(CalendarEvent calendarEvent)
+        {
+            var title = calendarEvent.Title;
+
+            if (calendarEvent.Class != null)
+            {
+                // Для класса: "Урок русского языка - 5А"
+                return $"{title} - {calendarEvent.Class.Name}";
+            }
+            else if (calendarEvent.Student != null)
+            {
+                // Для ученика: "Урок русского языка - Иванов И."
+                var lastName = calendarEvent.Student.User.LastName;
+                var firstNameInitial = calendarEvent.Student.User.FirstName?.FirstOrDefault();
+                return $"{title} - {lastName} {firstNameInitial}.";
+            }
+
+            return title;
         }
 
         // POST: Calendar/ToggleComplete/5
