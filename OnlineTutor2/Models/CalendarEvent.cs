@@ -11,7 +11,7 @@ namespace OnlineTutor2.Models
         public string Title { get; set; }
 
         [StringLength(1000)]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         [Required]
         public DateTime StartDateTime { get; set; }
@@ -33,10 +33,10 @@ namespace OnlineTutor2.Models
         public Student Student { get; set; }
 
         [StringLength(200)]
-        public string Location { get; set; } // Место (онлайн, кабинет и т.д.)
+        public string? Location { get; set; } // Место (онлайн, кабинет и т.д.)
 
         [StringLength(50)]
-        public string Color { get; set; } // Цвет для календаря
+        public string? Color { get; set; } // Цвет для календаря
 
         public bool IsRecurring { get; set; } // Повторяющееся событие
 
@@ -46,7 +46,7 @@ namespace OnlineTutor2.Models
         public bool IsCompleted { get; set; } // Занятие завершено
 
         [StringLength(500)]
-        public string Notes { get; set; } // Заметки после занятия
+        public string? Notes { get; set; } // Заметки после занятия
 
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
