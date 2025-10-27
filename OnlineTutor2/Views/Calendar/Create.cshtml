@@ -1,0 +1,206 @@
+﻿@model OnlineTutor2.ViewModels.CreateCalendarEventViewModel
+@{
+    ViewData["Title"] = "Добавить занятие";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-plus"></i> Добавить занятие в календарь
+                </h4>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-primary border-bottom pb-1 mb-3">
+                            <i class="fas fa-info-circle"></i> Основная информация
+                        </legend>
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label">
+                                <i class="fas fa-heading"></i> Название занятия <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Title" class="form-control" placeholder="Например: Урок русского языка" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">
+                                <i class="fas fa-align-left"></i> Описание
+                            </label>
+                            <textarea asp-for="Description" class="form-control" rows="3"
+                                      placeholder="Краткое описание занятия, темы и т.д."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-primary border-bottom pb-1 mb-3">
+                            <i class="fas fa-clock"></i> Дата и время
+                        </legend>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="StartDateTime" class="form-label">
+                                    <i class="fas fa-play-circle"></i> Начало <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="StartDateTime" class="form-control" type="datetime-local" />
+                                <span asp-validation-for="StartDateTime" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="EndDateTime" class="form-label">
+                                    <i class="fas fa-stop-circle"></i> Окончание <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="EndDateTime" class="form-control" type="datetime-local" />
+                                <span asp-validation-for="EndDateTime" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-primary border-bottom pb-1 mb-3">
+                            <i class="fas fa-users"></i> Участники
+                        </legend>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Внимание:</strong> Выберите либо класс, либо отдельного ученика
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ClassId" class="form-label">
+                                <i class="fas fa-users"></i> Класс
+                            </label>
+                            <select asp-for="ClassId" asp-items="@ViewBag.Classes" class="form-select" id="classSelect">
+                                <option value="">Не выбран</option>
+                            </select>
+                            <span asp-validation-for="ClassId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="StudentId" class="form-label">
+                                <i class="fas fa-user-graduate"></i> Ученик
+                            </label>
+                            <select asp-for="StudentId" asp-items="@ViewBag.Students" class="form-select" id="studentSelect">
+                                <option value="">Не выбран</option>
+                            </select>
+                            <span asp-validation-for="StudentId" class="text-danger"></span>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 text-primary border-bottom pb-1 mb-3">
+                            <i class="fas fa-cog"></i> Дополнительные настройки
+                        </legend>
+
+                        <div class="mb-3">
+                            <label asp-for="Location" class="form-label">
+                                <i class="fas fa-map-marker-alt"></i> Место проведения
+                            </label>
+                            <input asp-for="Location" class="form-control" placeholder="Например: Онлайн, Кабинет 201" />
+                            <span asp-validation-for="Location" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-palette"></i> Цвет в календаре
+                            </label>
+                            <div class="row">
+                                @foreach (var color in ViewBag.Colors)
+                                {
+                                    <div class="col-3 mb-2">
+                                        <input type="radio" class="btn-check" name="Color" id="color-@color.Value"
+                                               value="@color.Value" @(color.Value == "#007bff" ? "checked" : "") />
+                                        <label class="btn btn-outline-@color.Class w-100" for="color-@color.Value">
+                                            @color.Text
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsRecurring" class="form-check-input" id="isRecurring" />
+                                <label asp-for="IsRecurring" class="form-check-label">
+                                    <i class="fas fa-repeat"></i> Повторяющееся занятие
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="recurrenceGroup" style="display: none;">
+                            <label asp-for="RecurrencePattern" class="form-label">
+                                <i class="fas fa-calendar-week"></i> Повторять
+                            </label>
+                            <select asp-for="RecurrencePattern" asp-items="@ViewBag.RecurrencePatterns" class="form-select">
+                                <option value="">Выберите...</option>
+                            </select>
+                            <span asp-validation-for="RecurrencePattern" class="text-danger"></span>
+                        </div>
+                    </fieldset>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i> Отмена
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Добавить занятие
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const classSelect = document.getElementById('classSelect');
+            const studentSelect = document.getElementById('studentSelect');
+            const isRecurringCheckbox = document.getElementById('isRecurring');
+            const recurrenceGroup = document.getElementById('recurrenceGroup');
+
+            // Взаимоисключающий выбор класса и ученика
+            classSelect.addEventListener('change', function() {
+                if (this.value) {
+                    studentSelect.value = '';
+                    studentSelect.disabled = true;
+                } else {
+                    studentSelect.disabled = false;
+                }
+            });
+
+            studentSelect.addEventListener('change', function() {
+                if (this.value) {
+                    classSelect.value = '';
+                    classSelect.disabled = true;
+                } else {
+                    classSelect.disabled = false;
+                }
+            });
+
+            // Показ/скрытие поля повторения
+            isRecurringCheckbox.addEventListener('change', function() {
+                recurrenceGroup.style.display = this.checked ? 'block' : 'none';
+            });
+
+            // Инициализация при загрузке
+            if (classSelect.value) {
+                studentSelect.disabled = true;
+            }
+            if (studentSelect.value) {
+                classSelect.disabled = true;
+            }
+            if (isRecurringCheckbox.checked) {
+                recurrenceGroup.style.display = 'block';
+            }
+        });
+    </script>
+}

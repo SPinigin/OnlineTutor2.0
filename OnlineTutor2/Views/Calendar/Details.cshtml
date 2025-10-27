@@ -1,0 +1,153 @@
+﻿@model OnlineTutor2.ViewModels.CalendarEventDetailsViewModel
+@{
+    ViewData["Title"] = "Детали занятия";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header" style="background-color: @Model.Color; color: white;">
+                <h4 class="mb-0">
+                    <i class="fas fa-calendar-check"></i> @Model.Title
+                </h4>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <dt class="col-sm-3">
+                            <i class="fas fa-align-left text-muted"></i> Описание:
+                        </dt>
+                        <dd class="col-sm-9">@Model.Description</dd>
+                    }
+
+                    <dt class="col-sm-3">
+                        <i class="fas fa-clock text-primary"></i> Начало:
+                    </dt>
+                    <dd class="col-sm-9">
+                        @Model.StartDateTime.ToString("dd.MM.yyyy HH:mm")
+                    </dd>
+
+                    <dt class="col-sm-3">
+                        <i class="fas fa-clock text-danger"></i> Окончание:
+                    </dt>
+                    <dd class="col-sm-9">
+                        @Model.EndDateTime.ToString("dd.MM.yyyy HH:mm")
+                    </dd>
+
+                    <dt class="col-sm-3">
+                        <i class="fas fa-hourglass-half text-info"></i> Продолжительность:
+                    </dt>
+                    <dd class="col-sm-9">
+                        @{
+                            var duration = Model.EndDateTime - Model.StartDateTime;
+                            var hours = duration.Hours;
+                            var minutes = duration.Minutes;
+                        }
+                        @if (hours > 0)
+                        {
+                            @hours <text>ч </text>
+                        }
+                        @minutes <text>мин</text>
+                    </dd>
+
+                    @if (!string.IsNullOrEmpty(Model.ClassName))
+                    {
+                        <dt class="col-sm-3">
+                            <i class="fas fa-users text-success"></i> Класс:
+                        </dt>
+                        <dd class="col-sm-9">
+                            <span class="badge bg-success">@Model.ClassName</span>
+                        </dd>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.StudentName))
+                    {
+                        <dt class="col-sm-3">
+                            <i class="fas fa-user-graduate text-info"></i> Ученик:
+                        </dt>
+                        <dd class="col-sm-9">
+                            <span class="badge bg-info">@Model.StudentName</span>
+                        </dd>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.Location))
+                    {
+                        <dt class="col-sm-3">
+                            <i class="fas fa-map-marker-alt text-warning"></i> Место:
+                        </dt>
+                        <dd class="col-sm-9">@Model.Location</dd>
+                    }
+
+                    <dt class="col-sm-3">
+                        <i class="fas fa-info-circle text-secondary"></i> Статус:
+                    </dt>
+                    <dd class="col-sm-9">
+                        @if (Model.IsCompleted)
+                        {
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle"></i> Завершено
+                            </span>
+                        }
+                        else if (Model.StartDateTime > DateTime.Now)
+                        {
+                            <span class="badge bg-primary">
+                                <i class="fas fa-clock"></i> Запланировано
+                            </span>
+                        }
+                        else if (Model.EndDateTime < DateTime.Now)
+                        {
+                            <span class="badge bg-warning">
+                                <i class="fas fa-exclamation-triangle"></i> Пропущено
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">
+                                <i class="fas fa-broadcast-tower"></i> Сейчас идет
+                            </span>
+                        }
+                    </dd>
+
+                    @if (!string.IsNullOrEmpty(Model.Notes))
+                    {
+                        <dt class="col-sm-3">
+                            <i class="fas fa-sticky-note text-warning"></i> Заметки:
+                        </dt>
+                        <dd class="col-sm-9">
+                            <div class="alert alert-light">@Model.Notes</div>
+                        </dd>
+                    }
+
+                    <dt class="col-sm-3">
+                        <i class="fas fa-calendar-plus text-muted"></i> Создано:
+                    </dt>
+                    <dd class="col-sm-9">
+                        <small class="text-muted">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
+                    </dd>
+                </dl>
+            </div>
+            <div class="card-footer">
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> К календарю
+                    </a>
+                    @if (!Model.IsCompleted)
+                    {
+                        <form asp-action="ToggleComplete" asp-route-id="@Model.Id" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Завершить
+                            </button>
+                        </form>
+                    }
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Редактировать
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger">
+                        <i class="fas fa-trash"></i> Удалить
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
