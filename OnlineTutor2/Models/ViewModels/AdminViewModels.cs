@@ -109,16 +109,19 @@ namespace OnlineTutor2.ViewModels
         public int TotalClasses { get; set; }
         public int TotalSpellingTests { get; set; }
         public int TotalRegularTests { get; set; }
+        public int TotalOrthoeopyTests { get; set; }
         public int TotalSpellingQuestions { get; set; }
+        public int TotalOrthoeopyQuestions { get; set; }
         public int TotalRegularQuestions { get; set; }
         public int TotalSpellingResults { get; set; }
         public int TotalRegularResults { get; set; }
+        public int TotalOrthoeopyResults { get; set; }
         public int TotalMaterials { get; set; }
 
         // Вычисляемые свойства
-        public int TotalTests => TotalSpellingTests + TotalRegularTests;
-        public int TotalQuestions => TotalSpellingQuestions + TotalRegularQuestions;
-        public int TotalResults => TotalSpellingResults + TotalRegularResults;
+        public int TotalTests => TotalSpellingTests + TotalRegularTests + TotalOrthoeopyTests;
+        public int TotalQuestions => TotalSpellingQuestions + TotalRegularQuestions + TotalOrthoeopyQuestions;
+        public int TotalResults => TotalSpellingResults + TotalRegularResults + TotalOrthoeopyResults;
     }
 
     public class ServerInfoViewModel
