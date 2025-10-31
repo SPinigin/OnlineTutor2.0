@@ -42,7 +42,7 @@ namespace OnlineTutor2.ViewModels
         [Display(Name = "Класс в школе")]
         public int? Grade { get; set; }
 
-        [Display(Name = "Назначить в класс")]
+        [Display(Name = "Назначить в онлайн-класс")]
         public int? ClassId { get; set; }
     }
 
@@ -82,7 +82,7 @@ namespace OnlineTutor2.ViewModels
         [Display(Name = "Класс в школе")]
         public int? Grade { get; set; }
 
-        [Display(Name = "Назначить в класс")]
+        [Display(Name = "Назначить в онлайн-класс")]
         public int? ClassId { get; set; }
 
         [StringLength(20)]

@@ -14,7 +14,7 @@ namespace OnlineTutor2.ViewModels
         [Display(Name = "Описание")]
         public string? Description { get; set; }
 
-        [Display(Name = "Класс")]
+        [Display(Name = "Онлайн-класс")]
         public int? ClassId { get; set; }
 
         [Required]

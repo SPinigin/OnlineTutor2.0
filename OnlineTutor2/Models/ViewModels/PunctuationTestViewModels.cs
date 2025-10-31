@@ -14,7 +14,7 @@ namespace OnlineTutor2.ViewModels
         [Display(Name = "Описание")]
         public string? Description { get; set; }
 
-        [Display(Name = "Назначить классу")]
+        [Display(Name = "Назначить онлайн-классу")]
         public int? ClassId { get; set; }
 
         [Range(5, 180, ErrorMessage = "Время должно быть от 5 до 180 минут")]

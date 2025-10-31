@@ -8,7 +8,7 @@ namespace OnlineTutor2.ViewModels
         [Display(Name = "Excel файл")]
         public IFormFile ExcelFile { get; set; }
 
-        [Display(Name = "Назначить в класс")]
+        [Display(Name = "Назначить в онлайн-класс")]
         public int? ClassId { get; set; }
 
         [Display(Name = "Создать пароли автоматически")]

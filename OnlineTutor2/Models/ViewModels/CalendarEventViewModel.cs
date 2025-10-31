@@ -54,7 +54,7 @@ namespace OnlineTutor2.ViewModels
 
         [StringLength(500)]
         [Display(Name = "Заметки")]
-        public string? Notes { get; set; } // Nullable!
+        public string? Notes { get; set; }
     }
 
     public class CalendarEventDetailsViewModel

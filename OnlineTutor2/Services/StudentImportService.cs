@@ -17,9 +17,9 @@ namespace OnlineTutor2.Services
             {
                 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             }
-            catch
+            catch (Exception ex)
             {
-                //???
+                Console.WriteLine($"[ERROR] ConfigureExcelPackage error: {ex.Message}");
             }
         }
 

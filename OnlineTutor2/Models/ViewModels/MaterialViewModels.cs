@@ -18,7 +18,7 @@ namespace OnlineTutor2.ViewModels
         [Display(Name = "Файл")]
         public IFormFile File { get; set; } = null!;
 
-        [Display(Name = "Назначить классу")]
+        [Display(Name = "Назначить онлайн-классу")]
         public int? ClassId { get; set; }
 
         [Display(Name = "Активный")]
@@ -41,7 +41,7 @@ namespace OnlineTutor2.ViewModels
         [Display(Name = "Новый файл (оставьте пустым, чтобы не менять)")]
         public IFormFile? NewFile { get; set; }
 
-        [Display(Name = "Назначить классу")]
+        [Display(Name = "Назначить онлайн-классу")]
         public int? ClassId { get; set; }
 
         [Display(Name = "Активный")]
