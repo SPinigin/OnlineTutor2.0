@@ -14,11 +14,13 @@ namespace OnlineTutor2.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ILogger<CalendarController> _logger;
 
-        public CalendarController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public CalendarController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, ILogger<CalendarController> logger)
         {
             _context = context;
             _userManager = userManager;
+            _logger = logger;
         }
 
         // GET: Calendar
@@ -74,11 +76,14 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateCalendarEventViewModel model)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+
             if (ModelState.IsValid)
             {
                 // Валидация: должен быть выбран класс или ученик
                 if (!model.ClassId.HasValue && !model.StudentId.HasValue)
                 {
+                    _logger.LogWarning("Учитель {TeacherId} попытался создать событие без класса и ученика", currentUser.Id);
                     ModelState.AddModelError("", "Выберите класс или ученика для занятия");
                     await LoadSelectLists();
                     return View(model);
@@ -99,8 +104,6 @@ namespace OnlineTutor2.Controllers
                     await LoadSelectLists();
                     return View(model);
                 }
-
-                var currentUser = await _userManager.GetUserAsync(User);
 
                 // Проверяем, что класс или ученик принадлежит текущему учителю
                 if (model.ClassId.HasValue)
@@ -173,9 +176,14 @@ namespace OnlineTutor2.Controllers
                 _context.CalendarEvents.Add(calendarEvent);
                 await _context.SaveChangesAsync();
 
+                _logger.LogInformation("Учитель {TeacherId} создал событие {EventId}: {Title}, Дата: {StartDateTime}, ClassId: {ClassId}, StudentId: {StudentId}, IsRecurring: {IsRecurring}",
+                    currentUser.Id, calendarEvent.Id, model.Title, model.StartDateTime, model.ClassId, model.StudentId, model.IsRecurring);
+
                 TempData["SuccessMessage"] = "Занятие успешно добавлено в календарь!";
                 return RedirectToAction(nameof(Index));
             }
+
+            _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму создания события", currentUser.Id);
 
             await LoadSelectLists();
             return View(model);
@@ -219,6 +227,8 @@ namespace OnlineTutor2.Controllers
         public async Task<IActionResult> Edit(int id, EditCalendarEventViewModel model)
         {
             if (id != model.Id) return NotFound();
+
+            var currentUser = await _userManager.GetUserAsync(User);
 
             if (ModelState.IsValid)
             {
@@ -269,7 +279,6 @@ namespace OnlineTutor2.Controllers
 
                 try
                 {
-                    var currentUser = await _userManager.GetUserAsync(User);
                     var calendarEvent = await _context.CalendarEvents
                         .FirstOrDefaultAsync(e => e.Id == id && e.TeacherId == currentUser.Id);
 
@@ -292,11 +301,15 @@ namespace OnlineTutor2.Controllers
                     _context.Update(calendarEvent);
                     await _context.SaveChangesAsync();
 
+                    _logger.LogInformation("Учитель {TeacherId} обновил событие {EventId}: {Title}, ClassId: {ClassId}, StudentId: {StudentId}",
+                       currentUser.Id, id, model.Title, model.ClassId, model.StudentId);
+
                     TempData["SuccessMessage"] = "Занятие успешно обновлено!";
                     return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
+                    _logger.LogError(ex, "Ошибка конкурентности при обновлении события {EventId} учителем {TeacherId}", id, currentUser.Id);
                     ModelState.AddModelError("", "Ошибка при сохранении. Попробуйте еще раз.");
                 }
             }
@@ -368,8 +381,11 @@ namespace OnlineTutor2.Controllers
 
             if (calendarEvent == null) return NotFound();
 
+            var eventTitle = calendarEvent.Title;
             _context.CalendarEvents.Remove(calendarEvent);
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Учитель {TeacherId} удалил событие {EventId}: {Title}", currentUser.Id, id, eventTitle);
 
             TempData["SuccessMessage"] = "Занятие удалено из календаря";
             return RedirectToAction(nameof(Index));
@@ -532,10 +548,14 @@ namespace OnlineTutor2.Controllers
 
             if (calendarEvent == null) return NotFound();
 
+            var oldStatus = calendarEvent.IsCompleted;
             calendarEvent.IsCompleted = !calendarEvent.IsCompleted;
             calendarEvent.UpdatedAt = DateTime.Now;
 
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Учитель {TeacherId} изменил статус события {EventId} с {OldStatus} на {NewStatus}",
+                currentUser.Id, id, oldStatus, calendarEvent.IsCompleted);
 
             var status = calendarEvent.IsCompleted ? "завершено" : "возвращено в активные";
             TempData["InfoMessage"] = $"Занятие \"{calendarEvent.Title}\" {status}";
