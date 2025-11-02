@@ -89,7 +89,7 @@ else
                         <div class="row text-center mb-3">
                             <div class="col-4">
                                 <div class="d-flex flex-column">
-                                    <span class="h6 text-warning mb-0">@test.Questions.Count</span>
+                                    <span class="h6 text-warning mb-0">@test.PunctuationQuestions.Count</span>
                                     <small class="text-muted">вопросов</small>
                                 </div>
                             </div>
@@ -101,7 +101,7 @@ else
                             </div>
                             <div class="col-4">
                                 <div class="d-flex flex-column">
-                                    <span class="h6 text-success mb-0">@test.TestResults.Count</span>
+                                    <span class="h6 text-success mb-0">@test.PunctuationTestResults.Count</span>
                                     <small class="text-muted">прохождений</small>
                                 </div>
                             </div>
@@ -141,7 +141,7 @@ else
                                     <i class="fas fa-ellipsis-v"></i>
                                 </button>
                                 <ul class="dropdown-menu">
-                                    @if (test.Questions.Any())
+                                    @if (test.PunctuationQuestions.Any())
                                     {
                                         <li>
                                             <a class="dropdown-item" href="#">
