@@ -1,5 +1,5 @@
 ﻿@using OnlineTutor2.ViewModels
-@model List<OnlineTutor2.ViewModels.ImportQuestionRow>
+@model List<OnlineTutor2.ViewModels.ImportSpellingQuestionRow>
 @{
     ViewData["Title"] = "Предварительный просмотр вопросов";
     var test = ViewBag.Test as OnlineTutor2.Models.SpellingTest;
@@ -22,8 +22,8 @@
 </div>
 
 @{
-    var validQuestions = Model?.Where(q => q.IsValid).ToList() ?? new List<ImportQuestionRow>();
-    var invalidQuestions = Model?.Where(q => !q.IsValid).ToList() ?? new List<ImportQuestionRow>();
+    var validQuestions = Model?.Where(q => q.IsValid).ToList() ?? new List<ImportSpellingQuestionRow>();
+    var invalidQuestions = Model?.Where(q => !q.IsValid).ToList() ?? new List<ImportSpellingQuestionRow>();
 }
 
 <div class="row mb-4">

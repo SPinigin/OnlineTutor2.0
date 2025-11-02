@@ -122,7 +122,7 @@ namespace OnlineTutor2.Controllers
             var attemptCount = test.TestResults.Count(tr => tr.StudentId == student.Id);
             if (attemptCount >= test.MaxAttempts)
             {
-                TempData["ErrorMessage"] = $"Превышено максимальное количество попыток ({test.MaxAttempts}).";
+                TempData["ErrorMessage"] = $"Превышено количество попыток ({test.MaxAttempts}).";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -201,7 +201,7 @@ namespace OnlineTutor2.Controllers
         // POST: StudentTest/SubmitSpellingAnswer - Сохранение ответа на орфографию
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SubmitSpellingAnswer(SubmitAnswerViewModel model)
+        public async Task<IActionResult> SubmitSpellingAnswer(SubmitSpellingAnswerViewModel model)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var student = await _context.Students
@@ -362,7 +362,7 @@ namespace OnlineTutor2.Controllers
             {
                 _logger.LogWarning("Студент {StudentId} превысил лимит попыток ({MaxAttempts}) для теста пунктуации {TestId}",
                     student.Id, test.MaxAttempts, id);
-                TempData["ErrorMessage"] = $"Превышено максимальное количество попыток ({test.MaxAttempts}).";
+                TempData["ErrorMessage"] = $"Превышено количество попыток ({test.MaxAttempts}).";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -441,7 +441,7 @@ namespace OnlineTutor2.Controllers
         // POST: StudentTest/SubmitPunctuationAnswer - Сохранение ответа на пунктуацию
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SubmitPunctuationAnswer(SubmitAnswerViewModel model) // Используем ту же модель
+        public async Task<IActionResult> SubmitPunctuationAnswer(SubmitSpellingAnswerViewModel model) // Используем ту же модель
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var student = await _context.Students
@@ -656,7 +656,7 @@ namespace OnlineTutor2.Controllers
             {
                 _logger.LogWarning("Студент {StudentId} превысил лимит попыток ({MaxAttempts}) для теста орфоэпии {TestId}",
                     student.Id, test.MaxAttempts, id);
-                TempData["ErrorMessage"] = $"Превышено максимальное количество попыток ({test.MaxAttempts}).";
+                TempData["ErrorMessage"] = $"Превышено количество попыток ({test.MaxAttempts}).";
                 return RedirectToAction(nameof(Index));
             }
 

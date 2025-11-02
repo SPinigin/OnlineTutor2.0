@@ -5,7 +5,7 @@ namespace OnlineTutor2.Services
 {
     public interface ISpellingQuestionImportService
     {
-        Task<List<ImportQuestionRow>> ParseExcelFileAsync(IFormFile file);
+        Task<List<ImportSpellingQuestionRow>> ParseExcelFileAsync(IFormFile file);
         Task<byte[]> GenerateTemplateAsync();
     }
 
@@ -28,9 +28,9 @@ namespace OnlineTutor2.Services
             }
         }
 
-        public async Task<List<ImportQuestionRow>> ParseExcelFileAsync(IFormFile file)
+        public async Task<List<ImportSpellingQuestionRow>> ParseExcelFileAsync(IFormFile file)
         {
-            var questions = new List<ImportQuestionRow>();
+            var questions = new List<ImportSpellingQuestionRow>();
 
             try
             {
@@ -90,7 +90,7 @@ namespace OnlineTutor2.Services
                 {
                     try
                     {
-                        var question = new ImportQuestionRow { RowNumber = row };
+                        var question = new ImportSpellingQuestionRow { RowNumber = row };
 
                         question.WordWithGap = GetCellValue(worksheet, row, 1);
                         question.CorrectLetter = GetCellValue(worksheet, row, 2);
@@ -114,7 +114,7 @@ namespace OnlineTutor2.Services
                     catch (Exception rowEx)
                     {
                         Console.WriteLine($"[ERROR] Error processing row {row}: {rowEx.Message}");
-                        var errorQuestion = new ImportQuestionRow
+                        var errorQuestion = new ImportSpellingQuestionRow
                         {
                             RowNumber = row,
                             WordWithGap = GetCellValue(worksheet, row, 1) ?? "",
@@ -220,7 +220,7 @@ namespace OnlineTutor2.Services
             }
         }
 
-        private void ValidateQuestion(ImportQuestionRow question)
+        private void ValidateQuestion(ImportSpellingQuestionRow question)
         {
             // Проверка обязательных полей
             if (string.IsNullOrWhiteSpace(question.WordWithGap))

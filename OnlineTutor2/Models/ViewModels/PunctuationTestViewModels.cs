@@ -22,7 +22,7 @@ namespace OnlineTutor2.ViewModels
         public int TimeLimit { get; set; } = 30;
 
         [Range(1, 10, ErrorMessage = "Количество попыток должно быть от 1 до 10")]
-        [Display(Name = "Максимальное количество попыток")]
+        [Display(Name = "Количество попыток")]
         public int MaxAttempts { get; set; } = 1;
 
         [Display(Name = "Дата начала")]

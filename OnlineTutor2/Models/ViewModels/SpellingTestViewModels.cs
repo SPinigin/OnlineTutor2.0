@@ -22,7 +22,7 @@ namespace OnlineTutor2.ViewModels
         public int TimeLimit { get; set; } = 30;
 
         [Range(1, 10, ErrorMessage = "Количество попыток должно быть от 1 до 10")]
-        [Display(Name = "Максимальное количество попыток")]
+        [Display(Name = "Количество попыток")]
         public int MaxAttempts { get; set; } = 1;
 
         [Display(Name = "Дата начала")]
@@ -43,7 +43,7 @@ namespace OnlineTutor2.ViewModels
         public bool IsActive { get; set; } = true;
     }
 
-    public class StudentTestIndexViewModel
+    public class StudentSpellingTestIndexViewModel
     {
         public Student Student { get; set; }
         public List<SpellingTest> AvailableTests { get; set; } = new List<SpellingTest>();
@@ -56,7 +56,7 @@ namespace OnlineTutor2.ViewModels
         public int CurrentQuestionIndex { get; set; }
     }
 
-    public class SubmitAnswerViewModel
+    public class SubmitSpellingAnswerViewModel
     {
         [Required]
         public int TestResultId { get; set; }
@@ -71,14 +71,38 @@ namespace OnlineTutor2.ViewModels
     public class TestResultViewModel
     {
         public SpellingTestResult TestResult { get; set; }
-        public List<QuestionResultViewModel> QuestionResults { get; set; } = new List<QuestionResultViewModel>();
+        public List<SpellingQuestionResultViewModel> QuestionResults { get; set; } = new List<SpellingQuestionResultViewModel>();
     }
 
-    public class QuestionResultViewModel
+    public class SpellingQuestionResultViewModel
     {
         public SpellingQuestion Question { get; set; }
         public SpellingAnswer? Answer { get; set; }
         public bool IsCorrect { get; set; }
         public int PointsEarned { get; set; }
+    }
+
+    public class SpellingQuestionImportViewModel
+    {
+        public int SpellingTestId { get; set; }
+
+        [Required(ErrorMessage = "Выберите файл для импорта")]
+        [Display(Name = "Excel файл с вопросами")]
+        public IFormFile ExcelFile { get; set; }
+
+        [Display(Name = "Баллы за каждый правильный ответ")]
+        [Range(1, 10, ErrorMessage = "Баллы должны быть от 1 до 10")]
+        public int PointsPerQuestion { get; set; } = 1;
+    }
+
+    public class ImportSpellingQuestionRow
+    {
+        public int RowNumber { get; set; }
+        public string? WordWithGap { get; set; }
+        public string? CorrectLetter { get; set; }
+        public string? FullWord { get; set; }
+        public string? Hint { get; set; }
+        public List<string> Errors { get; set; } = new List<string>();
+        public bool IsValid => !Errors.Any();
     }
 }

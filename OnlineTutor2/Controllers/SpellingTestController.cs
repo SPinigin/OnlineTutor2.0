@@ -268,13 +268,13 @@ namespace OnlineTutor2.Controllers
             if (test == null) return NotFound();
 
             ViewBag.Test = test;
-            return View(new QuestionImportViewModel { SpellingTestId = id });
+            return View(new SpellingQuestionImportViewModel { SpellingTestId = id });
         }
 
         // POST: SpellingTest/ImportQuestions
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ImportQuestions(QuestionImportViewModel model)
+        public async Task<IActionResult> ImportQuestions(SpellingQuestionImportViewModel model)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.SpellingTests
@@ -324,7 +324,7 @@ namespace OnlineTutor2.Controllers
                 }
 
                 // Парсинг файла
-                List<ImportQuestionRow> questions;
+                List<ImportSpellingQuestionRow> questions;
                 try
                 {
                     questions = await _questionImportService.ParseExcelFileAsync(model.ExcelFile);
@@ -404,13 +404,13 @@ namespace OnlineTutor2.Controllers
                 }
 
                 var questionsArray = importData.GetProperty("Questions");
-                var questions = new List<ImportQuestionRow>();
+                var questions = new List<ImportSpellingQuestionRow>();
 
                 foreach (var questionElement in questionsArray.EnumerateArray())
                 {
                     try
                     {
-                        var question = JsonSerializer.Deserialize<ImportQuestionRow>(questionElement.GetRawText());
+                        var question = JsonSerializer.Deserialize<ImportSpellingQuestionRow>(questionElement.GetRawText());
                         if (question != null)
                         {
                             questions.Add(question);
@@ -470,12 +470,12 @@ namespace OnlineTutor2.Controllers
                 if (test == null) return NotFound();
 
                 var questionsArray = importData.GetProperty("Questions");
-                var validQuestions = new List<ImportQuestionRow>();
+                var validQuestions = new List<ImportSpellingQuestionRow>();
                 var orderIndex = test.Questions.Count;
 
                 foreach (var questionElement in questionsArray.EnumerateArray())
                 {
-                    var questionData = JsonSerializer.Deserialize<ImportQuestionRow>(questionElement.GetRawText());
+                    var questionData = JsonSerializer.Deserialize<ImportSpellingQuestionRow>(questionElement.GetRawText());
                     if (questionData.IsValid)
                     {
                         validQuestions.Add(questionData);
