@@ -17,16 +17,18 @@ namespace OnlineTutor2.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IStudentImportService _importService;
+        private readonly ILogger<StudentManagementController> _logger;
 
-        // ОДИН конструктор со всеми зависимостями
         public StudentManagementController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            IStudentImportService importService)
+            IStudentImportService importService,
+            ILogger<StudentManagementController> logger)
         {
             _context = context;
             _userManager = userManager;
             _importService = importService;
+            _logger = logger;
         }
 
         // GET: StudentManagement
@@ -138,12 +140,15 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateStudentViewModel model)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+
             if (ModelState.IsValid)
             {
                 // Проверяем, существует ли пользователь с таким email
                 var existingUser = await _userManager.FindByEmailAsync(model.Email);
                 if (existingUser != null)
                 {
+                    _logger.LogWarning("Учитель {TeacherId} попытался создать ученика с существующим email {Email}", currentUser.Id, model.Email);
                     ModelState.AddModelError("Email", "Пользователь с таким email уже существует.");
                     await LoadClassesForCreate();
                     return View(model);
@@ -179,14 +184,24 @@ namespace OnlineTutor2.Controllers
                     _context.Students.Add(student);
                     await _context.SaveChangesAsync();
 
+                    _logger.LogInformation("Учитель {TeacherId} создал ученика {StudentId}: {StudentName}, Email: {Email}, ClassId: {ClassId}",
+                        currentUser.Id, student.Id, user.FullName, model.Email, model.ClassId);
+
                     TempData["SuccessMessage"] = $"Ученик {user.FullName} успешно создан!";
                     return RedirectToAction(nameof(Index));
                 }
+
+                _logger.LogWarning("Учитель {TeacherId} не смог создать ученика {Email}. Ошибки: {@Errors}",
+                    currentUser.Id, model.Email, result.Errors);
 
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
+            }
+            else
+            {
+                _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму создания ученика", currentUser.Id);
             }
 
             await LoadClassesForCreate();
@@ -237,6 +252,8 @@ namespace OnlineTutor2.Controllers
         {
             if (id != model.Id) return NotFound();
 
+            var currentUser = await _userManager.GetUserAsync(User);
+
             if (ModelState.IsValid)
             {
                 try
@@ -259,6 +276,8 @@ namespace OnlineTutor2.Controllers
                         var existingUser = await _userManager.FindByEmailAsync(model.Email);
                         if (existingUser != null && existingUser.Id != student.User.Id)
                         {
+                            _logger.LogWarning("Учитель {TeacherId} попытался изменить email ученика {StudentId} на существующий {Email}",
+                                currentUser.Id, id, model.Email);
                             ModelState.AddModelError("Email", "Пользователь с таким email уже существует.");
                             await LoadClassesForEdit();
                             return View(model);
@@ -277,13 +296,21 @@ namespace OnlineTutor2.Controllers
                     _context.Update(student);
                     await _context.SaveChangesAsync();
 
+                    _logger.LogInformation("Учитель {TeacherId} обновил ученика {StudentId}: {StudentName}, ClassId: {ClassId}",
+                        currentUser.Id, id, student.User.FullName, model.ClassId);
+
                     TempData["SuccessMessage"] = $"Данные ученика {student.User.FullName} успешно обновлены!";
                     return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
+                    _logger.LogError(ex, "Ошибка конкурентности при обновлении ученика {StudentId} учителем {TeacherId}", id, currentUser.Id);
                     ModelState.AddModelError("", "Произошла ошибка при сохранении. Попробуйте еще раз.");
                 }
+            }
+            else
+            {
+                _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму обновления ученика {StudentId}", currentUser.Id, id);
             }
 
             await LoadClassesForEdit();
@@ -312,6 +339,8 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+
             var student = await _context.Students
                 .Include(s => s.User)
                 .FirstOrDefaultAsync(s => s.Id == id);
@@ -319,6 +348,7 @@ namespace OnlineTutor2.Controllers
             if (student == null) return NotFound();
 
             var userName = student.User.FullName;
+            var userId = student.UserId;
 
             // Удаляем связанные данные
             var testResults = _context.TestResults.Where(tr => tr.StudentId == id);
@@ -334,6 +364,9 @@ namespace OnlineTutor2.Controllers
             await _userManager.DeleteAsync(student.User);
 
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Учитель {TeacherId} удалил ученика {StudentId}, UserId: {UserId}, Имя: {StudentName}",
+                currentUser.Id, id, userId, userName);
 
             TempData["SuccessMessage"] = $"Ученик {userName} успешно удален!";
             return RedirectToAction(nameof(Index));
@@ -358,12 +391,16 @@ namespace OnlineTutor2.Controllers
                 }
             }
 
+            var oldClassId = student.ClassId;
             student.ClassId = classId;
             await _context.SaveChangesAsync();
 
             var message = classId.HasValue
                 ? $"Ученик назначен в онлайн-класс успешно!"
                 : "Ученик исключен из онлайн-класса!";
+
+            _logger.LogInformation("Учитель {TeacherId} {Action} ученика {StudentId}. Старый класс: {OldClassId}, Новый класс: {NewClassId}",
+               currentUser.Id, classId.HasValue ? "назначил в класс" : "исключил из класса", studentId, oldClassId, classId);
 
             TempData["SuccessMessage"] = message;
             return RedirectToAction(nameof(Index));
@@ -454,11 +491,17 @@ namespace OnlineTutor2.Controllers
                 };
                 _context.Students.Add(student);
                 await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Учитель {TeacherId} создал профиль студента {StudentId} для пользователя {UserId}",
+                   currentUser.Id, student.Id, userId);
             }
 
             // Назначаем студента в класс
             student.ClassId = classId;
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Учитель {TeacherId} добавил существующего ученика {StudentId} ({StudentName}) в класс {ClassId} ({ClassName})",
+                currentUser.Id, student.Id, user.FullName, classId, @class.Name);
 
             TempData["SuccessMessage"] = $"Ученик {user.FullName} успешно добавлен в класс \"{@class.Name}\"!";
             return RedirectToAction(nameof(Index));
@@ -475,6 +518,8 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Import(ImportStudentsViewModel model)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+
             if (ModelState.IsValid)
             {
                 try
@@ -491,6 +536,8 @@ namespace OnlineTutor2.Controllers
                     var fileExtension = Path.GetExtension(model.ExcelFile.FileName).ToLowerInvariant();
                     if (!allowedExtensions.Contains(fileExtension))
                     {
+                        _logger.LogWarning("Учитель {TeacherId} попытался импортировать файл недопустимого формата {FileExtension}",
+                            currentUser.Id, fileExtension);
                         ModelState.AddModelError("ExcelFile", "Поддерживаются только файлы Excel (.xlsx, .xls)");
                         await LoadClassesForImport();
                         return View(model);
@@ -504,12 +551,15 @@ namespace OnlineTutor2.Controllers
 
                     if (!students.Any())
                     {
+                        _logger.LogWarning("Учитель {TeacherId} импортировал пустой файл", currentUser.Id);
                         TempData["ErrorMessage"] = "Файл не содержит данных для импорта";
                         await LoadClassesForImport();
                         return View(model);
                     }
 
-                    // Сохраняем данные в TempData для следующего шага
+                    _logger.LogInformation("Учитель {TeacherId} успешно распарсил {StudentsCount} учеников для импорта",
+                        currentUser.Id, students.Count);
+
                     TempData["ImportData"] = JsonSerializer.Serialize(new
                     {
                         Students = students,
@@ -520,8 +570,13 @@ namespace OnlineTutor2.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Ошибка импорта учеников учителем {TeacherId}", currentUser.Id);
                     ModelState.AddModelError("", $"Ошибка при обработке файла: {ex.Message}");
                 }
+            }
+            else
+            {
+                _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму импорта учеников", currentUser.Id);
             }
 
             await LoadClassesForImport();
@@ -554,6 +609,7 @@ namespace OnlineTutor2.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Ошибка обработки предпросмотра импорта учеников");
                 TempData["ErrorMessage"] = $"Ошибка обработки данных: {ex.Message}";
                 return RedirectToAction(nameof(Import));
             }
@@ -570,6 +626,8 @@ namespace OnlineTutor2.Controllers
                 return RedirectToAction(nameof(Import));
             }
 
+            var currentUser = await _userManager.GetUserAsync(User);
+
             try
             {
                 var importData = JsonSerializer.Deserialize<JsonElement>(importDataJson);
@@ -578,7 +636,6 @@ namespace OnlineTutor2.Controllers
                     : (int?)null;
 
                 var result = new ImportResultViewModel();
-                var currentUser = await _userManager.GetUserAsync(User);
 
                 // Проверяем права на класс
                 if (classId.HasValue)
@@ -655,17 +712,23 @@ namespace OnlineTutor2.Controllers
                     }
                     catch (Exception ex)
                     {
+                        _logger.LogError(ex, "Ошибка импорта конкретного ученика {Email} учителем {TeacherId}",
+                            student.Email, currentUser.Id);
                         student.Errors.Add($"Ошибка создания: {ex.Message}");
                         result.FailedRows.Add(student);
                         result.FailedImports++;
                     }
                 }
 
+                _logger.LogInformation("Учитель {TeacherId} завершил импорт учеников. Успешно: {SuccessfulCount}, Ошибок: {FailedCount}, Всего: {TotalCount}",
+                    currentUser.Id, result.SuccessfulImports, result.FailedImports, result.TotalRows);
+
                 TempData["SuccessMessage"] = $"Импорт завершен! Успешно: {result.SuccessfulImports}, Ошибок: {result.FailedImports}";
                 return View("ImportResult", result);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Ошибка подтверждения импорта учеников учителем {TeacherId}", currentUser.Id);
                 TempData["ErrorMessage"] = $"Ошибка при импорте: {ex.Message}";
                 return RedirectToAction(nameof(Import));
             }
@@ -673,6 +736,8 @@ namespace OnlineTutor2.Controllers
 
         public async Task<IActionResult> DownloadTemplate()
         {
+            var currentUser = _userManager.GetUserAsync(User);
+
             try
             {
                 var templateBytes = await _importService.GenerateTemplateAsync();
@@ -682,6 +747,7 @@ namespace OnlineTutor2.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Ошибка генерации шаблона импорта учеников для учителя {TeacherId}", currentUser.Id);
                 TempData["ErrorMessage"] = $"Ошибка генерации шаблона: {ex.Message}";
                 return RedirectToAction(nameof(Import));
             }
