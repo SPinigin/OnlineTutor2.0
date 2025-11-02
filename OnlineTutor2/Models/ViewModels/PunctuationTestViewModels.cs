@@ -64,7 +64,7 @@ namespace OnlineTutor2.ViewModels
         public string? PlainSentence { get; set; }
         public string? Hint { get; set; }
         public List<string> Errors { get; set; } = new List<string>();
-        public bool IsValid => !Errors.Any();
+        public bool IsValid { get; set; }
     }
 
     public class TakePunctuationTestViewModel
