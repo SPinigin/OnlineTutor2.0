@@ -1,6 +1,6 @@
 ﻿@model OnlineTutor2.ViewModels.OrthoeopyTestAnalyticsViewModel
 @{
-    ViewData["Title"] = $"Аналитика теста: {Model.Test.Title}";
+    ViewData["Title"] = $"Аналитика теста: {Model.OrthoeopyTest.Title}";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -11,7 +11,7 @@
                     <a asp-controller="Test" asp-action="Category" asp-route-id="6">Тесты на орфоэпию</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a asp-controller="OrthoeopyTest" asp-action="Details" asp-route-id="@Model.Test.Id">@Model.Test.Title</a>
+                    <a asp-controller="OrthoeopyTest" asp-action="Details" asp-route-id="@Model.OrthoeopyTest.Id">@Model.OrthoeopyTest.Title</a>
                 </li>
                 <li class="breadcrumb-item active">Аналитика</li>
             </ol>
@@ -20,7 +20,7 @@
         <p class="text-muted">Детальный анализ результатов и статистика прохождения</p>
     </div>
     <div>
-        <a asp-controller="OrthoeopyTest" asp-action="Details" asp-route-id="@Model.Test.Id" class="btn btn-outline-secondary">
+        <a asp-controller="OrthoeopyTest" asp-action="Details" asp-route-id="@Model.OrthoeopyTest.Id" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left"></i> Назад к тесту
         </a>
     </div>
@@ -97,9 +97,9 @@
                         <i class="fas fa-volume-up text-success"></i>
                         <span class="info-label">Тест на орфоэпию</span>
                     </div>
-                    @if (!string.IsNullOrEmpty(Model.Test.Description))
+                    @if (!string.IsNullOrEmpty(Model.OrthoeopyTest.Description))
                     {
-                        <p class="text-muted mb-0 small">@Model.Test.Description</p>
+                        <p class="text-muted mb-0 small">@Model.OrthoeopyTest.Description</p>
                     }
                 </div>
             </div>
@@ -109,18 +109,18 @@
                     <div class="test-info-item mb-2">
                         <i class="fas fa-list text-info"></i>
                         <span class="info-label">Количество вопросов: </span>
-                        <span class="info-value">@Model.Test.Questions.Count</span>
+                        <span class="info-value">@Model.OrthoeopyTest.OrthoeopyQuestions.Count</span>
                     </div>
                     <div class="test-info-item mb-2">
                         <i class="fas fa-clock text-warning"></i>
                         <span class="info-label">Время на выполнение: </span>
-                        <span class="info-value">@Model.Test.TimeLimit</span>
+                        <span class="info-value">@Model.OrthoeopyTest.TimeLimit</span>
                         <span class="info-label">минут</span>
                     </div>
                     <div class="test-info-item">
                         <i class="fas fa-redo text-secondary"></i>
                         <span class="info-label">Количество попыток:</span>
-                        <span class="info-value">@Model.Test.MaxAttempts</span>
+                        <span class="info-value">@Model.OrthoeopyTest.MaxAttempts</span>
                     </div>
                 </div>
             </div>
@@ -131,7 +131,7 @@
                         <i class="fas fa-cog me-2"></i>Настройки:
                     </h6>
                     <div class="mb-2">
-                        @if (Model.Test.ShowHints)
+                        @if (Model.OrthoeopyTest.ShowHints)
                         {
                             <span class="setting-tag setting-enabled">
                                 <i class="fas fa-lightbulb"></i> Подсказки
@@ -144,7 +144,7 @@
                             </span>
                         }
 
-                        @if (Model.Test.ShowCorrectAnswers)
+                        @if (Model.OrthoeopyTest.ShowCorrectAnswers)
                         {
                             <span class="setting-tag setting-enabled">
                                 <i class="fas fa-check"></i> Показ ответов
@@ -158,21 +158,21 @@
                         }
                     </div>
 
-                    @if (Model.Test.StartDate.HasValue || Model.Test.EndDate.HasValue)
+                    @if (Model.OrthoeopyTest.StartDate.HasValue || Model.OrthoeopyTest.EndDate.HasValue)
                     {
                         <div>
-                            @if (Model.Test.StartDate.HasValue)
+                            @if (Model.OrthoeopyTest.StartDate.HasValue)
                             {
                                 <div class="date-info mb-1">
                                     <i class="fas fa-play text-success"></i>
-                                    <span class="small">@Model.Test.StartDate.Value.ToString("dd.MM.yyyy HH:mm")</span>
+                                    <span class="small">@Model.OrthoeopyTest.StartDate.Value.ToString("dd.MM.yyyy HH:mm")</span>
                                 </div>
                             }
-                            @if (Model.Test.EndDate.HasValue)
+                            @if (Model.OrthoeopyTest.EndDate.HasValue)
                             {
                                 <div class="date-info">
                                     <i class="fas fa-stop text-danger"></i>
-                                    <span class="small">@Model.Test.EndDate.Value.ToString("dd.MM.yyyy HH:mm")</span>
+                                    <span class="small">@Model.OrthoeopyTest.EndDate.Value.ToString("dd.MM.yyyy HH:mm")</span>
                                 </div>
                             }
                         </div>
@@ -255,10 +255,10 @@
                         {
                             <dl class="row">
                                 <dt class="col-sm-6">Лучший результат:</dt>
-                                <dd class="col-sm-6">@Model.Statistics.HighestScore/@Model.Test.Questions.Sum(q => q.Points) баллов</dd>
+                                <dd class="col-sm-6">@Model.Statistics.HighestScore/@Model.OrthoeopyTest.OrthoeopyQuestions.Sum(q => q.Points) баллов</dd>
 
                                 <dt class="col-sm-6">Худший результат:</dt>
-                                <dd class="col-sm-6">@Model.Statistics.LowestScore/@Model.Test.Questions.Sum(q => q.Points) баллов</dd>
+                                <dd class="col-sm-6">@Model.Statistics.LowestScore/@Model.OrthoeopyTest.OrthoeopyQuestions.Sum(q => q.Points) баллов</dd>
 
                                 <dt class="col-sm-6">Средний балл:</dt>
                                 <dd class="col-sm-6">@Model.Statistics.AverageScore.ToString("F1") баллов</dd>
@@ -341,7 +341,7 @@
                                     </td>
                                     <td>
                                         <span class="badge bg-info">
-                                            @studentResult.AttemptsUsed/@Model.Test.MaxAttempts
+                                            @studentResult.AttemptsUsed/@Model.OrthoeopyTest.MaxAttempts
                                         </span>
                                     </td>
                                     <td>
@@ -546,7 +546,7 @@
 
     <script>
         function showOrthoeopyStudentDetails(studentId, studentName) {
-            loadOrthoeopyStudentDetails(studentId, studentName, @Model.Test.Id);
+            loadOrthoeopyStudentDetails(studentId, studentName, @Model.OrthoeopyTest.Id);
         }
 
         function showStudentDetails(studentId, studentName) {
