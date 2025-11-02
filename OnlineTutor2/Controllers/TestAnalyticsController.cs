@@ -101,13 +101,13 @@ namespace OnlineTutor2.Controllers
                 .Include(pt => pt.Class)
                     .ThenInclude(c => c.Students)
                         .ThenInclude(s => s.User)
-                .Include(pt => pt.Questions.OrderBy(q => q.OrderIndex))
-                .Include(pt => pt.TestResults)
+                .Include(pt => pt.PunctuationQuestions.OrderBy(q => q.OrderIndex))
+                .Include(pt => pt.PunctuationTestResults)
                     .ThenInclude(tr => tr.Student)
                         .ThenInclude(s => s.User)
-                .Include(pt => pt.TestResults)
-                    .ThenInclude(tr => tr.Answers)
-                        .ThenInclude(a => a.Question)
+                .Include(pt => pt.PunctuationTestResults)
+                    .ThenInclude(tr => tr.PunctuationAnswers)
+                        .ThenInclude(a => a.PunctuationQuestion)
                 .FirstOrDefaultAsync(pt => pt.Id == id && pt.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -209,7 +209,7 @@ namespace OnlineTutor2.Controllers
                 var studentResult = new SpellingTestResultViewModel
                 {
                     Student = student,
-                    SpellingResults = results,
+                    Results = results,
                     AttemptsUsed = results.Count,
                     HasCompleted = completedResults.Any(),
                     IsInProgress = results.Any(tr => !tr.IsCompleted)
@@ -334,9 +334,9 @@ namespace OnlineTutor2.Controllers
 
         private PunctuationTestStatistics BuildPunctuationStatistics(PunctuationTest test, List<Student> allStudents)
         {
-            var completedResults = test.TestResults.Where(tr => tr.IsCompleted).ToList();
-            var inProgressResults = test.TestResults.Where(tr => !tr.IsCompleted).ToList();
-            var studentsWithResults = test.TestResults.Select(tr => tr.StudentId).Distinct().Count();
+            var completedResults = test.PunctuationTestResults.Where(tr => tr.IsCompleted).ToList();
+            var inProgressResults = test.PunctuationTestResults.Where(tr => !tr.IsCompleted).ToList();
+            var studentsWithResults = test.PunctuationTestResults.Select(tr => tr.StudentId).Distinct().Count();
 
             var stats = new PunctuationTestStatistics
             {
@@ -384,7 +384,7 @@ namespace OnlineTutor2.Controllers
 
             foreach (var student in allStudents)
             {
-                var results = test.TestResults.Where(tr => tr.StudentId == student.Id).ToList();
+                var results = test.PunctuationTestResults.Where(tr => tr.StudentId == student.Id).ToList();
                 var completedResults = results.Where(tr => tr.IsCompleted).ToList();
 
                 var studentResult = new PunctuationStudentResultViewModel
@@ -421,10 +421,10 @@ namespace OnlineTutor2.Controllers
         {
             var questionAnalytics = new List<PunctuationQuestionAnalyticsViewModel>();
 
-            foreach (var question in test.Questions.OrderBy(q => q.OrderIndex))
+            foreach (var question in test.PunctuationQuestions.OrderBy(q => q.OrderIndex))
             {
-                var answers = test.TestResults
-                    .SelectMany(tr => tr.Answers)
+                var answers = test.PunctuationTestResults
+                    .SelectMany(tr => tr.PunctuationAnswers)
                     .Where(a => a.PunctuationQuestionId == question.Id)
                     .ToList();
 
@@ -448,7 +448,7 @@ namespace OnlineTutor2.Controllers
                             IncorrectAnswer = g.Key,
                             Count = g.Count(),
                             Percentage = Math.Round((double)g.Count() / analytics.IncorrectAnswers * 100, 1),
-                            StudentNames = g.Select(a => a.TestResult.Student.User.FullName).ToList()
+                            StudentNames = g.Select(a => a.PunctuationTestResult.Student.User.FullName).ToList()
                         })
                         .OrderByDescending(m => m.Count)
                         .Take(5)
@@ -484,7 +484,7 @@ namespace OnlineTutor2.Controllers
         {
             var analytics = new RegularTestAnalyticsViewModel
             {
-                Test = test
+                RegularTest = test
             };
 
             var allStudents = new List<Student>();
@@ -506,7 +506,7 @@ namespace OnlineTutor2.Controllers
             }
 
             analytics.Statistics = BuildRegularTestStatistics(test, allStudents);
-            analytics.StudentResults = BuildRegularTestStudentResults(test, allStudents);
+            analytics.RegularResults = BuildRegularTestStudentResults(test, allStudents);
             analytics.QuestionAnalytics = BuildRegularTestQuestionAnalytics(test);
 
             return analytics;
@@ -683,8 +683,8 @@ namespace OnlineTutor2.Controllers
                 return NotFound();
 
             var results = await _context.PunctuationTestResults
-                .Include(tr => tr.Answers)
-                    .ThenInclude(a => a.Question)
+                .Include(tr => tr.PunctuationAnswers)
+                    .ThenInclude(a => a.PunctuationQuestion)
                 .Where(tr => tr.PunctuationTestId == testId && tr.StudentId == studentId && tr.IsCompleted)
                 .OrderByDescending(tr => tr.CompletedAt)
                 .ToListAsync();
@@ -692,12 +692,12 @@ namespace OnlineTutor2.Controllers
             var bestResult = results.OrderByDescending(r => r.Percentage).FirstOrDefault();
 
             var mistakes = results
-                .SelectMany(r => r.Answers)
+                .SelectMany(r => r.PunctuationAnswers)
                 .Where(a => !a.IsCorrect)
                 .GroupBy(a => new {
                     a.StudentAnswer,
-                    a.Question.CorrectPositions,
-                    a.Question.SentenceWithNumbers
+                    a.PunctuationQuestion.CorrectPositions,
+                    a.PunctuationQuestion.SentenceWithNumbers
                 })
                 .Select(g => new
                 {
@@ -742,8 +742,6 @@ namespace OnlineTutor2.Controllers
 
             return Json(response);
         }
-
-        
 
         // GET: TestAnalytics/GetStudentDetails
         [HttpGet]

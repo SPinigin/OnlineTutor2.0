@@ -104,8 +104,14 @@ namespace OnlineTutor2.Controllers
                 .Include(s => s.User)
                 .Include(s => s.Class)
                     .ThenInclude(c => c.Teacher)
-                .Include(s => s.TestResults)
-                    .ThenInclude(tr => tr.Test)
+                .Include(s => s.RegularTestResults)
+                    .ThenInclude(tr => tr.RegularTest)
+                .Include(s => s.SpellingTestResults)
+                    .ThenInclude(tr => tr.SpellingTest)
+                .Include(s => s.PunctuationTestResults)
+                    .ThenInclude(tr => tr.PunctuationTest)
+                .Include(s => s.OrthoeopyTestResults)
+                    .ThenInclude(tr => tr.OrthoeopyTest)
                 .Include(s => s.Grades)
                     .ThenInclude(g => g.Assignment)
                 .FirstOrDefaultAsync(s => s.Id == id);
@@ -325,7 +331,10 @@ namespace OnlineTutor2.Controllers
             var student = await _context.Students
                 .Include(s => s.User)
                 .Include(s => s.Class)
-                .Include(s => s.TestResults)
+                .Include(s => s.RegularTestResults)
+                .Include(s => s.SpellingTestResults)
+                .Include(s => s.PunctuationTestResults)
+                .Include(s => s.OrthoeopyTestResults)
                 .Include(s => s.Grades)
                 .FirstOrDefaultAsync(s => s.Id == id);
 
@@ -351,8 +360,14 @@ namespace OnlineTutor2.Controllers
             var userId = student.UserId;
 
             // Удаляем связанные данные
-            var testResults = _context.TestResults.Where(tr => tr.StudentId == id);
-            _context.TestResults.RemoveRange(testResults);
+            var regularTestResults = _context.RegularTestResults.Where(tr => tr.StudentId == id);
+            var spellingTestResults = _context.SpellingTestResults.Where(tr => tr.StudentId == id);
+            var punctuationTestResults = _context.PunctuationTestResults.Where(tr => tr.StudentId == id);
+            var orthoeopyTestResults = _context.OrthoeopyTestResults.Where(tr => tr.StudentId == id);
+            _context.RegularTestResults.RemoveRange(regularTestResults);
+            _context.SpellingTestResults.RemoveRange(spellingTestResults);
+            _context.PunctuationTestResults.RemoveRange(punctuationTestResults);
+            _context.OrthoeopyTestResults.RemoveRange(orthoeopyTestResults);
 
             var grades = _context.Grades.Where(g => g.StudentId == id);
             _context.Grades.RemoveRange(grades);
