@@ -29,17 +29,17 @@
                     Попытка @Model.TestResult.AttemptNumber из @Model.TestResult.SpellingTest.MaxAttempts
                 </span>
                 <span class="small text-muted">
-                    Вопрос <span id="currentQuestion">1</span> из @Model.TestResult.SpellingTest.Questions.Count
+                    Вопрос <span id="currentQuestion">1</span> из @Model.TestResult.SpellingTest.SpellingQuestions.Count
                 </span>
             </div>
         </div>
     </div>
 
     <div id="questionsContainer">
-        @for (int i = 0; i < Model.TestResult.SpellingTest.Questions.Count; i++)
+        @for (int i = 0; i < Model.TestResult.SpellingTest.SpellingQuestions.Count; i++)
         {
-            var question = Model.TestResult.SpellingTest.Questions.ElementAt(i);
-            var existingAnswer = Model.TestResult.Answers.FirstOrDefault(a => a.SpellingQuestionId == question.Id);
+            var question = Model.TestResult.SpellingTest.SpellingQuestions.ElementAt(i);
+            var existingAnswer = Model.TestResult.SpellingAnswers.FirstOrDefault(a => a.SpellingQuestionId == question.Id);
 
             <div class="question-card @(i == 0 ? "active" : "d-none")" data-question-index="@i" data-question-id="@question.Id">
                 <div class="card">
@@ -135,7 +135,7 @@
                     <i class="fas fa-exclamation-triangle"></i>
                     <strong>Внимание!</strong> После завершения теста вы не сможете изменить ответы.
                 </div>
-                <p>Вы ответили на <span id="answeredCount">0</span> из @Model.TestResult.SpellingTest.Questions.Count вопросов.</p>
+                <p>Вы ответили на <span id="answeredCount">0</span> из @Model.TestResult.SpellingTest.SpellingQuestions.Count вопросов.</p>
                 <p>Вы уверены, что хотите завершить тест?</p>
             </div>
             <div class="modal-footer">
@@ -224,7 +224,7 @@
 @section Scripts {
     <script>
         let currentQuestionIndex = 0;
-        let totalQuestions = @Model.TestResult.SpellingTest.Questions.Count;
+        let totalQuestions = @Model.TestResult.SpellingTest.SpellingQuestions.Count;
         let timeRemaining = @((int)Model.TimeRemaining.TotalSeconds);
         let answers = {};
         let timerInterval;
@@ -265,7 +265,7 @@
         }
 
         function loadExistingAnswers() {
-            @foreach (var answer in Model.TestResult.Answers)
+            @foreach (var answer in Model.TestResult.SpellingAnswers)
             {
                     <text>
                     answers[@answer.SpellingQuestionId] = '@answer.StudentAnswer';
