@@ -34,11 +34,14 @@
             <a asp-action="Index" asp-route-category="orthoepy" class="btn btn-@(currentCategory == "orthoepy" ? "success" : "outline-success")">
                 <i class="fas fa-volume-up"></i> Орфоэпия
             </a>
+            <a asp-action="Index" asp-route-category="regular" class="btn btn-@(currentCategory == "regular" ? "success" : "outline-success")">
+                <i class="fas fa-volume-up"></i> Классические
+            </a>
         </div>
     </div>
 </div>
 
-@if (!Model.SpellingTests.Any() && !Model.PunctuationTests.Any())
+@if (!Model.SpellingTests.Any() && !Model.PunctuationTests.Any() && !Model.OrthoeopyTests.Any() && !Model.RegularTests.Any())
 {
     <div class="text-center py-5">
         <i class="fas fa-tasks text-muted" style="font-size: 4rem;"></i>
@@ -50,11 +53,11 @@ else
 {
     @if (Model.SpellingTests.Any() && (string.IsNullOrEmpty(currentCategory) || currentCategory == "spelling"))
     {
-        <h4 class="mb-3"><i class="fas fa-spell-check text-primary"></i> Тесты на орфографию</h4>
+        <h4 class="mb-3"><i class="fas fa-spell-check text-primary"></i> Тесты по орфографии</h4>
         <div class="row mb-5">
             @foreach (var test in Model.SpellingTests)
             {
-                var studentResults = test.TestResults.Where(tr => tr.StudentId == Model.Student.Id).ToList();
+                var studentResults = test.SpellingTestResults.Where(tr => tr.StudentId == Model.Student.Id).ToList();
                 var completedResults = studentResults.Where(tr => tr.IsCompleted).ToList();
                 var ongoingResult = studentResults.FirstOrDefault(tr => !tr.IsCompleted);
                 var attemptsUsed = studentResults.Count;
@@ -85,7 +88,7 @@ else
                             <div class="row text-center mb-3">
                                 <div class="col-4">
                                     <div class="d-flex flex-column">
-                                        <span class="h6 text-primary mb-0">@test.Questions.Count</span>
+                                        <span class="h6 text-primary mb-0">@test.SpellingQuestions.Count</span>
                                         <small class="text-muted">вопросов</small>
                                     </div>
                                 </div>
@@ -154,11 +157,11 @@ else
 
     @if (Model.PunctuationTests.Any() && (string.IsNullOrEmpty(currentCategory) || currentCategory == "punctuation"))
     {
-        <h4 class="mb-3"><i class="fas fa-exclamation text-warning"></i> Тесты на пунктуацию</h4>
+        <h4 class="mb-3"><i class="fas fa-exclamation text-warning"></i> Тесты по пунктуации</h4>
         <div class="row">
             @foreach (var test in Model.PunctuationTests)
             {
-                var studentResults = test.TestResults.Where(tr => tr.StudentId == Model.Student.Id).ToList();
+                var studentResults = test.PunctuationTestResults.Where(tr => tr.StudentId == Model.Student.Id).ToList();
                 var completedResults = studentResults.Where(tr => tr.IsCompleted).ToList();
                 var ongoingResult = studentResults.FirstOrDefault(tr => !tr.IsCompleted);
                 var attemptsUsed = studentResults.Count;
@@ -189,7 +192,7 @@ else
                             <div class="row text-center mb-3">
                                 <div class="col-4">
                                     <div class="d-flex flex-column">
-                                        <span class="h6 text-warning mb-0">@test.Questions.Count</span>
+                                        <span class="h6 text-warning mb-0">@test.PunctuationQuestions.Count</span>
                                         <small class="text-muted">вопросов</small>
                                     </div>
                                 </div>
@@ -258,11 +261,11 @@ else
 
     @if (Model.OrthoeopyTests.Any() && (string.IsNullOrEmpty(currentCategory) || currentCategory == "orthoepy"))
     {
-        <h4 class="mb-3"><i class="fas fa-volume-up text-success"></i> Тесты на орфоэпию</h4>
+        <h4 class="mb-3"><i class="fas fa-volume-up text-success"></i> Тесты по орфоэпии</h4>
         <div class="row">
             @foreach (var test in Model.OrthoeopyTests)
             {
-                var studentResults = test.TestResults.Where(tr => tr.StudentId == Model.Student.Id).ToList();
+                var studentResults = test.OrthoeopyTestResults.Where(tr => tr.StudentId == Model.Student.Id).ToList();
                 var completedResults = studentResults.Where(tr => tr.IsCompleted).ToList();
                 var ongoingResult = studentResults.FirstOrDefault(tr => !tr.IsCompleted);
                 var attemptsUsed = studentResults.Count;
@@ -293,7 +296,7 @@ else
                             <div class="row text-center mb-3">
                                 <div class="col-4">
                                     <div class="d-flex flex-column">
-                                        <span class="h6 text-success mb-0">@test.Questions.Count</span>
+                                        <span class="h6 text-success mb-0">@test.OrthoeopyQuestions.Count</span>
                                         <small class="text-muted">вопросов</small>
                                     </div>
                                 </div>
