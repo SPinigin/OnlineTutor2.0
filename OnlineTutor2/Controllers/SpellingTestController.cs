@@ -39,7 +39,7 @@ namespace OnlineTutor2.Controllers
             var tests = await _context.SpellingTests
                 .Where(st => st.TeacherId == currentUser.Id)
                 .Include(st => st.Class)
-                .Include(st => st.Questions)
+                .Include(st => st.SpellingQuestions)
                 .OrderByDescending(st => st.CreatedAt)
                 .ToListAsync();
 
@@ -55,12 +55,12 @@ namespace OnlineTutor2.Controllers
             var test = await _context.SpellingTests
                 .Include(st => st.Teacher)
                 .Include(st => st.Class)
-                .Include(st => st.Questions.OrderBy(q => q.OrderIndex))
-                .Include(st => st.TestResults)
+                .Include(st => st.SpellingQuestions.OrderBy(q => q.OrderIndex))
+                .Include(st => st.SpellingTestResults)
                     .ThenInclude(tr => tr.Student)
                         .ThenInclude(s => s.User)
-                .Include(st => st.TestResults)
-                    .ThenInclude(tr => tr.Answers)
+                .Include(st => st.SpellingTestResults)
+                    .ThenInclude(tr => tr.SpellingAnswers)
                 .FirstOrDefaultAsync(st => st.Id == id && st.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -206,12 +206,12 @@ namespace OnlineTutor2.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.SpellingTests
                 .Include(st => st.Class)
-                .Include(st => st.Questions)
-                .Include(st => st.TestResults)
+                .Include(st => st.SpellingQuestions)
+                .Include(st => st.SpellingTestResults)
                     .ThenInclude(tr => tr.Student)
                         .ThenInclude(s => s.User)
-                .Include(st => st.TestResults)
-                    .ThenInclude(tr => tr.Answers)
+                .Include(st => st.SpellingTestResults)
+                    .ThenInclude(tr => tr.SpellingAnswers)
                 .FirstOrDefaultAsync(st => st.Id == id && st.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -226,15 +226,15 @@ namespace OnlineTutor2.Controllers
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.SpellingTests
-                .Include(st => st.TestResults)
+                .Include(st => st.SpellingTestResults)
                 .FirstOrDefaultAsync(st => st.Id == id && st.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
 
-            if (test.TestResults.Any())
+            if (test.SpellingTestResults.Any())
             {
                 _logger.LogWarning("Учитель {TeacherId} попытался удалить тест орфографии {TestId} с результатами ({ResultsCount})",
-                    currentUser.Id, id, test.TestResults.Count);
+                    currentUser.Id, id, test.SpellingTestResults.Count);
                 TempData["ErrorMessage"] = "Нельзя удалить тест, который уже проходили ученики.";
                 return RedirectToAction(nameof(Delete), new { id });
             }
@@ -464,14 +464,14 @@ namespace OnlineTutor2.Controllers
 
                 var currentUser = await _userManager.GetUserAsync(User);
                 var test = await _context.SpellingTests
-                    .Include(st => st.Questions)
+                    .Include(st => st.SpellingQuestions)
                     .FirstOrDefaultAsync(st => st.Id == testId && st.TeacherId == currentUser.Id);
 
                 if (test == null) return NotFound();
 
                 var questionsArray = importData.GetProperty("Questions");
                 var validQuestions = new List<ImportSpellingQuestionRow>();
-                var orderIndex = test.Questions.Count;
+                var orderIndex = test.SpellingQuestions.Count;
 
                 foreach (var questionElement in questionsArray.EnumerateArray())
                 {
@@ -541,7 +541,7 @@ namespace OnlineTutor2.Controllers
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.SpellingTests
-                .Include(st => st.Questions)
+                .Include(st => st.SpellingQuestions)
                 .FirstOrDefaultAsync(st => st.Id == id && st.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -550,12 +550,12 @@ namespace OnlineTutor2.Controllers
             var model = new SpellingQuestion
             {
                 SpellingTestId = test.Id,
-                OrderIndex = test.Questions.Count + 1,
+                OrderIndex = test.SpellingQuestions.Count + 1,
                 Points = 1
             };
 
             ViewBag.Test = test;
-            ViewBag.NextOrderIndex = test.Questions.Count + 1;
+            ViewBag.NextOrderIndex = test.SpellingQuestions.Count + 1;
 
             return View(model);
         }
@@ -567,7 +567,7 @@ namespace OnlineTutor2.Controllers
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.SpellingTests
-                .Include(st => st.Questions)
+                .Include(st => st.SpellingQuestions)
                 .FirstOrDefaultAsync(st => st.Id == model.SpellingTestId && st.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -586,7 +586,7 @@ namespace OnlineTutor2.Controllers
                     FullWord = model.FullWord,
                     Hint = model.Hint,
                     Points = model.Points > 0 ? model.Points : 1,
-                    OrderIndex = model.OrderIndex > 0 ? model.OrderIndex : test.Questions.Count + 1
+                    OrderIndex = model.OrderIndex > 0 ? model.OrderIndex : test.SpellingQuestions.Count + 1
                 };
 
                 _context.SpellingQuestions.Add(question);
@@ -602,7 +602,7 @@ namespace OnlineTutor2.Controllers
             _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму добавления вопроса к тесту орфографии {TestId}", currentUser.Id, model.SpellingTestId);
 
             ViewBag.Test = test;
-            ViewBag.NextOrderIndex = test.Questions.Count + 1;
+            ViewBag.NextOrderIndex = test.SpellingQuestions.Count + 1;
             return View(model);
         }
 
@@ -756,7 +756,7 @@ namespace OnlineTutor2.Controllers
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.SpellingTests
-                .Include(st => st.Questions)
+                .Include(st => st.SpellingQuestions)
                 .FirstOrDefaultAsync(st => st.Id == testId && st.TeacherId == currentUser.Id);
 
             if (test == null)
@@ -766,7 +766,7 @@ namespace OnlineTutor2.Controllers
             {
                 for (int i = 0; i < questionIds.Count; i++)
                 {
-                    var question = test.Questions.FirstOrDefault(q => q.Id == questionIds[i]);
+                    var question = test.SpellingQuestions.FirstOrDefault(q => q.Id == questionIds[i]);
                     if (question != null)
                     {
                         question.OrderIndex = i + 1;
