@@ -1,6 +1,11 @@
 ﻿@model OnlineTutor2.Models.Student
 @{
     ViewData["Title"] = "Удаление ученика";
+
+    var totalTestResults = Model.RegularTestResults.Count +
+                         Model.SpellingTestResults.Count +
+                         Model.PunctuationTestResults.Count +
+                         Model.OrthoeopyTestResults.Count;
 }
 
 <div class="row justify-content-center">
@@ -100,15 +105,15 @@
                     </div>
                 </div>
 
-                @if (Model.TestResults.Any() || Model.Grades.Any())
+                @if (totalTestResults > 0 || Model.Grades.Any())
                 {
                     <div class="alert alert-warning mt-3">
                         <i class="fas fa-info-circle"></i>
                         <strong>Будет удалено:</strong>
                         <ul class="mb-0 mt-2">
-                            @if (Model.TestResults.Any())
+                            @if (totalTestResults > 0)
                             {
-                                <li>Все результаты тестов (@Model.TestResults.Count шт.)</li>
+                                <li>Все результаты тестов (@totalTestResults шт.)</li>
                             }
                             @if (Model.Grades.Any())
                             {
