@@ -6,7 +6,7 @@ namespace OnlineTutor2.ViewModels
     {
         public SpellingTest SpellingTest { get; set; }
         public SpellingTestStatistics Statistics { get; set; }
-        public List<StudentSpellingTestResultViewModel> StudentSpellingResults { get; set; } = new List<StudentSpellingTestResultViewModel>();
+        public List<SpellingTestResultViewModel> SpellingResults { get; set; } = new List<SpellingTestResultViewModel>();
         public List<SpellingQuestionAnalyticsViewModel> SpellingQuestionAnalytics { get; set; } = new List<SpellingQuestionAnalyticsViewModel>();
     }
 
@@ -26,7 +26,7 @@ namespace OnlineTutor2.ViewModels
         public Dictionary<string, int> GradeDistribution { get; set; } = new Dictionary<string, int>();
     }
 
-    public class StudentSpellingTestResultViewModel
+    public class SpellingTestResultViewModel
     {
         public Student Student { get; set; }
         public List<SpellingTestResult> Results { get; set; } = new List<SpellingTestResult>();
@@ -40,7 +40,7 @@ namespace OnlineTutor2.ViewModels
 
     public class SpellingQuestionAnalyticsViewModel
     {
-        public SpellingQuestion Question { get; set; }
+        public SpellingQuestion SpellingQuestion { get; set; }
         public int TotalAnswers { get; set; }
         public int CorrectAnswers { get; set; }
         public int IncorrectAnswers { get; set; }

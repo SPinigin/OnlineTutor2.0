@@ -143,7 +143,7 @@ namespace OnlineTutor2.Controllers
             }
 
             analytics.Statistics = BuildSpellingStatistics(test, allStudents);
-            analytics.StudentSpellingResults = BuildSpellingStudentResults(test, allStudents);
+            analytics.SpellingResults = BuildSpellingStudentResults(test, allStudents);
             analytics.SpellingQuestionAnalytics = BuildSpellingQuestionAnalytics(test);
 
             return analytics;
@@ -197,19 +197,19 @@ namespace OnlineTutor2.Controllers
             return stats;
         }
 
-        private List<StudentSpellingTestResultViewModel> BuildSpellingStudentResults(SpellingTest test, List<Student> allStudents)
+        private List<SpellingTestResultViewModel> BuildSpellingStudentResults(SpellingTest test, List<Student> allStudents)
         {
-            var studentResults = new List<StudentSpellingTestResultViewModel>();
+            var studentResults = new List<SpellingTestResultViewModel>();
 
             foreach (var student in allStudents)
             {
                 var results = test.SpellingTestResults.Where(tr => tr.StudentId == student.Id).ToList();
                 var completedResults = results.Where(tr => tr.IsCompleted).ToList();
 
-                var studentResult = new StudentSpellingTestResultViewModel
+                var studentResult = new SpellingTestResultViewModel
                 {
                     Student = student,
-                    Results = results,
+                    SpellingResults = results,
                     AttemptsUsed = results.Count,
                     HasCompleted = completedResults.Any(),
                     IsInProgress = results.Any(tr => !tr.IsCompleted)
@@ -249,7 +249,7 @@ namespace OnlineTutor2.Controllers
 
                 var analytics = new SpellingQuestionAnalyticsViewModel
                 {
-                    Question = question,
+                    SpellingQuestion = question,
                     TotalAnswers = answers.Count,
                     CorrectAnswers = answers.Count(a => a.IsCorrect),
                     IncorrectAnswers = answers.Count(a => !a.IsCorrect)
