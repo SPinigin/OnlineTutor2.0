@@ -1,6 +1,6 @@
 ﻿@model OnlineTutor2.ViewModels.RegularTestAnalyticsViewModel
 @{
-    ViewData["Title"] = $"Аналитика теста: {Model.Test.Title}";
+    ViewData["Title"] = $"Аналитика теста: {Model.RegularTest.Title}";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -11,7 +11,7 @@
                     <a asp-controller="Test" asp-action="Index">Тесты</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a asp-controller="Test" asp-action="Details" asp-route-id="@Model.Test.Id">@Model.Test.Title</a>
+                    <a asp-controller="Test" asp-action="Details" asp-route-id="@Model.RegularTest.Id">@Model.RegularTest.Title</a>
                 </li>
                 <li class="breadcrumb-item active">Аналитика</li>
             </ol>
@@ -20,7 +20,7 @@
         <p class="text-muted">Детальный анализ результатов и статистика прохождения</p>
     </div>
     <div>
-        <a asp-controller="Test" asp-action="Details" asp-route-id="@Model.Test.Id" class="btn btn-outline-secondary">
+        <a asp-controller="Test" asp-action="Details" asp-route-id="@Model.RegularTest.Id" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left"></i> Назад к тесту
         </a>
     </div>
@@ -93,7 +93,7 @@
                 <strong>Тип теста:</strong>
                 <div class="mt-1">
                     <span class="badge bg-info fs-6">
-                        @switch (Model.Test.Type)
+                        @switch (Model.RegularTest.Type)
                         {
                             case TestType.Practice:
                                 <i class="fas fa-dumbbell"></i> <span>Практика</span>
@@ -116,22 +116,22 @@
             </div>
             <div class="col-md-3">
                 <strong>Вопросов в тесте:</strong>
-                <div class="mt-1"><span class="badge bg-primary fs-6">@Model.Test.Questions.Count</span></div>
+                <div class="mt-1"><span class="badge bg-primary fs-6">@Model.RegularTest.RegularQuestions.Count</span></div>
             </div>
             <div class="col-md-3">
                 <strong>Время на выполнение:</strong>
-                <div class="mt-1"><span class="badge bg-warning fs-6">@Model.Test.TimeLimit минут</span></div>
+                <div class="mt-1"><span class="badge bg-warning fs-6">@Model.RegularTest.TimeLimit минут</span></div>
             </div>
             <div class="col-md-3">
                 <strong>Максимум попыток:</strong>
-                <div class="mt-1"><span class="badge bg-secondary fs-6">@Model.Test.MaxAttempts</span></div>
+                <div class="mt-1"><span class="badge bg-secondary fs-6">@Model.RegularTest.MaxAttempts</span></div>
             </div>
         </div>
-        @if (!string.IsNullOrEmpty(Model.Test.Description))
+        @if (!string.IsNullOrEmpty(Model.RegularTest.Description))
         {
             <div class="mt-3">
                 <strong>Описание:</strong>
-                <p class="text-muted mb-0">@Model.Test.Description</p>
+                <p class="text-muted mb-0">@Model.RegularTest.Description</p>
             </div>
         }
     </div>
@@ -145,7 +145,7 @@
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" type="button" role="tab">
-            <i class="fas fa-users"></i> Ученики (@Model.StudentResults.Count)
+            <i class="fas fa-users"></i> Ученики (@Model.RegularResults.Count)
         </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -199,10 +199,10 @@
                         {
                             <dl class="row">
                                 <dt class="col-sm-6">Лучший результат:</dt>
-                                <dd class="col-sm-6">@Model.Statistics.HighestScore/@Model.Test.Questions.Sum(q => q.Points) баллов</dd>
+                                <dd class="col-sm-6">@Model.Statistics.HighestScore/@Model.RegularTest.RegularQuestions.Sum(q => q.Points) баллов</dd>
 
                                 <dt class="col-sm-6">Худший результат:</dt>
-                                <dd class="col-sm-6">@Model.Statistics.LowestScore/@Model.Test.Questions.Sum(q => q.Points) баллов</dd>
+                                <dd class="col-sm-6">@Model.Statistics.LowestScore/@Model.RegularTest.RegularQuestions.Sum(q => q.Points) баллов</dd>
 
                                 <dt class="col-sm-6">Средний балл:</dt>
                                 <dd class="col-sm-6">@Model.Statistics.AverageScore.ToString("F1") баллов</dd>
@@ -253,7 +253,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var studentResult in Model.StudentResults)
+                            @foreach (var studentResult in Model.RegularResults)
                             {
                                 <tr>
                                     <td>
@@ -284,7 +284,7 @@
                                     </td>
                                     <td>
                                         <span class="badge bg-info">
-                                            @studentResult.AttemptsUsed/@Model.Test.MaxAttempts
+                                            @studentResult.AttemptsUsed/@Model.RegularTest.MaxAttempts
                                         </span>
                                     </td>
                                     <td>
@@ -351,7 +351,7 @@
                             <div class="col-md-8">
                                 <h6 class="mb-0">
                                     <span class="badge bg-info me-2">@questionIndex</span>
-                                    @qa.Question.Text
+                                    @qa.RegularQuestion.Text
                                     @if (qa.IsMostDifficult)
                                     {
                                         <span class="badge bg-danger ms-2">Ошибка</span>
@@ -363,7 +363,7 @@
                                 </h6>
                                 <small class="text-muted">
                                     Тип: 
-                                    @switch (qa.Question.Type)
+                                    @switch (qa.RegularQuestion.Type)
                                     {
                                         case QuestionType.MultipleChoice:
                                             <span>Множественный выбор</span>
@@ -374,17 +374,11 @@
                                         case QuestionType.TrueFalse:
                                             <span>Верно/Неверно</span>
                                             break;
-                                        case QuestionType.Text:
-                                            <span>Текстовый ответ</span>
-                                            break;
-                                        case QuestionType.Essay:
-                                            <span>Эссе</span>
-                                            break;
                                         default:
                                             <span>Обычный</span>
                                             break;
                                     }
-                                    | Баллов: @qa.Question.Points
+                                    | Баллов: @qa.RegularQuestion.Points
                                 </small>
                             </div>
                             <div class="col-md-4 text-end">
@@ -403,7 +397,7 @@
                         </div>
                     </div>
                     
-                    @if (qa.Question.Type != QuestionType.Essay && qa.Question.Type != QuestionType.Text)
+                    @* @if (qa.RegularQuestion.Type != QuestionType.Essay && qa.Question.Type != QuestionType.Text)
                     {
                         <div class="card-body">
                             <h6><i class="fas fa-list"></i> Варианты ответов:</h6>
@@ -438,7 +432,7 @@
                                 }
                             </div>
                         </div>
-                    }
+                    } *@
                     
                     @if (qa.CommonMistakes.Any())
                     {

@@ -4,9 +4,9 @@ namespace OnlineTutor2.ViewModels
 {
     public class RegularTestAnalyticsViewModel
     {
-        public RegularTest Test { get; set; }
+        public RegularTest RegularTest { get; set; }
         public RegularTestStatistics Statistics { get; set; }
-        public List<RegularTestStudentResultViewModel> StudentResults { get; set; } = new List<RegularTestStudentResultViewModel>();
+        public List<RegularTestStudentResultViewModel> RegularResults { get; set; } = new List<RegularTestStudentResultViewModel>();
         public List<RegularTestQuestionAnalyticsViewModel> QuestionAnalytics { get; set; } = new List<RegularTestQuestionAnalyticsViewModel>();
     }
 
