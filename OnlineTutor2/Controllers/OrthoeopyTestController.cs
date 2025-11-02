@@ -35,11 +35,12 @@ namespace OnlineTutor2.Controllers
         public async Task<IActionResult> Index()
         {
             var currentUser = await _userManager.GetUserAsync(User);
+
             var tests = await _context.OrthoeopyTests
                 .Where(ot => ot.TeacherId == currentUser.Id)
                 .Include(ot => ot.Class)
-                .Include(ot => ot.Questions)
-                .Include(ot => ot.TestResults)
+                .Include(ot => ot.OrthoeopyQuestions)
+                .Include(ot => ot.OrthoeopyTestResults)
                 .OrderByDescending(ot => ot.CreatedAt)
                 .ToListAsync();
 
@@ -55,12 +56,12 @@ namespace OnlineTutor2.Controllers
             var test = await _context.OrthoeopyTests
                 .Include(ot => ot.Teacher)
                 .Include(ot => ot.Class)
-                .Include(ot => ot.Questions.OrderBy(q => q.OrderIndex))
-                .Include(ot => ot.TestResults)
+                .Include(ot => ot.OrthoeopyQuestions.OrderBy(q => q.OrderIndex))
+                .Include(ot => ot.OrthoeopyTestResults)
                     .ThenInclude(tr => tr.Student)
                         .ThenInclude(s => s.User)
-                .Include(ot => ot.TestResults)
-                    .ThenInclude(tr => tr.Answers)
+                .Include(ot => ot.OrthoeopyTestResults)
+                    .ThenInclude(tr => tr.OrthoeopyAnswers)
                 .FirstOrDefaultAsync(ot => ot.Id == id && ot.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -202,12 +203,12 @@ namespace OnlineTutor2.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.OrthoeopyTests
                 .Include(ot => ot.Class)
-                .Include(ot => ot.Questions)
-                .Include(ot => ot.TestResults)
+                .Include(ot => ot.OrthoeopyQuestions)
+                .Include(ot => ot.OrthoeopyTestResults)
                     .ThenInclude(tr => tr.Student)
                         .ThenInclude(s => s.User)
-                .Include(ot => ot.TestResults)
-                    .ThenInclude(tr => tr.Answers)
+                .Include(ot => ot.OrthoeopyTestResults)
+                    .ThenInclude(tr => tr.OrthoeopyAnswers)
                 .FirstOrDefaultAsync(ot => ot.Id == id && ot.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -223,15 +224,15 @@ namespace OnlineTutor2.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
 
             var test = await _context.OrthoeopyTests
-                .Include(ot => ot.TestResults)
+                .Include(ot => ot.OrthoeopyTestResults)
                 .FirstOrDefaultAsync(ot => ot.Id == id && ot.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
 
-            if (test.TestResults.Any())
+            if (test.OrthoeopyTestResults.Any())
             {
                 _logger.LogWarning("Учитель {TeacherId} попытался удалить тест орфоэпии {TestId} с результатами ({ResultsCount})",
-                   currentUser.Id, id, test.TestResults.Count);
+                   currentUser.Id, id, test.OrthoeopyTestResults.Count);
                 TempData["ErrorMessage"] = "Нельзя удалить тест, который уже проходили ученики.";
                 return RedirectToAction(nameof(Delete), new { id });
             }
@@ -251,7 +252,7 @@ namespace OnlineTutor2.Controllers
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.OrthoeopyTests
-                .Include(ot => ot.Questions)
+                .Include(ot => ot.OrthoeopyQuestions)
                 .FirstOrDefaultAsync(ot => ot.Id == id && ot.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -259,13 +260,13 @@ namespace OnlineTutor2.Controllers
             var model = new OrthoeopyQuestion
             {
                 OrthoeopyTestId = test.Id,
-                OrderIndex = test.Questions.Count + 1,
+                OrderIndex = test.OrthoeopyQuestions.Count + 1,
                 Points = 1,
                 StressPosition = 1
             };
 
             ViewBag.Test = test;
-            ViewBag.NextOrderIndex = test.Questions.Count + 1;
+            ViewBag.NextOrderIndex = test.OrthoeopyQuestions.Count + 1;
 
             return View(model);
         }
@@ -277,7 +278,7 @@ namespace OnlineTutor2.Controllers
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.OrthoeopyTests
-                .Include(ot => ot.Questions)
+                .Include(ot => ot.OrthoeopyQuestions)
                 .FirstOrDefaultAsync(ot => ot.Id == model.OrthoeopyTestId && ot.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -295,7 +296,7 @@ namespace OnlineTutor2.Controllers
                     Hint = model.Hint,
                     WrongStressPositions = model.WrongStressPositions,
                     Points = model.Points > 0 ? model.Points : 1,
-                    OrderIndex = model.OrderIndex > 0 ? model.OrderIndex : test.Questions.Count + 1
+                    OrderIndex = model.OrderIndex > 0 ? model.OrderIndex : test.OrthoeopyQuestions.Count + 1
                 };
 
                 _context.OrthoeopyQuestions.Add(question);
@@ -311,7 +312,7 @@ namespace OnlineTutor2.Controllers
             _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму добавления вопроса к тесту орфоэпии {TestId}", currentUser.Id, model.OrthoeopyTestId);
 
             ViewBag.Test = test;
-            ViewBag.NextOrderIndex = test.Questions.Count + 1;
+            ViewBag.NextOrderIndex = test.OrthoeopyQuestions.Count + 1;
             return View(model);
         }
 
@@ -391,16 +392,16 @@ namespace OnlineTutor2.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var question = await _context.OrthoeopyQuestions
                 .Include(oq => oq.OrthoeopyTest)
-                .Include(oq => oq.StudentAnswers)
+                .Include(oq => oq.OrthoeopyAnswers)
                 .FirstOrDefaultAsync(oq => oq.Id == id && oq.OrthoeopyTest.TeacherId == currentUser.Id);
 
             if (question == null)
                 return Json(new { success = false, message = "Вопрос не найден" });
 
-            if (question.StudentAnswers.Any())
+            if (question.OrthoeopyAnswers.Any())
             {
                 _logger.LogWarning("Учитель {TeacherId} попытался удалить вопрос орфоэпии {QuestionId} с ответами студентов ({AnswersCount})",
-                    currentUser.Id, id, question.StudentAnswers.Count);
+                    currentUser.Id, id, question.OrthoeopyAnswers.Count);
 
                 return Json(new
                 {
@@ -649,14 +650,14 @@ namespace OnlineTutor2.Controllers
 
                 var currentUser = await _userManager.GetUserAsync(User);
                 var test = await _context.OrthoeopyTests
-                    .Include(ot => ot.Questions)
+                    .Include(ot => ot.OrthoeopyQuestions)
                     .FirstOrDefaultAsync(ot => ot.Id == testId && ot.TeacherId == currentUser.Id);
 
                 if (test == null) return NotFound();
 
                 var questionsArray = importData.GetProperty("Questions");
                 var validQuestions = new List<ImportOrthoeopyQuestionRow>();
-                var orderIndex = test.Questions.Count;
+                var orderIndex = test.OrthoeopyQuestions.Count;
 
                 foreach (var questionElement in questionsArray.EnumerateArray())
                 {

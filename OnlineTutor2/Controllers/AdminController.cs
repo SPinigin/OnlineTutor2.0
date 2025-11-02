@@ -41,7 +41,11 @@ namespace OnlineTutor2.Controllers
                 TotalRegularTests = await _context.RegularTests.CountAsync(),
                 TotalPunctuationTests = await _context.PunctuationTests.CountAsync(),
                 TotalOrthoeopyTests = await _context.OrthoeopyTests.CountAsync(),
-                TotalTestResults = await _context.SpellingTestResults.CountAsync() + await _context.PunctuationTestResults.CountAsync() + await _context.RegularTestResults.CountAsync() + await _context.OrthoeopyTestResults.CountAsync(),
+                TotalTestResults = 
+                    await _context.SpellingTestResults.CountAsync() + 
+                    await _context.PunctuationTestResults.CountAsync() + 
+                    await _context.RegularTestResults.CountAsync() + 
+                    await _context.OrthoeopyTestResults.CountAsync(),
                 PendingTeachers = await _context.Teachers.CountAsync(t => !t.IsApproved),
 
                 RecentUsers = await _userManager.Users
@@ -290,7 +294,10 @@ namespace OnlineTutor2.Controllers
             var classes = await _context.Classes
                 .Include(c => c.Teacher)
                 .Include(c => c.Students)
-                .Include(c => c.Tests)
+                .Include(c => c.RegularTests)
+                .Include(c => c.SpellingTests)
+                .Include(c => c.PunctuationTests)
+                .Include(c => c.OrthoeopyTests)
                 .Include(c => c.Materials)
                 .OrderBy(c => c.Name)
                 .ToListAsync();
@@ -306,7 +313,10 @@ namespace OnlineTutor2.Controllers
             var adminId = _userManager.GetUserId(User);
             var @class = await _context.Classes
                 .Include(c => c.Students)
-                .Include(c => c.Tests)
+                .Include(c => c.RegularTests)
+                .Include(c => c.SpellingTests)
+                .Include(c => c.PunctuationTests)
+                .Include(c => c.OrthoeopyTests)
                 .Include(c => c.Materials)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
@@ -318,7 +328,7 @@ namespace OnlineTutor2.Controllers
 
             var className = @class.Name;
             var studentsCount = @class.Students.Count;
-            var testsCount = @class.Tests.Count;
+            var testsCount = @class.RegularTests.Count + @class.SpellingTests.Count + @class.PunctuationTests.Count + @class.OrthoeopyTests.Count;
 
             // Убираем студентов из класса
             foreach (var student in @class.Students)
@@ -327,7 +337,22 @@ namespace OnlineTutor2.Controllers
             }
 
             // Убираем привязку тестов к классу
-            foreach (var test in @class.Tests)
+            foreach (var test in @class.RegularTests)
+            {
+                test.ClassId = null;
+            }
+
+            foreach (var test in @class.SpellingTests)
+            {
+                test.ClassId = null;
+            }
+
+            foreach (var test in @class.PunctuationTests)
+            {
+                test.ClassId = null;
+            }
+
+            foreach (var test in @class.OrthoeopyTests)
             {
                 test.ClassId = null;
             }
@@ -478,7 +503,7 @@ namespace OnlineTutor2.Controllers
                 {
                     Id = tr.Id,
                     TestTitle = tr.RegularTest.Title,
-                    TestType = "Обычный",
+                    TestType = "Классический",
                     StudentName = tr.Student.User.FullName,
                     Score = tr.Score,
                     MaxScore = tr.MaxScore,
