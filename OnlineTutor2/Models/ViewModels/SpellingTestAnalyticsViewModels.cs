@@ -4,13 +4,13 @@ namespace OnlineTutor2.ViewModels
 {
     public class SpellingTestAnalyticsViewModel
     {
-        public SpellingTest Test { get; set; }
-        public TestStatistics Statistics { get; set; }
-        public List<StudentTestResultViewModel> StudentResults { get; set; } = new List<StudentTestResultViewModel>();
-        public List<QuestionAnalyticsViewModel> QuestionAnalytics { get; set; } = new List<QuestionAnalyticsViewModel>();
+        public SpellingTest SpellingTest { get; set; }
+        public SpellingTestStatistics Statistics { get; set; }
+        public List<StudentSpellingTestResultViewModel> StudentSpellingResults { get; set; } = new List<StudentSpellingTestResultViewModel>();
+        public List<SpellingQuestionAnalyticsViewModel> SpellingQuestionAnalytics { get; set; } = new List<SpellingQuestionAnalyticsViewModel>();
     }
 
-    public class TestStatistics
+    public class SpellingTestStatistics
     {
         public int TotalStudents { get; set; }
         public int StudentsCompleted { get; set; }
@@ -26,7 +26,7 @@ namespace OnlineTutor2.ViewModels
         public Dictionary<string, int> GradeDistribution { get; set; } = new Dictionary<string, int>();
     }
 
-    public class StudentTestResultViewModel
+    public class StudentSpellingTestResultViewModel
     {
         public Student Student { get; set; }
         public List<SpellingTestResult> Results { get; set; } = new List<SpellingTestResult>();
@@ -38,7 +38,7 @@ namespace OnlineTutor2.ViewModels
         public TimeSpan? TotalTimeSpent { get; set; }
     }
 
-    public class QuestionAnalyticsViewModel
+    public class SpellingQuestionAnalyticsViewModel
     {
         public SpellingQuestion Question { get; set; }
         public int TotalAnswers { get; set; }

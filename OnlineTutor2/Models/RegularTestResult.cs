@@ -1,6 +1,6 @@
 ﻿namespace OnlineTutor2.Models
 {
-    public class TestResult
+    public class RegularTestResult
     {
         public int Id { get; set; }
 
@@ -23,8 +23,8 @@
         public int AttemptNumber { get; set; }
 
         // Навигационные свойства
-        public virtual Test Test { get; set; }
+        public virtual RegularTest RegularTest { get; set; }
         public virtual Student Student { get; set; }
-        public virtual ICollection<StudentAnswer> StudentAnswers { get; set; } = new List<StudentAnswer>();
+        public virtual ICollection<RegularAnswer> RegularAnswers { get; set; } = new List<RegularAnswer>();
     }
 }

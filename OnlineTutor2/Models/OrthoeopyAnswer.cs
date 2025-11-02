@@ -18,7 +18,7 @@ namespace OnlineTutor2.Models
         public DateTime AnsweredAt { get; set; } = DateTime.Now;
 
         // Навигационные свойства
-        public virtual OrthoeopyTestResult TestResult { get; set; } = null!;
-        public virtual OrthoeopyQuestion Question { get; set; } = null!;
+        public virtual OrthoeopyTestResult OrthoeopyTestResult { get; set; } = null!;
+        public virtual OrthoeopyQuestion OrthoeopyQuestion { get; set; } = null!;
     }
 }

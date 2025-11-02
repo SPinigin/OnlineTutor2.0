@@ -25,6 +25,6 @@
         // Навигационные свойства
         public virtual SpellingTest SpellingTest { get; set; }
         public virtual Student Student { get; set; }
-        public virtual ICollection<SpellingAnswer> Answers { get; set; } = new List<SpellingAnswer>();
+        public virtual ICollection<SpellingAnswer> SpellingAnswers { get; set; } = new List<SpellingAnswer>();
     }
 }

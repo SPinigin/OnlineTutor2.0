@@ -20,6 +20,6 @@
         // Навигационные свойства
         public virtual OrthoeopyTest OrthoeopyTest { get; set; } = null!;
         public virtual Student Student { get; set; } = null!;
-        public virtual ICollection<OrthoeopyAnswer> Answers { get; set; } = new List<OrthoeopyAnswer>();
+        public virtual ICollection<OrthoeopyAnswer> OrthoeopyAnswers { get; set; } = new List<OrthoeopyAnswer>();
     }
 }

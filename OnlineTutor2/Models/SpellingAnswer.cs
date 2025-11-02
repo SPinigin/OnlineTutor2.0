@@ -20,7 +20,7 @@ namespace OnlineTutor2.Models
         public DateTime AnsweredAt { get; set; } = DateTime.Now;
 
         // Навигационные свойства
-        public virtual SpellingTestResult TestResult { get; set; }
-        public virtual SpellingQuestion Question { get; set; }
+        public virtual SpellingTestResult SpellingTestResult { get; set; }
+        public virtual SpellingQuestion SpellingQuestion { get; set; }
     }
 }

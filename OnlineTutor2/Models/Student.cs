@@ -24,7 +24,7 @@ namespace OnlineTutor2.Models
         // Навигационные свойства
         public virtual ApplicationUser User { get; set; }
         public virtual Class? Class { get; set; }
-        public virtual ICollection<TestResult> TestResults { get; set; } = new List<TestResult>();
+        public virtual ICollection<RegularTestResult> TestResults { get; set; } = new List<RegularTestResult>();
         public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
         public virtual ICollection<Grade> Grades { get; set; } = new List<Grade>();
     }

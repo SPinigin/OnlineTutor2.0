@@ -48,7 +48,7 @@ namespace OnlineTutor2.Models
         public virtual ApplicationUser Teacher { get; set; } = null!;
         public virtual TestCategory TestCategory { get; set; } = null!;
         public virtual Class? Class { get; set; }
-        public virtual ICollection<OrthoeopyQuestion> Questions { get; set; } = new List<OrthoeopyQuestion>();
-        public virtual ICollection<OrthoeopyTestResult> TestResults { get; set; } = new List<OrthoeopyTestResult>();
+        public virtual ICollection<OrthoeopyQuestion> OrthoeopyQuestions { get; set; } = new List<OrthoeopyQuestion>();
+        public virtual ICollection<OrthoeopyTestResult> OrthoeopyTestResults { get; set; } = new List<OrthoeopyTestResult>();
     }
 }

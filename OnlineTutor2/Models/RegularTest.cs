@@ -2,7 +2,7 @@
 
 namespace OnlineTutor2.Models
 {
-    public class Test
+    public class RegularTest
     {
         public int Id { get; set; }
 
@@ -35,8 +35,8 @@ namespace OnlineTutor2.Models
         // Навигационные свойства
         public virtual ApplicationUser Teacher { get; set; }
         public virtual Class? Class { get; set; }
-        public virtual ICollection<Question> Questions { get; set; } = new List<Question>();
-        public virtual ICollection<TestResult> TestResults { get; set; } = new List<TestResult>();
+        public virtual ICollection<RegularQuestion> RegularQuestions { get; set; } = new List<RegularQuestion>();
+        public virtual ICollection<RegularTestResult> RegularTestResults { get; set; } = new List<RegularTestResult>();
     }
 
     public enum TestType

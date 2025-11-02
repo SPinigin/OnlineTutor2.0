@@ -4,11 +4,27 @@ namespace OnlineTutor2.ViewModels
 {
     public class PunctuationTestAnalyticsViewModel
     {
-        public PunctuationTest Test { get; set; } = null!;
-        public TestStatistics Statistics { get; set; } = new TestStatistics();
+        public PunctuationTest PunctuationTest { get; set; } = null!;
+        public PunctuationTestStatistics Statistics { get; set; } = new PunctuationTestStatistics();
         public List<PunctuationStudentResultViewModel> StudentResults { get; set; } = new List<PunctuationStudentResultViewModel>();
         public List<PunctuationQuestionAnalyticsViewModel> QuestionAnalytics { get; set; } = new List<PunctuationQuestionAnalyticsViewModel>();
         public List<Student> StudentsNotTaken { get; set; } = new List<Student>();
+    }
+
+    public class PunctuationTestStatistics
+    {
+        public int TotalStudents { get; set; }
+        public int StudentsCompleted { get; set; }
+        public int StudentsNotStarted { get; set; }
+        public int StudentsInProgress { get; set; }
+        public double AverageScore { get; set; }
+        public double AveragePercentage { get; set; }
+        public int HighestScore { get; set; }
+        public int LowestScore { get; set; }
+        public TimeSpan AverageCompletionTime { get; set; }
+        public DateTime? FirstCompletion { get; set; }
+        public DateTime? LastCompletion { get; set; }
+        public Dictionary<string, int> GradeDistribution { get; set; } = new Dictionary<string, int>();
     }
 
     public class PunctuationStudentResultViewModel

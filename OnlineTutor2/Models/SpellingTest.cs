@@ -48,7 +48,7 @@ namespace OnlineTutor2.Models
         public virtual ApplicationUser Teacher { get; set; } = null!;
         public virtual TestCategory TestCategory { get; set; } = null!;
         public virtual Class? Class { get; set; }
-        public virtual ICollection<SpellingQuestion> Questions { get; set; } = new List<SpellingQuestion>();
-        public virtual ICollection<SpellingTestResult> TestResults { get; set; } = new List<SpellingTestResult>();
+        public virtual ICollection<SpellingQuestion> SpellingQuestions { get; set; } = new List<SpellingQuestion>();
+        public virtual ICollection<SpellingTestResult> SpellingTestResults { get; set; } = new List<SpellingTestResult>();
     }
 }

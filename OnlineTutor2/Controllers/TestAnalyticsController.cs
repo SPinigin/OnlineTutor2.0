@@ -29,13 +29,13 @@ namespace OnlineTutor2.Controllers
                 .Include(st => st.Class)
                     .ThenInclude(c => c.Students)
                         .ThenInclude(s => s.User)
-                .Include(st => st.Questions.OrderBy(q => q.OrderIndex))
-                .Include(st => st.TestResults)
+                .Include(st => st.SpellingQuestions.OrderBy(q => q.OrderIndex))
+                .Include(st => st.SpellingTestResults)
                     .ThenInclude(tr => tr.Student)
                         .ThenInclude(s => s.User)
-                .Include(st => st.TestResults)
-                    .ThenInclude(tr => tr.Answers)
-                        .ThenInclude(a => a.Question)
+                .Include(st => st.SpellingTestResults)
+                    .ThenInclude(tr => tr.SpellingAnswers)
+                        .ThenInclude(a => a.SpellingQuestion)
                 .FirstOrDefaultAsync(st => st.Id == id && st.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -44,27 +44,23 @@ namespace OnlineTutor2.Controllers
             return View("SpellingAnalytics", analytics);
         }
 
-        // GET: TestAnalytics/Regular/5 - Аналитика обычного теста
+        // GET: TestAnalytics/Regular/1 - Аналитика обычного теста
         public async Task<IActionResult> Regular(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            var test = await _context.Tests
-                .Include(t => t.Teacher)
-                .Include(t => t.Class)
+            var test = await _context.RegularTests
+                .Include(st => st.Teacher)
+                .Include(st => st.Class)
                     .ThenInclude(c => c.Students)
                         .ThenInclude(s => s.User)
-                .Include(t => t.Questions.OrderBy(q => q.OrderIndex))
-                    .ThenInclude(q => q.Answers)
-                .Include(t => t.TestResults)
+                .Include(st => st.RegularQuestions.OrderBy(q => q.OrderIndex))
+                .Include(st => st.RegularTestResults)
                     .ThenInclude(tr => tr.Student)
                         .ThenInclude(s => s.User)
-                .Include(t => t.TestResults)
-                    .ThenInclude(tr => tr.StudentAnswers)
-                        .ThenInclude(sa => sa.Question)
-                .Include(t => t.TestResults)
-                    .ThenInclude(tr => tr.StudentAnswers)
-                        .ThenInclude(sa => sa.Answer)
-                .FirstOrDefaultAsync(t => t.Id == id && t.TeacherId == currentUser.Id);
+                .Include(st => st.RegularTestResults)
+                    .ThenInclude(tr => tr.RegularAnswers)
+                        .ThenInclude(a => a.RegularQuestion)
+                .FirstOrDefaultAsync(st => st.Id == id && st.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
 
@@ -72,12 +68,60 @@ namespace OnlineTutor2.Controllers
             return View("RegularTestAnalytics", analytics);
         }
 
+        // GET: TestAnalytics/Regular/6 - Аналитика теста орфоэпии
+        public async Task<IActionResult> Orthoeopy(int id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var test = await _context.OrthoeopyTests
+                .Include(st => st.Teacher)
+                .Include(st => st.Class)
+                    .ThenInclude(c => c.Students)
+                        .ThenInclude(s => s.User)
+                .Include(st => st.OrthoeopyQuestions.OrderBy(q => q.OrderIndex))
+                .Include(st => st.OrthoeopyTestResults)
+                    .ThenInclude(tr => tr.Student)
+                        .ThenInclude(s => s.User)
+                .Include(st => st.OrthoeopyTestResults)
+                    .ThenInclude(tr => tr.OrthoeopyAnswers)
+                        .ThenInclude(a => a.OrthoeopyQuestion)
+                .FirstOrDefaultAsync(st => st.Id == id && st.TeacherId == currentUser.Id);
+
+            if (test == null) return NotFound();
+
+            var analytics = await BuildOrthoeopyAnalyticsAsync(test);
+            return View("OrthoeopyTestAnalytics", analytics);
+        }
+
+        // GET: TestAnalytics/Punctuation/5 - Аналитика теста на пунктуацию
+        public async Task<IActionResult> Punctuation(int id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var test = await _context.PunctuationTests
+                .Include(pt => pt.Teacher)
+                .Include(pt => pt.Class)
+                    .ThenInclude(c => c.Students)
+                        .ThenInclude(s => s.User)
+                .Include(pt => pt.Questions.OrderBy(q => q.OrderIndex))
+                .Include(pt => pt.TestResults)
+                    .ThenInclude(tr => tr.Student)
+                        .ThenInclude(s => s.User)
+                .Include(pt => pt.TestResults)
+                    .ThenInclude(tr => tr.Answers)
+                        .ThenInclude(a => a.Question)
+                .FirstOrDefaultAsync(pt => pt.Id == id && pt.TeacherId == currentUser.Id);
+
+            if (test == null) return NotFound();
+
+            var analytics = await BuildPunctuationAnalyticsAsync(test);
+            return View("PunctuationAnalytics", analytics);
+        }
+
         // Методы для тестов на орфографию
         private async Task<SpellingTestAnalyticsViewModel> BuildSpellingAnalyticsAsync(SpellingTest test)
         {
             var analytics = new SpellingTestAnalyticsViewModel
             {
-                Test = test
+                SpellingTest = test
             };
 
             var allStudents = new List<Student>();
@@ -99,19 +143,19 @@ namespace OnlineTutor2.Controllers
             }
 
             analytics.Statistics = BuildSpellingStatistics(test, allStudents);
-            analytics.StudentResults = BuildSpellingStudentResults(test, allStudents);
-            analytics.QuestionAnalytics = BuildSpellingQuestionAnalytics(test);
+            analytics.StudentSpellingResults = BuildSpellingStudentResults(test, allStudents);
+            analytics.SpellingQuestionAnalytics = BuildSpellingQuestionAnalytics(test);
 
             return analytics;
         }
 
-        private TestStatistics BuildSpellingStatistics(SpellingTest test, List<Student> allStudents)
+        private SpellingTestStatistics BuildSpellingStatistics(SpellingTest test, List<Student> allStudents)
         {
-            var completedResults = test.TestResults.Where(tr => tr.IsCompleted).ToList();
-            var inProgressResults = test.TestResults.Where(tr => !tr.IsCompleted).ToList();
-            var studentsWithResults = test.TestResults.Select(tr => tr.StudentId).Distinct().Count();
+            var completedResults = test.SpellingTestResults.Where(tr => tr.IsCompleted).ToList();
+            var inProgressResults = test.SpellingTestResults.Where(tr => !tr.IsCompleted).ToList();
+            var studentsWithResults = test.SpellingTestResults.Select(tr => tr.StudentId).Distinct().Count();
 
-            var stats = new TestStatistics
+            var stats = new SpellingTestStatistics
             {
                 TotalStudents = allStudents.Count,
                 StudentsCompleted = completedResults.Select(tr => tr.StudentId).Distinct().Count(),
@@ -153,16 +197,16 @@ namespace OnlineTutor2.Controllers
             return stats;
         }
 
-        private List<StudentTestResultViewModel> BuildSpellingStudentResults(SpellingTest test, List<Student> allStudents)
+        private List<StudentSpellingTestResultViewModel> BuildSpellingStudentResults(SpellingTest test, List<Student> allStudents)
         {
-            var studentResults = new List<StudentTestResultViewModel>();
+            var studentResults = new List<StudentSpellingTestResultViewModel>();
 
             foreach (var student in allStudents)
             {
-                var results = test.TestResults.Where(tr => tr.StudentId == student.Id).ToList();
+                var results = test.SpellingTestResults.Where(tr => tr.StudentId == student.Id).ToList();
                 var completedResults = results.Where(tr => tr.IsCompleted).ToList();
 
-                var studentResult = new StudentTestResultViewModel
+                var studentResult = new StudentSpellingTestResultViewModel
                 {
                     Student = student,
                     Results = results,
@@ -192,18 +236,18 @@ namespace OnlineTutor2.Controllers
             return studentResults.OrderBy(sr => sr.Student.User.LastName).ToList();
         }
 
-        private List<QuestionAnalyticsViewModel> BuildSpellingQuestionAnalytics(SpellingTest test)
+        private List<SpellingQuestionAnalyticsViewModel> BuildSpellingQuestionAnalytics(SpellingTest test)
         {
-            var questionAnalytics = new List<QuestionAnalyticsViewModel>();
+            var questionAnalytics = new List<SpellingQuestionAnalyticsViewModel>();
 
-            foreach (var question in test.Questions.OrderBy(q => q.OrderIndex))
+            foreach (var question in test.SpellingQuestions.OrderBy(q => q.OrderIndex))
             {
-                var answers = test.TestResults
-                    .SelectMany(tr => tr.Answers)
+                var answers = test.SpellingTestResults
+                    .SelectMany(tr => tr.SpellingAnswers)
                     .Where(a => a.SpellingQuestionId == question.Id)
                     .ToList();
 
-                var analytics = new QuestionAnalyticsViewModel
+                var analytics = new SpellingQuestionAnalyticsViewModel
                 {
                     Question = question,
                     TotalAnswers = answers.Count,
@@ -224,7 +268,7 @@ namespace OnlineTutor2.Controllers
                             IncorrectAnswer = g.Key,
                             Count = g.Count(),
                             Percentage = Math.Round((double)g.Count() / analytics.IncorrectAnswers * 100, 1),
-                            StudentNames = g.Select(a => a.TestResult.Student.User.FullName).ToList()
+                            StudentNames = g.Select(a => a.SpellingTestResult.Student.User.FullName).ToList()
                         })
                         .OrderByDescending(m => m.Count)
                         .Take(5)
@@ -255,36 +299,12 @@ namespace OnlineTutor2.Controllers
             return questionAnalytics;
         }
 
-        // GET: TestAnalytics/Punctuation/5 - Аналитика теста на пунктуацию
-        public async Task<IActionResult> Punctuation(int id)
-        {
-            var currentUser = await _userManager.GetUserAsync(User);
-            var test = await _context.PunctuationTests
-                .Include(pt => pt.Teacher)
-                .Include(pt => pt.Class)
-                    .ThenInclude(c => c.Students)
-                        .ThenInclude(s => s.User)
-                .Include(pt => pt.Questions.OrderBy(q => q.OrderIndex))
-                .Include(pt => pt.TestResults)
-                    .ThenInclude(tr => tr.Student)
-                        .ThenInclude(s => s.User)
-                .Include(pt => pt.TestResults)
-                    .ThenInclude(tr => tr.Answers)
-                        .ThenInclude(a => a.Question)
-                .FirstOrDefaultAsync(pt => pt.Id == id && pt.TeacherId == currentUser.Id);
-
-            if (test == null) return NotFound();
-
-            var analytics = await BuildPunctuationAnalyticsAsync(test);
-            return View("PunctuationAnalytics", analytics);
-        }
-
         // Методы для тестов на пунктуацию
         private async Task<PunctuationTestAnalyticsViewModel> BuildPunctuationAnalyticsAsync(PunctuationTest test)
         {
             var analytics = new PunctuationTestAnalyticsViewModel
             {
-                Test = test
+                PunctuationTest = test
             };
 
             var allStudents = new List<Student>();
@@ -312,13 +332,13 @@ namespace OnlineTutor2.Controllers
             return analytics;
         }
 
-        private TestStatistics BuildPunctuationStatistics(PunctuationTest test, List<Student> allStudents)
+        private PunctuationTestStatistics BuildPunctuationStatistics(PunctuationTest test, List<Student> allStudents)
         {
             var completedResults = test.TestResults.Where(tr => tr.IsCompleted).ToList();
             var inProgressResults = test.TestResults.Where(tr => !tr.IsCompleted).ToList();
             var studentsWithResults = test.TestResults.Select(tr => tr.StudentId).Distinct().Count();
 
-            var stats = new TestStatistics
+            var stats = new PunctuationTestStatistics
             {
                 TotalStudents = allStudents.Count,
                 StudentsCompleted = completedResults.Select(tr => tr.StudentId).Distinct().Count(),
@@ -459,6 +479,188 @@ namespace OnlineTutor2.Controllers
             return questionAnalytics;
         }
 
+        // Методы для обычных тестов
+        private async Task<RegularTestAnalyticsViewModel> BuildRegularTestAnalyticsAsync(RegularTest test)
+        {
+            var analytics = new RegularTestAnalyticsViewModel
+            {
+                Test = test
+            };
+
+            var allStudents = new List<Student>();
+            if (test.Class != null)
+            {
+                allStudents = test.Class.Students.ToList();
+            }
+            else
+            {
+                var teacherClassIds = await _context.Classes
+                    .Where(c => c.TeacherId == test.TeacherId)
+                    .Select(c => c.Id)
+                    .ToListAsync();
+
+                allStudents = await _context.Students
+                    .Include(s => s.User)
+                    .Where(s => s.ClassId.HasValue && teacherClassIds.Contains(s.ClassId.Value))
+                    .ToListAsync();
+            }
+
+            analytics.Statistics = BuildRegularTestStatistics(test, allStudents);
+            analytics.StudentResults = BuildRegularTestStudentResults(test, allStudents);
+            analytics.QuestionAnalytics = BuildRegularTestQuestionAnalytics(test);
+
+            return analytics;
+        }
+
+        private RegularTestStatistics BuildRegularTestStatistics(RegularTest test, List<Student> allStudents)
+        {
+            var completedResults = test.RegularTestResults.Where(tr => tr.IsCompleted).ToList();
+            var inProgressResults = test.RegularTestResults.Where(tr => !tr.IsCompleted).ToList();
+            var studentsWithResults = test.RegularTestResults.Select(tr => tr.StudentId).Distinct().Count();
+
+            var stats = new RegularTestStatistics
+            {
+                TotalStudents = allStudents.Count,
+                StudentsCompleted = completedResults.Select(tr => tr.StudentId).Distinct().Count(),
+                StudentsInProgress = inProgressResults.Select(tr => tr.StudentId).Distinct().Count(),
+                StudentsNotStarted = allStudents.Count - studentsWithResults
+            };
+
+            if (completedResults.Any())
+            {
+                stats.AverageScore = Math.Round(completedResults.Average(tr => tr.Score), 1);
+                stats.AveragePercentage = Math.Round(completedResults.Average(tr => tr.Percentage), 1);
+                stats.HighestScore = completedResults.Max(tr => tr.Score);
+                stats.LowestScore = completedResults.Min(tr => tr.Score);
+                stats.FirstCompletion = completedResults.Min(tr => tr.CompletedAt);
+                stats.LastCompletion = completedResults.Max(tr => tr.CompletedAt);
+
+                var completionTimes = completedResults
+                    .Where(tr => tr.CompletedAt.HasValue)
+                    .Select(tr => tr.CompletedAt.Value - tr.StartedAt)
+                    .ToList();
+
+                if (completionTimes.Any())
+                {
+                    var averageTicks = (long)completionTimes.Average(ts => ts.Ticks);
+                    stats.AverageCompletionTime = new TimeSpan(averageTicks);
+                }
+
+                //изменить градацию
+                stats.GradeDistribution = new Dictionary<string, int>
+                {
+                    ["Отлично (80-100%)"] = completedResults.Count(tr => tr.Percentage >= 80),
+                    ["Хорошо (60-79%)"] = completedResults.Count(tr => tr.Percentage >= 60 && tr.Percentage < 80),
+                    ["Удовлетворительно (40-59%)"] = completedResults.Count(tr => tr.Percentage >= 40 && tr.Percentage < 60),
+                    ["Неудовлетворительно (0-39%)"] = completedResults.Count(tr => tr.Percentage < 40)
+                };
+            }
+
+            return stats;
+        }
+
+        private List<RegularTestStudentResultViewModel> BuildRegularTestStudentResults(RegularTest test, List<Student> allStudents)
+        {
+            var studentResults = new List<RegularTestStudentResultViewModel>();
+
+            foreach (var student in allStudents)
+            {
+                var results = test.RegularTestResults.Where(tr => tr.StudentId == student.Id).ToList();
+                var completedResults = results.Where(tr => tr.IsCompleted).ToList();
+
+                var studentResult = new RegularTestStudentResultViewModel
+                {
+                    Student = student,
+                    Results = results,
+                    AttemptsUsed = results.Count,
+                    HasCompleted = completedResults.Any(),
+                    IsInProgress = results.Any(tr => !tr.IsCompleted)
+                };
+
+                if (completedResults.Any())
+                {
+                    studentResult.BestResult = completedResults.OrderByDescending(tr => tr.Percentage).First();
+                    studentResult.LatestResult = completedResults.OrderByDescending(tr => tr.CompletedAt).First();
+
+                    var totalTime = completedResults
+                        .Where(tr => tr.CompletedAt.HasValue)
+                        .Sum(tr => (tr.CompletedAt.Value - tr.StartedAt).Ticks);
+
+                    if (totalTime > 0)
+                    {
+                        studentResult.TotalTimeSpent = new TimeSpan(totalTime);
+                    }
+                }
+
+                studentResults.Add(studentResult);
+            }
+
+            return studentResults.OrderBy(sr => sr.Student.User.LastName).ToList();
+        }
+
+        private List<RegularTestQuestionAnalyticsViewModel> BuildRegularTestQuestionAnalytics(RegularTest test)
+        {
+            var questionAnalytics = new List<RegularTestQuestionAnalyticsViewModel>();
+
+            foreach (var question in test.RegularQuestions.OrderBy(q => q.OrderIndex))
+            {
+                var answers = test.RegularTestResults
+                    .SelectMany(tr => tr.RegularAnswers)
+                    .Where(sa => sa.QuestionId == question.Id)
+                    .ToList();
+
+                var analytics = new RegularTestQuestionAnalyticsViewModel
+                {
+                    RegularQuestion = question,
+                    TotalAnswers = answers.Count,
+                    CorrectAnswers = answers.Count(a => a.IsCorrect),
+                    IncorrectAnswers = answers.Count(a => !a.IsCorrect)
+                };
+
+                if (answers.Any())
+                {
+                    analytics.SuccessRate = Math.Round((double)analytics.CorrectAnswers / analytics.TotalAnswers * 100, 1);
+
+                    // Анализ частых неправильных вариантов ответов
+                    var incorrectAnswers = answers
+                        .Where(a => !a.IsCorrect && a.StudentAnswer != null)
+                        .GroupBy(a => a.StudentAnswer)
+                        .Select(g => new CommonMistakeViewModel
+                        {
+                            //IncorrectAnswer = g.Key,
+                            Count = g.Count(),
+                            Percentage = Math.Round((double)g.Count() / analytics.IncorrectAnswers * 100, 1),
+                            StudentNames = g.Select(a => a.RegularTestResult.Student.User.FullName).ToList()
+                        })
+                        .OrderByDescending(m => m.Count)
+                        .Take(5)
+                        .ToList();
+
+                    analytics.CommonMistakes = incorrectAnswers;
+                }
+
+                questionAnalytics.Add(analytics);
+            }
+
+            // Отмечаем самые сложные и легкие вопросы
+            if (questionAnalytics.Any(qa => qa.TotalAnswers > 0))
+            {
+                var lowestSuccessRate = questionAnalytics.Where(qa => qa.TotalAnswers > 0).Min(qa => qa.SuccessRate);
+                var highestSuccessRate = questionAnalytics.Where(qa => qa.TotalAnswers > 0).Max(qa => qa.SuccessRate);
+
+                foreach (var qa in questionAnalytics)
+                {
+                    if (qa.TotalAnswers > 0)
+                    {
+                        qa.IsMostDifficult = qa.SuccessRate == lowestSuccessRate;
+                        qa.IsEasiest = qa.SuccessRate == highestSuccessRate;
+                    }
+                }
+            }
+
+            return questionAnalytics;
+        }
+
         // Метод для получения детальной информации о студенте (пунктуация)
         [HttpGet]
         public async Task<IActionResult> GetPunctuationStudentDetails(int studentId, int testId)
@@ -541,187 +743,7 @@ namespace OnlineTutor2.Controllers
             return Json(response);
         }
 
-        // Методы для обычных тестов
-        private async Task<RegularTestAnalyticsViewModel> BuildRegularTestAnalyticsAsync(Test test)
-        {
-            var analytics = new RegularTestAnalyticsViewModel
-            {
-                Test = test
-            };
-
-            var allStudents = new List<Student>();
-            if (test.Class != null)
-            {
-                allStudents = test.Class.Students.ToList();
-            }
-            else
-            {
-                var teacherClassIds = await _context.Classes
-                    .Where(c => c.TeacherId == test.TeacherId)
-                    .Select(c => c.Id)
-                    .ToListAsync();
-
-                allStudents = await _context.Students
-                    .Include(s => s.User)
-                    .Where(s => s.ClassId.HasValue && teacherClassIds.Contains(s.ClassId.Value))
-                    .ToListAsync();
-            }
-
-            analytics.Statistics = BuildRegularTestStatistics(test, allStudents);
-            analytics.StudentResults = BuildRegularTestStudentResults(test, allStudents);
-            analytics.QuestionAnalytics = BuildRegularTestQuestionAnalytics(test);
-
-            return analytics;
-        }
-
-        private TestStatistics BuildRegularTestStatistics(Test test, List<Student> allStudents)
-        {
-            var completedResults = test.TestResults.Where(tr => tr.IsCompleted).ToList();
-            var inProgressResults = test.TestResults.Where(tr => !tr.IsCompleted).ToList();
-            var studentsWithResults = test.TestResults.Select(tr => tr.StudentId).Distinct().Count();
-
-            var stats = new TestStatistics
-            {
-                TotalStudents = allStudents.Count,
-                StudentsCompleted = completedResults.Select(tr => tr.StudentId).Distinct().Count(),
-                StudentsInProgress = inProgressResults.Select(tr => tr.StudentId).Distinct().Count(),
-                StudentsNotStarted = allStudents.Count - studentsWithResults
-            };
-
-            if (completedResults.Any())
-            {
-                stats.AverageScore = Math.Round(completedResults.Average(tr => tr.Score), 1);
-                stats.AveragePercentage = Math.Round(completedResults.Average(tr => tr.Percentage), 1);
-                stats.HighestScore = completedResults.Max(tr => tr.Score);
-                stats.LowestScore = completedResults.Min(tr => tr.Score);
-                stats.FirstCompletion = completedResults.Min(tr => tr.CompletedAt);
-                stats.LastCompletion = completedResults.Max(tr => tr.CompletedAt);
-
-                var completionTimes = completedResults
-                    .Where(tr => tr.CompletedAt.HasValue)
-                    .Select(tr => tr.CompletedAt.Value - tr.StartedAt)
-                    .ToList();
-
-                if (completionTimes.Any())
-                {
-                    var averageTicks = (long)completionTimes.Average(ts => ts.Ticks);
-                    stats.AverageCompletionTime = new TimeSpan(averageTicks);
-                }
-
-                //изменить градацию
-                stats.GradeDistribution = new Dictionary<string, int>
-                {
-                    ["Отлично (80-100%)"] = completedResults.Count(tr => tr.Percentage >= 80),
-                    ["Хорошо (60-79%)"] = completedResults.Count(tr => tr.Percentage >= 60 && tr.Percentage < 80),
-                    ["Удовлетворительно (40-59%)"] = completedResults.Count(tr => tr.Percentage >= 40 && tr.Percentage < 60),
-                    ["Неудовлетворительно (0-39%)"] = completedResults.Count(tr => tr.Percentage < 40)
-                };
-            }
-
-            return stats;
-        }
-
-        private List<RegularTestStudentResultViewModel> BuildRegularTestStudentResults(Test test, List<Student> allStudents)
-        {
-            var studentResults = new List<RegularTestStudentResultViewModel>();
-
-            foreach (var student in allStudents)
-            {
-                var results = test.TestResults.Where(tr => tr.StudentId == student.Id).ToList();
-                var completedResults = results.Where(tr => tr.IsCompleted).ToList();
-
-                var studentResult = new RegularTestStudentResultViewModel
-                {
-                    Student = student,
-                    Results = results,
-                    AttemptsUsed = results.Count,
-                    HasCompleted = completedResults.Any(),
-                    IsInProgress = results.Any(tr => !tr.IsCompleted)
-                };
-
-                if (completedResults.Any())
-                {
-                    studentResult.BestResult = completedResults.OrderByDescending(tr => tr.Percentage).First();
-                    studentResult.LatestResult = completedResults.OrderByDescending(tr => tr.CompletedAt).First();
-
-                    var totalTime = completedResults
-                        .Where(tr => tr.CompletedAt.HasValue)
-                        .Sum(tr => (tr.CompletedAt.Value - tr.StartedAt).Ticks);
-
-                    if (totalTime > 0)
-                    {
-                        studentResult.TotalTimeSpent = new TimeSpan(totalTime);
-                    }
-                }
-
-                studentResults.Add(studentResult);
-            }
-
-            return studentResults.OrderBy(sr => sr.Student.User.LastName).ToList();
-        }
-
-        private List<RegularTestQuestionAnalyticsViewModel> BuildRegularTestQuestionAnalytics(Test test)
-        {
-            var questionAnalytics = new List<RegularTestQuestionAnalyticsViewModel>();
-
-            foreach (var question in test.Questions.OrderBy(q => q.OrderIndex))
-            {
-                var answers = test.TestResults
-                    .SelectMany(tr => tr.StudentAnswers)
-                    .Where(sa => sa.QuestionId == question.Id)
-                    .ToList();
-
-                var analytics = new RegularTestQuestionAnalyticsViewModel
-                {
-                    Question = question,
-                    TotalAnswers = answers.Count,
-                    CorrectAnswers = answers.Count(a => a.IsCorrect),
-                    IncorrectAnswers = answers.Count(a => !a.IsCorrect)
-                };
-
-                if (answers.Any())
-                {
-                    analytics.SuccessRate = Math.Round((double)analytics.CorrectAnswers / analytics.TotalAnswers * 100, 1);
-
-                    // Анализ частых неправильных вариантов ответов
-                    var incorrectAnswers = answers
-                        .Where(a => !a.IsCorrect && a.Answer != null)
-                        .GroupBy(a => a.Answer.Text)
-                        .Select(g => new CommonMistakeViewModel
-                        {
-                            IncorrectAnswer = g.Key,
-                            Count = g.Count(),
-                            Percentage = Math.Round((double)g.Count() / analytics.IncorrectAnswers * 100, 1),
-                            StudentNames = g.Select(a => a.TestResult.Student.User.FullName).ToList()
-                        })
-                        .OrderByDescending(m => m.Count)
-                        .Take(5)
-                        .ToList();
-
-                    analytics.CommonMistakes = incorrectAnswers;
-                }
-
-                questionAnalytics.Add(analytics);
-            }
-
-            // Отмечаем самые сложные и легкие вопросы
-            if (questionAnalytics.Any(qa => qa.TotalAnswers > 0))
-            {
-                var lowestSuccessRate = questionAnalytics.Where(qa => qa.TotalAnswers > 0).Min(qa => qa.SuccessRate);
-                var highestSuccessRate = questionAnalytics.Where(qa => qa.TotalAnswers > 0).Max(qa => qa.SuccessRate);
-
-                foreach (var qa in questionAnalytics)
-                {
-                    if (qa.TotalAnswers > 0)
-                    {
-                        qa.IsMostDifficult = qa.SuccessRate == lowestSuccessRate;
-                        qa.IsEasiest = qa.SuccessRate == highestSuccessRate;
-                    }
-                }
-            }
-
-            return questionAnalytics;
-        }
+        
 
         // GET: TestAnalytics/GetStudentDetails
         [HttpGet]
@@ -745,8 +767,8 @@ namespace OnlineTutor2.Controllers
                 return NotFound();
 
             var results = await _context.SpellingTestResults
-                .Include(tr => tr.Answers)
-                    .ThenInclude(a => a.Question)
+                .Include(tr => tr.SpellingAnswers)
+                    .ThenInclude(a => a.SpellingQuestion)
                 .Where(tr => tr.SpellingTestId == testId && tr.StudentId == studentId && tr.IsCompleted)
                 .OrderByDescending(tr => tr.CompletedAt)
                 .ToListAsync();
@@ -754,9 +776,9 @@ namespace OnlineTutor2.Controllers
             var bestResult = results.OrderByDescending(r => r.Percentage).FirstOrDefault();
 
             var mistakes = results
-                .SelectMany(r => r.Answers)
+                .SelectMany(r => r.SpellingAnswers)
                 .Where(a => !a.IsCorrect)
-                .GroupBy(a => new { a.StudentAnswer, a.Question.CorrectLetter, a.Question.FullWord })
+                .GroupBy(a => new { a.StudentAnswer, a.SpellingQuestion.CorrectLetter, a.SpellingQuestion.FullWord })
                 .Select(g => new
                 {
                     IncorrectAnswer = g.Key.StudentAnswer,
@@ -810,13 +832,13 @@ namespace OnlineTutor2.Controllers
                 .Include(ot => ot.Class)
                     .ThenInclude(c => c.Students)
                         .ThenInclude(s => s.User)
-                .Include(ot => ot.Questions.OrderBy(q => q.OrderIndex))
-                .Include(ot => ot.TestResults)
+                .Include(ot => ot.OrthoeopyQuestions.OrderBy(q => q.OrderIndex))
+                .Include(ot => ot.OrthoeopyTestResults)
                     .ThenInclude(tr => tr.Student)
                         .ThenInclude(s => s.User)
-                .Include(ot => ot.TestResults)
-                    .ThenInclude(tr => tr.Answers)
-                        .ThenInclude(a => a.Question)
+                .Include(ot => ot.OrthoeopyTestResults)
+                    .ThenInclude(tr => tr.OrthoeopyAnswers)
+                        .ThenInclude(a => a.OrthoeopyQuestion)
                 .FirstOrDefaultAsync(ot => ot.Id == id && ot.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -829,7 +851,7 @@ namespace OnlineTutor2.Controllers
         {
             var analytics = new OrthoeopyTestAnalyticsViewModel
             {
-                Test = test
+                OrthoeopyTest = test
             };
 
             var allStudents = new List<Student>();
@@ -853,18 +875,18 @@ namespace OnlineTutor2.Controllers
             analytics.Statistics = BuildOrthoeopyStatistics(test, allStudents);
             analytics.StudentResults = BuildOrthoeopyStudentResults(test, allStudents);
             analytics.QuestionAnalytics = BuildOrthoeopyQuestionAnalytics(test);
-            analytics.StudentsNotTaken = allStudents.Where(s => !test.TestResults.Any(tr => tr.StudentId == s.Id)).ToList();
+            analytics.StudentsNotTaken = allStudents.Where(s => !test.OrthoeopyTestResults.Any(tr => tr.StudentId == s.Id)).ToList();
 
             return analytics;
         }
 
-        private TestStatistics BuildOrthoeopyStatistics(OrthoeopyTest test, List<Student> allStudents)
+        private OrthoeopyTestStatistics BuildOrthoeopyStatistics(OrthoeopyTest test, List<Student> allStudents)
         {
-            var completedResults = test.TestResults.Where(tr => tr.IsCompleted).ToList();
-            var inProgressResults = test.TestResults.Where(tr => !tr.IsCompleted).ToList();
-            var studentsWithResults = test.TestResults.Select(tr => tr.StudentId).Distinct().Count();
+            var completedResults = test.OrthoeopyTestResults.Where(tr => tr.IsCompleted).ToList();
+            var inProgressResults = test.OrthoeopyTestResults.Where(tr => !tr.IsCompleted).ToList();
+            var studentsWithResults = test.OrthoeopyTestResults.Select(tr => tr.StudentId).Distinct().Count();
 
-            var stats = new TestStatistics
+            var stats = new OrthoeopyTestStatistics
             {
                 TotalStudents = allStudents.Count,
                 StudentsCompleted = completedResults.Select(tr => tr.StudentId).Distinct().Count(),
@@ -910,7 +932,7 @@ namespace OnlineTutor2.Controllers
 
             foreach (var student in allStudents)
             {
-                var results = test.TestResults.Where(tr => tr.StudentId == student.Id).ToList();
+                var results = test.OrthoeopyTestResults.Where(tr => tr.StudentId == student.Id).ToList();
                 var completedResults = results.Where(tr => tr.IsCompleted).ToList();
 
                 var studentResult = new OrthoeopyStudentResultViewModel
@@ -947,10 +969,10 @@ namespace OnlineTutor2.Controllers
         {
             var questionAnalytics = new List<OrthoeopyQuestionAnalyticsViewModel>();
 
-            foreach (var question in test.Questions.OrderBy(q => q.OrderIndex))
+            foreach (var question in test.OrthoeopyQuestions.OrderBy(q => q.OrderIndex))
             {
-                var answers = test.TestResults
-                    .SelectMany(tr => tr.Answers)
+                var answers = test.OrthoeopyTestResults
+                    .SelectMany(tr => tr.OrthoeopyAnswers)
                     .Where(a => a.OrthoeopyQuestionId == question.Id)
                     .ToList();
 
@@ -975,7 +997,7 @@ namespace OnlineTutor2.Controllers
                             IncorrectPosition = g.Key,
                             Count = g.Count(),
                             Percentage = Math.Round((double)g.Count() / analytics.IncorrectAnswers * 100, 1),
-                            StudentNames = g.Select(a => a.TestResult.Student.User.FullName).ToList()
+                            StudentNames = g.Select(a => a.OrthoeopyTestResult.Student.User.FullName).ToList()
                         })
                         .OrderByDescending(m => m.Count)
                         .Take(5)
@@ -1027,8 +1049,8 @@ namespace OnlineTutor2.Controllers
                 return NotFound();
 
             var results = await _context.OrthoeopyTestResults
-                .Include(tr => tr.Answers)
-                    .ThenInclude(a => a.Question)
+                .Include(tr => tr.OrthoeopyAnswers)
+                    .ThenInclude(a => a.OrthoeopyQuestion)
                 .Where(tr => tr.OrthoeopyTestId == testId && tr.StudentId == studentId && tr.IsCompleted)
                 .OrderByDescending(tr => tr.CompletedAt)
                 .ToListAsync();
@@ -1036,13 +1058,13 @@ namespace OnlineTutor2.Controllers
             var bestResult = results.OrderByDescending(r => r.Percentage).FirstOrDefault();
 
             var mistakes = results
-                .SelectMany(r => r.Answers)
+                .SelectMany(r => r.OrthoeopyAnswers)
                 .Where(a => !a.IsCorrect && a.SelectedStressPosition.HasValue)
                 .GroupBy(a => new {
                     a.SelectedStressPosition,
-                    a.Question.Word,
-                    a.Question.WordWithStress,
-                    a.Question.StressPosition
+                    a.OrthoeopyQuestion.Word,
+                    a.OrthoeopyQuestion.WordWithStress,
+                    a.OrthoeopyQuestion.StressPosition
                 })
                 .Select(g => new
                 {

@@ -2,7 +2,7 @@
 
 namespace OnlineTutor2.Models
 {
-    public class Question
+    public class RegularQuestion
     {
         public int Id { get; set; }
 
@@ -19,17 +19,14 @@ namespace OnlineTutor2.Models
         public int OrderIndex { get; set; }
 
         // Навигационные свойства
-        public virtual Test Test { get; set; }
-        public virtual ICollection<Answer> Answers { get; set; } = new List<Answer>();
-        public virtual ICollection<StudentAnswer> StudentAnswers { get; set; } = new List<StudentAnswer>();
+        public virtual RegularTest RegularTest { get; set; }
+        public virtual ICollection<RegularAnswer> RegularAnswers { get; set; } = new List<RegularAnswer>();
     }
 
     public enum QuestionType
     {
         MultipleChoice = 1,
         SingleChoice = 2,
-        TrueFalse = 3,
-        Text = 4,
-        Essay = 5
+        TrueFalse = 3
     }
 }

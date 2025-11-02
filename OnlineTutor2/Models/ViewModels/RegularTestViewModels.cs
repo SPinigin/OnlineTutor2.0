@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace OnlineTutor2.ViewModels
 {
-    public class CreateSpellingTestViewModel
+    public class CreateRegularTestViewModel
     {
         [Required(ErrorMessage = "Название теста обязательно")]
         [StringLength(200)]
@@ -43,20 +43,20 @@ namespace OnlineTutor2.ViewModels
         public bool IsActive { get; set; } = true;
     }
 
-    public class StudentSpellingTestIndexViewModel
+    public class StudentRegularTestIndexViewModel
     {
         public Student Student { get; set; }
-        public List<SpellingTest> AvailableTests { get; set; } = new List<SpellingTest>();
+        public List<RegularTest> AvailableTests { get; set; } = new List<RegularTest>();
     }
 
-    public class TakeSpellingTestViewModel
+    public class TakeRegularTestViewModel
     {
-        public SpellingTestResult TestResult { get; set; }
+        public RegularTestResult RegularTestResult { get; set; }
         public TimeSpan TimeRemaining { get; set; }
         public int CurrentQuestionIndex { get; set; }
     }
 
-    public class SubmitSpellingAnswerViewModel
+    public class SubmitRegularAnswerViewModel
     {
         [Required]
         public int TestResultId { get; set; }
@@ -68,21 +68,21 @@ namespace OnlineTutor2.ViewModels
         public string? StudentAnswer { get; set; }
     }
 
-    public class SpellingTestResultViewModel
+    public class RegularTestResultViewModel
     {
-        public SpellingTestResult TestResult { get; set; }
-        public List<SpellingQuestionResultViewModel> QuestionResults { get; set; } = new List<SpellingQuestionResultViewModel>();
+        public RegularTestResult RegularTestResult { get; set; }
+        public List<RegularQuestionResultViewModel> RegularQuestionResults { get; set; } = new List<RegularQuestionResultViewModel>();
     }
 
-    public class SpellingQuestionResultViewModel
+    public class RegularQuestionResultViewModel
     {
-        public SpellingQuestion Question { get; set; }
-        public SpellingAnswer? Answer { get; set; }
+        public RegularQuestion RegularQuestion { get; set; }
+        public RegularAnswer? Answer { get; set; }
         public bool IsCorrect { get; set; }
         public int PointsEarned { get; set; }
     }
 
-    public class SpellingQuestionImportViewModel
+    public class RegularQuestionImportViewModel
     {
         public int SpellingTestId { get; set; }
 
@@ -95,7 +95,7 @@ namespace OnlineTutor2.ViewModels
         public int PointsPerQuestion { get; set; } = 1;
     }
 
-    public class ImportSpellingQuestionRow
+    public class ImportRegularQuestionRow
     {
         public int RowNumber { get; set; }
         public string? WordWithGap { get; set; }

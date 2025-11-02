@@ -1,6 +1,6 @@
 ﻿namespace OnlineTutor2.Models
 {
-    public class StudentAnswer
+    public class RegularAnswer
     {
         public int Id { get; set; }
 
@@ -10,15 +10,14 @@
 
         public int? AnswerId { get; set; }
 
-        public string? TextAnswer { get; set; }
+        public int? StudentAnswer { get; set; }
 
         public bool IsCorrect { get; set; }
 
         public int Points { get; set; }
 
         // Навигационные свойства
-        public virtual TestResult TestResult { get; set; }
-        public virtual Question Question { get; set; }
-        public virtual Answer? Answer { get; set; }
+        public virtual RegularTestResult RegularTestResult { get; set; }
+        public virtual RegularQuestion RegularQuestion { get; set; }
     }
 }

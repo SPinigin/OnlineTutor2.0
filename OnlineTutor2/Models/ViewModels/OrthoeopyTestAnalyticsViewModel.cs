@@ -4,11 +4,27 @@ namespace OnlineTutor2.ViewModels
 {
     public class OrthoeopyTestAnalyticsViewModel
     {
-        public OrthoeopyTest Test { get; set; } = null!;
-        public TestStatistics Statistics { get; set; } = new();
+        public OrthoeopyTest OrthoeopyTest { get; set; } = null!;
+        public OrthoeopyTestStatistics Statistics { get; set; } = new();
         public List<OrthoeopyStudentResultViewModel> StudentResults { get; set; } = new();
         public List<OrthoeopyQuestionAnalyticsViewModel> QuestionAnalytics { get; set; } = new();
         public List<Student> StudentsNotTaken { get; set; } = new();
+    }
+
+    public class OrthoeopyTestStatistics
+    {
+        public int TotalStudents { get; set; }
+        public int StudentsCompleted { get; set; }
+        public int StudentsNotStarted { get; set; }
+        public int StudentsInProgress { get; set; }
+        public double AverageScore { get; set; }
+        public double AveragePercentage { get; set; }
+        public int HighestScore { get; set; }
+        public int LowestScore { get; set; }
+        public TimeSpan AverageCompletionTime { get; set; }
+        public DateTime? FirstCompletion { get; set; }
+        public DateTime? LastCompletion { get; set; }
+        public Dictionary<string, int> GradeDistribution { get; set; } = new Dictionary<string, int>();
     }
 
     public class OrthoeopyStudentResultViewModel

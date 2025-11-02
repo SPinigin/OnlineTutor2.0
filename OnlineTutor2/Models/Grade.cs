@@ -25,7 +25,7 @@
         // Навигационные свойства
         public virtual Student Student { get; set; }
         public virtual Assignment? Assignment { get; set; }
-        public virtual Test? Test { get; set; }
+        public virtual RegularTest? Test { get; set; }
         public virtual ApplicationUser Teacher { get; set; }
     }
 }
