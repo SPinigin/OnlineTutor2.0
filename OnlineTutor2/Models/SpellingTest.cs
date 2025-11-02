@@ -26,7 +26,7 @@ namespace OnlineTutor2.Models
 
         [Range(1, 100, ErrorMessage = "Количество попыток должно быть от 1 до 100")]
         [Display(Name = "Количество попыток")]
-        public int MaxAttempts { get; set; } = 3;
+        public int MaxAttempts { get; set; } = 1;
 
         [Display(Name = "Дата начала")]
         public DateTime? StartDate { get; set; }

@@ -5,6 +5,7 @@
     var isSpellingResult = Model is OnlineTutor2.Models.SpellingTestResult;
     var isPunctuationResult = Model is OnlineTutor2.Models.PunctuationTestResult;
     var isOrthoeopyResult = Model is OnlineTutor2.Models.OrthoeopyTestResult;
+    var isRegularResult = Model is OnlineTutor2.Models.RegularTestResult;
 
     // Получаем данные в зависимости от типа
     var percentage = 0.0;
@@ -31,9 +32,9 @@
         completedAt = result.CompletedAt ?? DateTime.Now;
         startedAt = result.StartedAt;
         testTitle = result.SpellingTest.Title;
-        questionsCount = result.SpellingTest.Questions.Count;
-        correctAnswersCount = result.Answers.Count(a => a.IsCorrect);
-        incorrectAnswersCount = result.Answers.Count(a => !a.IsCorrect);
+        questionsCount = result.SpellingTest.SpellingQuestions.Count;
+        correctAnswersCount = result.SpellingAnswers.Count(a => a.IsCorrect);
+        incorrectAnswersCount = result.SpellingAnswers.Count(a => !a.IsCorrect);
         showCorrectAnswers = result.SpellingTest.ShowCorrectAnswers;
         testId = result.SpellingTestId;
         maxAttempts = result.SpellingTest.MaxAttempts;
@@ -48,9 +49,9 @@
         completedAt = result.CompletedAt ?? DateTime.Now;
         startedAt = result.StartedAt;
         testTitle = result.PunctuationTest.Title;
-        questionsCount = result.PunctuationTest.Questions.Count;
-        correctAnswersCount = result.Answers.Count(a => a.IsCorrect);
-        incorrectAnswersCount = result.Answers.Count(a => !a.IsCorrect);
+        questionsCount = result.PunctuationTest.PunctuationQuestions.Count;
+        correctAnswersCount = result.PunctuationAnswers.Count(a => a.IsCorrect);
+        incorrectAnswersCount = result.PunctuationAnswers.Count(a => !a.IsCorrect);
         showCorrectAnswers = result.PunctuationTest.ShowCorrectAnswers;
         testId = result.PunctuationTestId;
         maxAttempts = result.PunctuationTest.MaxAttempts;
@@ -65,16 +66,31 @@
         completedAt = result.CompletedAt ?? DateTime.Now;
         startedAt = result.StartedAt;
         testTitle = result.OrthoeopyTest.Title;
-        questionsCount = result.OrthoeopyTest.Questions.Count;
-        correctAnswersCount = result.Answers.Count(a => a.IsCorrect);
-        incorrectAnswersCount = result.Answers.Count(a => !a.IsCorrect);
+        questionsCount = result.OrthoeopyTest.OrthoeopyQuestions.Count;
+        correctAnswersCount = result.OrthoeopyAnswers.Count(a => a.IsCorrect);
+        incorrectAnswersCount = result.OrthoeopyAnswers.Count(a => !a.IsCorrect);
         showCorrectAnswers = result.OrthoeopyTest.ShowCorrectAnswers;
         testId = result.OrthoeopyTestId;
         maxAttempts = result.OrthoeopyTest.MaxAttempts;
     }
+    else if (isRegularResult)
+    {
+        var result = Model as OnlineTutor2.Models.RegularTestResult;
+        percentage = result.Percentage;
+        score = result.Score;
+        maxScore = result.MaxScore;
+        attemptNumber = result.AttemptNumber;
+        completedAt = result.CompletedAt ?? DateTime.Now;
+        startedAt = result.StartedAt;
+        testTitle = result.RegularTest.Title;
+        questionsCount = result.RegularTest.RegularQuestions.Count;
+        correctAnswersCount = result.RegularAnswers.Count(a => a.IsCorrect);
+        incorrectAnswersCount = result.RegularAnswers.Count(a => !a.IsCorrect);
+        showCorrectAnswers = result.RegularTest.ShowCorrectAnswers;
+        testId = result.RegularTestId;
+        maxAttempts = result.RegularTest.MaxAttempts;
+    }
 }
-
-
 
 @if (showCorrectAnswers)
 {
@@ -96,9 +112,9 @@
             else if (isOrthoeopyResult)
             {
                 var orthoeopyResult = Model as OnlineTutor2.Models.OrthoeopyTestResult;
-                @foreach (var question in orthoeopyResult.OrthoeopyTest.Questions.OrderBy(q => q.OrderIndex))
+                @foreach (var question in orthoeopyResult.OrthoeopyTest.OrthoeopyQuestions.OrderBy(q => q.OrderIndex))
                 {
-                    var answer = orthoeopyResult.Answers.FirstOrDefault(a => a.OrthoeopyQuestionId == question.Id);
+                    var answer = orthoeopyResult.OrthoeopyAnswers.FirstOrDefault(a => a.OrthoeopyQuestionId == question.Id);
                     var isCorrect = answer?.IsCorrect ?? false;
 
                     <div class="question-result mb-4 p-3 border rounded">
@@ -106,7 +122,7 @@
                             <div class="col-md-8">
                                 <div class="d-flex align-items-center mb-2">
                                     <span class="badge bg-@(isCorrect ? "success" : "danger") me-2">
-                                        @(orthoeopyResult.OrthoeopyTest.Questions.OrderBy(q => q.OrderIndex).ToList().IndexOf(question) + 1)
+                                        @(orthoeopyResult.OrthoeopyTest.OrthoeopyQuestions.OrderBy(q => q.OrderIndex).ToList().IndexOf(question) + 1)
                                     </span>
                                     <h6 class="mb-0">Выберите правильное ударение</h6>
                                 </div>

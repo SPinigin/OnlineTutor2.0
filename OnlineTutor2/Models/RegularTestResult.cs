@@ -4,7 +4,7 @@
     {
         public int Id { get; set; }
 
-        public int TestId { get; set; }
+        public int RegularTestId { get; set; }
 
         public int StudentId { get; set; }
 
