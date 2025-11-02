@@ -85,27 +85,27 @@
                 <div class="row mt-3">
                     <div class="col-md-4">
                         <div class="text-center p-3 bg-light rounded">
-                            <h5 class="text-danger">@(Model.Questions?.Count ?? 0)</h5>
+                            <h5 class="text-danger">@(Model.PunctuationQuestions?.Count ?? 0)</h5>
                             <small class="text-muted">вопросов</small>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="text-center p-3 bg-light rounded">
-                            <h5 class="text-danger">@(Model.TestResults?.Count ?? 0)</h5>
+                            <h5 class="text-danger">@(Model.PunctuationTestResults?.Count ?? 0)</h5>
                             <small class="text-muted">результатов</small>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="text-center p-3 bg-light rounded">
                             <h5 class="text-danger">
-                                @(Model.TestResults?.SelectMany(tr => tr.Answers)?.Count() ?? 0)
+                                @(Model.PunctuationTestResults?.SelectMany(tr => tr.PunctuationAnswers)?.Count() ?? 0)
                             </h5>
                             <small class="text-muted">ответов</small>
                         </div>
                     </div>
                 </div>
 
-                @if (Model.TestResults?.Any() == true)
+                @if (Model.PunctuationTestResults?.Any() == true)
                 {
                     <div class="alert alert-danger mt-3">
                         <i class="fas fa-ban"></i>
@@ -115,7 +115,7 @@
                         <div class="mt-2">
                             <strong>Результаты учеников:</strong>
                             <ul class="mb-0 mt-1">
-                                @foreach (var result in Model.TestResults.Take(5))
+                                @foreach (var result in Model.PunctuationTestResults.Take(5))
                                 {
                                     <li>
                                         @(result.Student?.User?.FullName ?? "Неизвестный ученик") -
@@ -123,28 +123,28 @@
                                         (@(result.CompletedAt?.ToString("dd.MM.yyyy") ?? "не завершен"))
                                     </li>
                                 }
-                                @if (Model.TestResults.Count > 5)
+                                @if (Model.PunctuationTestResults.Count > 5)
                                 {
-                                    <li class="text-muted">...и еще @(Model.TestResults.Count - 5) результатов</li>
+                                    <li class="text-muted">...и еще @(Model.PunctuationTestResults.Count - 5) результатов</li>
                                 }
                             </ul>
                         </div>
                     </div>
                 }
-                else if (Model.Questions?.Any() == true)
+                else if (Model.PunctuationQuestions?.Any() == true)
                 {
                     <div class="alert alert-warning mt-3">
                         <i class="fas fa-info-circle"></i>
                         <strong>Будет удалено:</strong>
                         <ul class="mb-0 mt-2">
                             <li>Тест "@Model.Title"</li>
-                            <li>Все вопросы (@(Model.Questions?.Count ?? 0) шт.)</li>
+                            <li>Все вопросы (@(Model.PunctuationQuestions?.Count ?? 0) шт.)</li>
                             <li>Настройки и конфигурация теста</li>
                         </ul>
                     </div>
                 }
 
-                @if (Model.TestResults?.Any() == true)
+                @if (Model.PunctuationTestResults?.Any() == true)
                 {
                     <div class="alert alert-info mt-3">
                         <h6><i class="fas fa-lightbulb"></i> Рекомендуемые действия:</h6>
@@ -156,7 +156,7 @@
                     </div>
                 }
 
-                @if (Model.TestResults?.Any() != true)
+                @if (Model.PunctuationTestResults?.Any() != true)
                 {
                     <div class="mt-4">
                         <label for="confirmationText" class="form-label">
@@ -185,7 +185,7 @@
                             <i class="fas fa-arrow-left"></i> Отмена
                         </a>
 
-                        @if (Model.TestResults?.Any() == true)
+                        @if (Model.PunctuationTestResults?.Any() == true)
                         {
                             <form asp-action="ToggleStatus" asp-route-id="@Model.Id" method="post" class="d-inline">
                                 <button type="submit" class="btn btn-warning">
