@@ -13,11 +13,14 @@ namespace OnlineTutor2.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ILogger<ClassController> _logger;
 
-        public ClassController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+
+        public ClassController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, ILogger<ClassController> logger)
         {
             _context = context;
             _userManager = userManager;
+            _logger = logger;
         }
 
         // GET: Class
@@ -218,10 +221,10 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateClassViewModel model)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+
             if (ModelState.IsValid)
             {
-                var currentUser = await _userManager.GetUserAsync(User);
-
                 var @class = new Class
                 {
                     Name = model.Name,
@@ -232,10 +235,13 @@ namespace OnlineTutor2.Controllers
                 _context.Classes.Add(@class);
                 await _context.SaveChangesAsync();
 
+                _logger.LogInformation("Учитель {TeacherId} создал класс {ClassId}: {ClassName}", currentUser.Id, @class.Id, @class.Name);
+
                 TempData["SuccessMessage"] = $"Класс \"{@class.Name}\" успешно создан!";
                 return RedirectToAction(nameof(Index));
             }
 
+            _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму создания класса", currentUser.Id);
             return View(model);
         }
 
@@ -268,11 +274,12 @@ namespace OnlineTutor2.Controllers
         {
             if (id != model.Id) return NotFound();
 
+            var currentUser = await _userManager.GetUserAsync(User);
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var currentUser = await _userManager.GetUserAsync(User);
                     var @class = await _context.Classes
                         .FirstOrDefaultAsync(c => c.Id == id && c.TeacherId == currentUser.Id);
 
@@ -285,15 +292,20 @@ namespace OnlineTutor2.Controllers
                     _context.Update(@class);
                     await _context.SaveChangesAsync();
 
+                    _logger.LogInformation("Учитель {TeacherId} обновил класс {ClassId}: {ClassName}, IsActive: {IsActive}",
+                        currentUser.Id, id, @class.Name, @class.IsActive);
+
                     TempData["SuccessMessage"] = $"Класс \"{@class.Name}\" успешно обновлен!";
                     return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
+                    _logger.LogError(ex, "Ошибка конкурентности при обновлении класса {ClassId} учителем {TeacherId}", id, currentUser.Id);
                     ModelState.AddModelError("", "Произошла ошибка при сохранении. Попробуйте еще раз.");
                 }
             }
 
+            _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму обновления класса {ClassId}", currentUser.Id, id);
             return View(model);
         }
 
@@ -329,12 +341,17 @@ namespace OnlineTutor2.Controllers
             // Проверяем, есть ли ученики в классе
             if (@class.Students.Any())
             {
+                _logger.LogWarning("Учитель {TeacherId} попытался удалить класс {ClassId} с учениками ({StudentsCount})",
+                    currentUser.Id, id, @class.Students.Count);
                 TempData["ErrorMessage"] = "Нельзя удалить класс, в котором есть ученики. Сначала переместите учеников в другой класс или удалите их.";
                 return RedirectToAction(nameof(Delete), new { id });
             }
 
+            var className = @class.Name;
             _context.Classes.Remove(@class);
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Учитель {TeacherId} удалил класс {ClassId}: {ClassName}", currentUser.Id, id, className);
 
             TempData["SuccessMessage"] = $"Класс \"{@class.Name}\" успешно удален!";
             return RedirectToAction(nameof(Index));
@@ -350,8 +367,12 @@ namespace OnlineTutor2.Controllers
 
             if (@class == null) return NotFound();
 
+            var oldStatus = @class.IsActive;
             @class.IsActive = !@class.IsActive;
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Учитель {TeacherId} изменил статус класса {ClassId}: {ClassName} с {OldStatus} на {NewStatus}",
+                currentUser.Id, id, @class.Name, oldStatus, @class.IsActive);
 
             var status = @class.IsActive ? "активирован" : "деактивирован";
             TempData["InfoMessage"] = $"Класс \"{@class.Name}\" {status}.";
