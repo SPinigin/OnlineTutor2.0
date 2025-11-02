@@ -29,17 +29,17 @@
                     Попытка @Model.TestResult.AttemptNumber из @Model.TestResult.OrthoeopyTest.MaxAttempts
                 </span>
                 <span class="small text-muted">
-                    Вопрос <span id="currentQuestion">1</span> из @Model.TestResult.OrthoeopyTest.Questions.Count
+                    Вопрос <span id="currentQuestion">1</span> из @Model.TestResult.OrthoeopyTest.OrthoeopyQuestions.Count
                 </span>
             </div>
         </div>
     </div>
 
     <div id="questionsContainer">
-        @for (int i = 0; i < Model.TestResult.OrthoeopyTest.Questions.Count; i++)
+        @for (int i = 0; i < Model.TestResult.OrthoeopyTest.OrthoeopyQuestions.Count; i++)
         {
-            var question = Model.TestResult.OrthoeopyTest.Questions.ElementAt(i);
-            var existingAnswer = Model.TestResult.Answers.FirstOrDefault(a => a.OrthoeopyQuestionId == question.Id);
+            var question = Model.TestResult.OrthoeopyTest.OrthoeopyQuestions.ElementAt(i);
+            var existingAnswer = Model.TestResult.OrthoeopyAnswers.FirstOrDefault(a => a.OrthoeopyQuestionId == question.Id);
 
             // Генерируем варианты ударений для слова
             var syllableCount = CountSyllables(question.Word);
@@ -144,7 +144,7 @@
                     <i class="fas fa-exclamation-triangle"></i>
                     <strong>Внимание!</strong> После завершения теста вы не сможете изменить ответы.
                 </div>
-                <p>Вы ответили на <span id="answeredCount">0</span> из @Model.TestResult.OrthoeopyTest.Questions.Count вопросов.</p>
+                <p>Вы ответили на <span id="answeredCount">0</span> из @Model.TestResult.OrthoeopyTest.OrthoeopyQuestions.Count вопросов.</p>
                 <p>Вы уверены, что хотите завершить тест?</p>
             </div>
             <div class="modal-footer">
@@ -248,7 +248,7 @@
 @section Scripts {
     <script>
         let currentQuestionIndex = 0;
-        let totalQuestions = @Model.TestResult.OrthoeopyTest.Questions.Count;
+        let totalQuestions = @Model.TestResult.OrthoeopyTest.OrthoeopyQuestions.Count;
         let timeRemaining = @((int)Model.TimeRemaining.TotalSeconds);
         let answers = {};
         let timerInterval;
@@ -270,7 +270,7 @@
         }
 
         function loadExistingAnswers() {
-            @foreach (var answer in Model.TestResult.Answers)
+            @foreach (var answer in Model.TestResult.OrthoeopyAnswers)
             {
                     if (answer.SelectedStressPosition.HasValue)
                     {
