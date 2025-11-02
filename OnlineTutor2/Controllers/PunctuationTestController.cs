@@ -17,15 +17,18 @@ namespace OnlineTutor2.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IPunctuationQuestionImportService _questionImportService;
+        private readonly ILogger<PunctuationTestController> _logger;
 
         public PunctuationTestController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            IPunctuationQuestionImportService questionImportService)
+            IPunctuationQuestionImportService questionImportService,
+            ILogger<PunctuationTestController> logger)
         {
             _context = context;
             _userManager = userManager;
             _questionImportService = questionImportService;
+            _logger = logger;
         }
 
         // GET: PunctuationTest
@@ -76,16 +79,16 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreatePunctuationTestViewModel model)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+
             if (ModelState.IsValid)
             {
-                var currentUser = await _userManager.GetUserAsync(User);
-
                 var test = new PunctuationTest
                 {
                     Title = model.Title,
                     Description = model.Description,
                     TeacherId = currentUser.Id,
-                    TestCategoryId = 5, // id=5 для тестов пунктуации
+                    TestCategoryId = 5,
                     ClassId = model.ClassId,
                     TimeLimit = model.TimeLimit,
                     MaxAttempts = model.MaxAttempts,
@@ -99,9 +102,14 @@ namespace OnlineTutor2.Controllers
                 _context.PunctuationTests.Add(test);
                 await _context.SaveChangesAsync();
 
+                _logger.LogInformation("Учитель {TeacherId} создал тест пунктуации {TestId}: {Title}, ClassId: {ClassId}, TimeLimit: {TimeLimit}",
+                    currentUser.Id, test.Id, test.Title, test.ClassId, test.TimeLimit);
+
                 TempData["SuccessMessage"] = $"Тест \"{test.Title}\" успешно создан! Теперь добавьте вопросы.";
                 return RedirectToAction(nameof(Details), new { id = test.Id });
             }
+
+            _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму создания теста пунктуации", currentUser.Id);
 
             await LoadClasses();
             return View(model);
@@ -142,11 +150,12 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, CreatePunctuationTestViewModel model)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var currentUser = await _userManager.GetUserAsync(User);
                     var test = await _context.PunctuationTests
                         .FirstOrDefaultAsync(pt => pt.Id == id && pt.TeacherId == currentUser.Id);
 
@@ -166,13 +175,21 @@ namespace OnlineTutor2.Controllers
                     _context.Update(test);
                     await _context.SaveChangesAsync();
 
+                    _logger.LogInformation("Учитель {TeacherId} обновил тест пунктуации {TestId}: {Title}, ClassId: {ClassId}",
+                        currentUser.Id, id, test.Title, test.ClassId);
+
                     TempData["SuccessMessage"] = $"Тест \"{test.Title}\" успешно обновлен!";
                     return RedirectToAction(nameof(Details), new { id });
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
+                    _logger.LogError(ex, "Ошибка конкурентности при обновлении теста пунктуации {TestId} учителем {TeacherId}", id, currentUser.Id);
                     ModelState.AddModelError("", "Произошла ошибка при сохранении. Попробуйте еще раз.");
                 }
+            }
+            else
+            {
+                _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму обновления теста пунктуации {TestId}", currentUser.Id, id);
             }
 
             await LoadClasses();
@@ -215,12 +232,17 @@ namespace OnlineTutor2.Controllers
 
             if (test.TestResults.Any())
             {
+                _logger.LogWarning("Учитель {TeacherId} попытался удалить тест пунктуации {TestId} с результатами ({ResultsCount})",
+                    currentUser.Id, id, test.TestResults.Count);
                 TempData["ErrorMessage"] = "Нельзя удалить тест, который уже проходили ученики.";
                 return RedirectToAction(nameof(Delete), new { id });
             }
 
+            var testTitle = test.Title;
             _context.PunctuationTests.Remove(test);
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Учитель {TeacherId} удалил тест пунктуации {TestId}: {Title}", currentUser.Id, id, testTitle);
 
             TempData["SuccessMessage"] = $"Тест \"{test.Title}\" успешно удален!";
             return RedirectToAction(nameof(Index));
@@ -271,6 +293,8 @@ namespace OnlineTutor2.Controllers
 
                 if (model.ExcelFile.Length > 10 * 1024 * 1024)
                 {
+                    _logger.LogWarning("Учитель {TeacherId} попытался импортировать слишком большой файл ({FileSize} байт) для теста пунктуации {TestId}",
+                        currentUser.Id, model.ExcelFile.Length, model.PunctuationTestId);
                     ModelState.AddModelError("ExcelFile", "Размер файла не должен превышать 10 МБ");
                     return View(model);
                 }
@@ -279,6 +303,8 @@ namespace OnlineTutor2.Controllers
                 var fileExtension = Path.GetExtension(model.ExcelFile.FileName).ToLowerInvariant();
                 if (!allowedExtensions.Contains(fileExtension))
                 {
+                    _logger.LogWarning("Учитель {TeacherId} попытался импортировать файл недопустимого формата ({FileExtension}) для теста пунктуации {TestId}",
+                        currentUser.Id, fileExtension, model.PunctuationTestId);
                     ModelState.AddModelError("ExcelFile", "Поддерживаются только файлы Excel (.xlsx, .xls)");
                     return View(model);
                 }
@@ -287,6 +313,7 @@ namespace OnlineTutor2.Controllers
 
                 if (questions == null || !questions.Any())
                 {
+                    _logger.LogWarning("Учитель {TeacherId} импортировал пустой файл для теста пунктуации {TestId}", currentUser.Id, model.PunctuationTestId);
                     TempData["ErrorMessage"] = "Файл не содержит данных для импорта";
                     return View(model);
                 }
@@ -302,10 +329,14 @@ namespace OnlineTutor2.Controllers
                 HttpContext.Session.SetString(sessionKey, JsonSerializer.Serialize(importData));
                 TempData["ImportSessionKey"] = sessionKey;
 
+                _logger.LogInformation("Учитель {TeacherId} инициировал импорт {QuestionsCount} вопросов для теста пунктуации {TestId}",
+                    currentUser.Id, questions.Count, model.PunctuationTestId);
+
                 return RedirectToAction(nameof(PreviewQuestions));
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Ошибка импорта вопросов для теста пунктуации {TestId} учителем {TeacherId}", model.PunctuationTestId, currentUser.Id);
                 TempData["ErrorMessage"] = $"Произошла ошибка: {ex.Message}";
                 return View(model);
             }
@@ -371,6 +402,7 @@ namespace OnlineTutor2.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Ошибка обработки предпросмотра импорта");
                 TempData["ErrorMessage"] = $"Ошибка обработки данных: {ex.Message}";
                 return RedirectToAction(nameof(Index));
             }
@@ -441,11 +473,15 @@ namespace OnlineTutor2.Controllers
                 await _context.SaveChangesAsync();
                 HttpContext.Session.Remove(sessionKey);
 
+                _logger.LogInformation("Учитель {TeacherId} подтвердил импорт {QuestionsCount} вопросов для теста пунктуации {TestId}",
+                    currentUser.Id, validQuestions.Count, testId);
+
                 TempData["SuccessMessage"] = $"Успешно импортировано {validQuestions.Count} вопросов!";
                 return RedirectToAction(nameof(Details), new { id = testId });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Ошибка подтверждения импорта вопросов пунктуации");
                 TempData["ErrorMessage"] = $"Ошибка при импорте: {ex.Message}";
                 return RedirectToAction(nameof(Index));
             }
@@ -454,6 +490,8 @@ namespace OnlineTutor2.Controllers
         // GET: PunctuationTest/DownloadQuestionTemplate
         public async Task<IActionResult> DownloadQuestionTemplate()
         {
+            var currentUser = _userManager.GetUserAsync(User);
+
             try
             {
                 var templateBytes = await _questionImportService.GenerateTemplateAsync();
@@ -463,6 +501,7 @@ namespace OnlineTutor2.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Ошибка генерации шаблона вопросов пунктуации для учителя {TeacherId}", currentUser.Id);
                 TempData["ErrorMessage"] = $"Ошибка генерации шаблона: {ex.Message}";
                 return RedirectToAction(nameof(Index));
             }
@@ -521,9 +560,14 @@ namespace OnlineTutor2.Controllers
                 _context.PunctuationQuestions.Add(question);
                 await _context.SaveChangesAsync();
 
+                _logger.LogInformation("Учитель {TeacherId} добавил вопрос {QuestionId} к тесту пунктуации {TestId}: Предложение: {Sentence}",
+                    currentUser.Id, question.Id, model.PunctuationTestId, model.PlainSentence);
+
                 TempData["SuccessMessage"] = "Вопрос успешно добавлен!";
                 return RedirectToAction(nameof(Details), new { id = model.PunctuationTestId });
             }
+
+            _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму добавления вопроса к тесту пунктуации {TestId}", currentUser.Id, model.PunctuationTestId);
 
             ViewBag.Test = test;
             ViewBag.NextOrderIndex = test.Questions.Count + 1;
@@ -540,8 +584,12 @@ namespace OnlineTutor2.Controllers
 
             if (test == null) return NotFound();
 
+            var oldStatus = test.IsActive;
             test.IsActive = !test.IsActive;
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Учитель {TeacherId} изменил статус теста пунктуации {TestId}: {Title} с {OldStatus} на {NewStatus}",
+                currentUser.Id, id, test.Title, oldStatus, test.IsActive);
 
             var status = test.IsActive ? "активирован" : "деактивирован";
             TempData["InfoMessage"] = $"Тест \"{test.Title}\" {status}.";
@@ -595,13 +643,21 @@ namespace OnlineTutor2.Controllers
                     _context.Update(existingQuestion);
                     await _context.SaveChangesAsync();
 
+                    _logger.LogInformation("Учитель {TeacherId} обновил вопрос пунктуации {QuestionId}: Предложение: {Sentence}",
+                        currentUser.Id, id, model.PlainSentence);
+
                     TempData["SuccessMessage"] = "Вопрос успешно обновлен!";
                     return RedirectToAction(nameof(Details), new { id = existingQuestion.PunctuationTestId });
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
+                    _logger.LogError(ex, "Ошибка конкурентности при обновлении вопроса пунктуации {QuestionId} учителем {TeacherId}", id, currentUser.Id);
                     ModelState.AddModelError("", "Произошла ошибка при сохранении. Попробуйте еще раз.");
                 }
+            }
+            else
+            {
+                _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму обновления вопроса пунктуации {QuestionId}", currentUser.Id, id);
             }
 
             ViewBag.Test = existingQuestion.PunctuationTest;
@@ -624,6 +680,9 @@ namespace OnlineTutor2.Controllers
 
             if (question.StudentAnswers.Any())
             {
+                _logger.LogWarning("Учитель {TeacherId} попытался удалить вопрос пунктуации {QuestionId} с ответами студентов ({AnswersCount})",
+                    currentUser.Id, id, question.StudentAnswers.Count);
+
                 return Json(new
                 {
                     success = false,
@@ -639,6 +698,9 @@ namespace OnlineTutor2.Controllers
 
                 await ReorderQuestions(testId);
 
+                _logger.LogInformation("Учитель {TeacherId} удалил вопрос пунктуации {QuestionId} из теста {TestId}",
+                    currentUser.Id, id, testId);
+
                 return Json(new
                 {
                     success = true,
@@ -648,6 +710,8 @@ namespace OnlineTutor2.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Ошибка удаления вопроса пунктуации {QuestionId} учителем {TeacherId}", id, currentUser.Id);
+
                 return Json(new
                 {
                     success = false,
