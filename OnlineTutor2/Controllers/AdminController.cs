@@ -143,7 +143,10 @@ namespace OnlineTutor2.Controllers
             var roles = await _userManager.GetRolesAsync(user);
             var student = await _context.Students
                 .Include(s => s.Class)
-                .Include(s => s.TestResults)
+                .Include(s => s.RegularTestResults)
+                .Include(s => s.SpellingTestResults)
+                .Include(s => s.PunctuationTestResults)
+                .Include(s => s.OrthoeopyTestResults)
                 .FirstOrDefaultAsync(s => s.UserId == id);
             var teacher = await _context.Teachers.FirstOrDefaultAsync(t => t.UserId == id);
 
