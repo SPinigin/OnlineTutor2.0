@@ -36,7 +36,7 @@
         <div class="card text-center">
             <div class="card-body">
                 <i class="fas fa-question-circle text-success" style="font-size: 2rem;"></i>
-                <h4 class="mt-2 text-success">@Model.Questions.Count</h4>
+                <h4 class="mt-2 text-success">@Model.OrthoeopyQuestions.Count</h4>
                 <small class="text-muted">Вопросов</small>
             </div>
         </div>
@@ -63,7 +63,7 @@
         <div class="card text-center">
             <div class="card-body">
                 <i class="fas fa-users text-warning" style="font-size: 2rem;"></i>
-                <h4 class="mt-2 text-warning">@Model.TestResults.Count</h4>
+                <h4 class="mt-2 text-warning">@Model.OrthoeopyTestResults.Count</h4>
                 <small class="text-muted">Прохождений</small>
             </div>
         </div>
@@ -131,7 +131,7 @@
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">
-            <i class="fas fa-list"></i> Вопросы теста (@Model.Questions.Count)
+            <i class="fas fa-list"></i> Вопросы теста (@Model.OrthoeopyQuestions.Count)
         </h5>
         <div class="btn-group" role="group">
             <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
@@ -152,7 +152,7 @@
         </div>
     </div>
     <div class="card-body">
-        @if (Model.Questions.Any())
+        @if (Model.OrthoeopyQuestions.Any())
         {
             <div class="table-responsive">
                 <table class="table table-hover">
@@ -166,7 +166,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var question in Model.Questions.OrderBy(q => q.OrderIndex))
+                        @foreach (var question in Model.OrthoeopyQuestions.OrderBy(q => q.OrderIndex))
                         {
                             <tr>
                                 <td>
@@ -226,7 +226,7 @@
     </div>
 </div>
 
-@if (Model.TestResults.Any())
+@if (Model.OrthoeopyTestResults.Any())
 {
     <div class="card mb-4">
         <div class="card-header">
@@ -246,7 +246,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var result in Model.TestResults.OrderByDescending(tr => tr.StartedAt).Take(5))
+                        @foreach (var result in Model.OrthoeopyTestResults.OrderByDescending(tr => tr.StartedAt).Take(5))
                         {
                             <tr>
                                 <td>@result.Student.User.FullName</td>
@@ -287,7 +287,7 @@
                     </tbody>
                 </table>
             </div>
-            @if (Model.TestResults.Count > 5)
+            @if (Model.OrthoeopyTestResults.Count > 5)
             {
                 <div class="text-center mt-3">
                     <a asp-controller="TestAnalytics" asp-action="Orthoepy" asp-route-id="@Model.Id" class="btn btn-outline-info">
