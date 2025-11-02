@@ -38,7 +38,7 @@ namespace OnlineTutor2.Controllers
             var tests = await _context.PunctuationTests
                 .Where(pt => pt.TeacherId == currentUser.Id)
                 .Include(pt => pt.Class)
-                .Include(pt => pt.Questions)
+                .Include(pt => pt.PunctuationQuestions)
                 .OrderByDescending(pt => pt.CreatedAt)
                 .ToListAsync();
 
@@ -54,12 +54,12 @@ namespace OnlineTutor2.Controllers
             var test = await _context.PunctuationTests
                 .Include(pt => pt.Teacher)
                 .Include(pt => pt.Class)
-                .Include(pt => pt.Questions.OrderBy(q => q.OrderIndex))
-                .Include(pt => pt.TestResults)
+                .Include(pt => pt.PunctuationQuestions.OrderBy(q => q.OrderIndex))
+                .Include(pt => pt.PunctuationTestResults)
                     .ThenInclude(tr => tr.Student)
                         .ThenInclude(s => s.User)
-                .Include(pt => pt.TestResults)
-                    .ThenInclude(tr => tr.Answers)
+                .Include(pt => pt.PunctuationTestResults)
+                    .ThenInclude(tr => tr.PunctuationAnswers)
                 .FirstOrDefaultAsync(pt => pt.Id == id && pt.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -205,12 +205,12 @@ namespace OnlineTutor2.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.PunctuationTests
                 .Include(pt => pt.Class)
-                .Include(pt => pt.Questions)
-                .Include(pt => pt.TestResults)
+                .Include(pt => pt.PunctuationQuestions)
+                .Include(pt => pt.PunctuationTestResults)
                     .ThenInclude(tr => tr.Student)
                         .ThenInclude(s => s.User)
-                .Include(pt => pt.TestResults)
-                    .ThenInclude(tr => tr.Answers)
+                .Include(pt => pt.PunctuationTestResults)
+                    .ThenInclude(tr => tr.PunctuationAnswers)
                 .FirstOrDefaultAsync(pt => pt.Id == id && pt.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -225,15 +225,15 @@ namespace OnlineTutor2.Controllers
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.PunctuationTests
-                .Include(pt => pt.TestResults)
+                .Include(pt => pt.PunctuationTestResults)
                 .FirstOrDefaultAsync(pt => pt.Id == id && pt.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
 
-            if (test.TestResults.Any())
+            if (test.PunctuationTestResults.Any())
             {
                 _logger.LogWarning("Учитель {TeacherId} попытался удалить тест пунктуации {TestId} с результатами ({ResultsCount})",
-                    currentUser.Id, id, test.TestResults.Count);
+                    currentUser.Id, id, test.PunctuationTestResults.Count);
                 TempData["ErrorMessage"] = "Нельзя удалить тест, который уже проходили ученики.";
                 return RedirectToAction(nameof(Delete), new { id });
             }
@@ -435,14 +435,14 @@ namespace OnlineTutor2.Controllers
 
                 var currentUser = await _userManager.GetUserAsync(User);
                 var test = await _context.PunctuationTests
-                    .Include(pt => pt.Questions)
+                    .Include(pt => pt.PunctuationQuestions)
                     .FirstOrDefaultAsync(pt => pt.Id == testId && pt.TeacherId == currentUser.Id);
 
                 if (test == null) return NotFound();
 
                 var questionsArray = importData.GetProperty("Questions");
                 var validQuestions = new List<ImportPunctuationQuestionRow>();
-                var orderIndex = test.Questions.Count;
+                var orderIndex = test.PunctuationQuestions.Count;
 
                 foreach (var questionElement in questionsArray.EnumerateArray())
                 {
@@ -512,7 +512,7 @@ namespace OnlineTutor2.Controllers
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.PunctuationTests
-                .Include(pt => pt.Questions)
+                .Include(pt => pt.PunctuationQuestions)
                 .FirstOrDefaultAsync(pt => pt.Id == id && pt.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -520,12 +520,12 @@ namespace OnlineTutor2.Controllers
             var model = new PunctuationQuestion
             {
                 PunctuationTestId = test.Id,
-                OrderIndex = test.Questions.Count + 1,
+                OrderIndex = test.PunctuationQuestions.Count + 1,
                 Points = 1
             };
 
             ViewBag.Test = test;
-            ViewBag.NextOrderIndex = test.Questions.Count + 1;
+            ViewBag.NextOrderIndex = test.PunctuationQuestions.Count + 1;
 
             return View(model);
         }
@@ -537,7 +537,7 @@ namespace OnlineTutor2.Controllers
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.PunctuationTests
-                .Include(pt => pt.Questions)
+                .Include(pt => pt.PunctuationQuestions)
                 .FirstOrDefaultAsync(pt => pt.Id == model.PunctuationTestId && pt.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -554,7 +554,7 @@ namespace OnlineTutor2.Controllers
                     PlainSentence = model.PlainSentence,
                     Hint = model.Hint,
                     Points = model.Points > 0 ? model.Points : 1,
-                    OrderIndex = model.OrderIndex > 0 ? model.OrderIndex : test.Questions.Count + 1
+                    OrderIndex = model.OrderIndex > 0 ? model.OrderIndex : test.PunctuationQuestions.Count + 1
                 };
 
                 _context.PunctuationQuestions.Add(question);
@@ -570,7 +570,7 @@ namespace OnlineTutor2.Controllers
             _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму добавления вопроса к тесту пунктуации {TestId}", currentUser.Id, model.PunctuationTestId);
 
             ViewBag.Test = test;
-            ViewBag.NextOrderIndex = test.Questions.Count + 1;
+            ViewBag.NextOrderIndex = test.PunctuationQuestions.Count + 1;
             return View(model);
         }
 

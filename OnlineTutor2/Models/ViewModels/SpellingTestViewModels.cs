@@ -68,11 +68,11 @@ namespace OnlineTutor2.ViewModels
         public string? StudentAnswer { get; set; }
     }
 
-    public class SpellingTestResultViewModel
-    {
-        public SpellingTestResult TestResult { get; set; }
-        public List<SpellingQuestionResultViewModel> QuestionResults { get; set; } = new List<SpellingQuestionResultViewModel>();
-    }
+    //public class SpellingTestResultViewModel
+    //{
+    //    public SpellingTestResult TestResult { get; set; }
+    //    public List<SpellingQuestionResultViewModel> QuestionResults { get; set; } = new List<SpellingQuestionResultViewModel>();
+    //}
 
     public class SpellingQuestionResultViewModel
     {

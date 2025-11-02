@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
-using OnlineTutor2.Models;
+﻿using OnlineTutor2.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace OnlineTutor2.ViewModels
 {
