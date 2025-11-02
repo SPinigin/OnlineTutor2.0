@@ -180,12 +180,17 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateMaterialViewModel model)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+
             if (ModelState.IsValid)
             {
                 // Валидация файла
                 var validationResult = ValidateFile(model.File);
                 if (!validationResult.IsValid)
                 {
+                    _logger.LogWarning("Учитель {TeacherId} попытался загрузить недопустимый файл. Ошибка: {Error}",
+                        currentUser.Id, validationResult.ErrorMessage);
+
                     ModelState.AddModelError("File", validationResult.ErrorMessage);
                     await LoadClasses();
                     return View(model);
@@ -193,8 +198,6 @@ namespace OnlineTutor2.Controllers
 
                 try
                 {
-                    var currentUser = await _userManager.GetUserAsync(User);
-
                     // Сохраняем файл
                     var filePath = await SaveFileAsync(model.File);
 
@@ -215,17 +218,22 @@ namespace OnlineTutor2.Controllers
                     _context.Materials.Add(material);
                     await _context.SaveChangesAsync();
 
-                    _logger.LogInformation("Material {Title} uploaded by user {UserId}",
-                        material.Title, currentUser.Id);
+                    _logger.LogInformation("Учитель {TeacherId} загрузил материал {MaterialId}: {Title}, Файл: {FileName}, Размер: {FileSize} байт, ClassId: {ClassId}",
+                        currentUser.Id, material.Id, material.Title, material.FileName, material.FileSize, material.ClassId);
 
                     TempData["SuccessMessage"] = $"Материал \"{material.Title}\" успешно загружен!";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error uploading material");
+                    _logger.LogError(ex, "Ошибка загрузки материала учителем {TeacherId}. Title: {Title}, FileName: {FileName}",
+                        currentUser.Id, model.Title, model.File?.FileName);
                     ModelState.AddModelError("", "Произошла ошибка при загрузке файла. Попробуйте еще раз.");
                 }
+            }
+            else
+            {
+                _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму создания материала", currentUser.Id);
             }
 
             await LoadClasses();
@@ -264,11 +272,12 @@ namespace OnlineTutor2.Controllers
         {
             if (id != model.Id) return NotFound();
 
+            var currentUser = await _userManager.GetUserAsync(User);
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var currentUser = await _userManager.GetUserAsync(User);
                     var material = await _context.Materials
                         .FirstOrDefaultAsync(m => m.Id == id && m.UploadedById == currentUser.Id);
 
@@ -286,13 +295,15 @@ namespace OnlineTutor2.Controllers
                         var validationResult = ValidateFile(model.NewFile);
                         if (!validationResult.IsValid)
                         {
+                            _logger.LogWarning("Учитель {TeacherId} попытался обновить материал {MaterialId} недопустимым файлом. Ошибка: {Error}",
+                                currentUser.Id, id, validationResult.ErrorMessage);
                             ModelState.AddModelError("NewFile", validationResult.ErrorMessage);
                             await LoadClasses();
                             return View(model);
                         }
 
-                        // Удаляем старый файл
-                        DeleteFile(material.FilePath);
+                        var oldFileName = material.FileName;
+                        DeleteFile(material.FilePath); // Удаляем старый файл
 
                         // Сохраняем новый файл
                         var newFilePath = await SaveFileAsync(model.NewFile);
@@ -302,23 +313,34 @@ namespace OnlineTutor2.Controllers
                         material.FileSize = model.NewFile.Length;
                         material.ContentType = model.NewFile.ContentType;
                         material.Type = DetermineMaterialType(model.NewFile.FileName);
+
+                        _logger.LogInformation("Учитель {TeacherId} заменил файл материала {MaterialId}. Старый: {OldFile}, Новый: {NewFile}",
+                            currentUser.Id, id, oldFileName, model.NewFile.FileName);
                     }
 
                     _context.Update(material);
                     await _context.SaveChangesAsync();
 
+                    _logger.LogInformation("Учитель {TeacherId} обновил материал {MaterialId}: {Title}, ClassId: {ClassId}",
+                        currentUser.Id, id, material.Title, material.ClassId);
+
                     TempData["SuccessMessage"] = $"Материал \"{material.Title}\" успешно обновлен!";
                     return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
+                    _logger.LogError(ex, "Ошибка конкурентности при обновлении материала {MaterialId} учителем {TeacherId}", id, currentUser.Id);
                     ModelState.AddModelError("", "Произошла ошибка при сохранении. Попробуйте еще раз.");
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error updating material {Id}", id);
+                    _logger.LogError(ex, "Ошибка обновления материала {MaterialId} учителем {TeacherId}", id, currentUser.Id);
                     ModelState.AddModelError("", "Произошла ошибка при обновлении материала.");
                 }
+            }
+            else
+            {
+                _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму обновления материала {MaterialId}", currentUser.Id, id);
             }
 
             await LoadClasses();
@@ -351,23 +373,25 @@ namespace OnlineTutor2.Controllers
 
             if (material == null) return NotFound();
 
+            var materialTitle = material.Title;
+            var materialFileName = material.FileName;
+
             try
             {
-                // Удаляем файл с диска
-                DeleteFile(material.FilePath);
+                DeleteFile(material.FilePath); // Удаляем файл
 
                 // Удаляем запись из БД
                 _context.Materials.Remove(material);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Material {Title} (ID: {Id}) deleted by user {UserId}",
-                    material.Title, material.Id, currentUser.Id);
+                _logger.LogInformation("Учитель {TeacherId} удалил материал {MaterialId}: {Title}, Файл: {FileName}",
+                    currentUser.Id, id, materialTitle, materialFileName);
 
                 TempData["SuccessMessage"] = $"Материал \"{material.Title}\" успешно удален!";
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting material {Id}", id);
+                _logger.LogError(ex, "Ошибка удаления материала {MaterialId} учителем {TeacherId}", id, currentUser.Id);
                 TempData["ErrorMessage"] = "Произошла ошибка при удалении материала.";
             }
 
@@ -392,14 +416,15 @@ namespace OnlineTutor2.Controllers
 
             if (!System.IO.File.Exists(filePath))
             {
+                _logger.LogError("Файл материала {MaterialId} не найден на сервере. Путь: {FilePath}", id, filePath);
                 TempData["ErrorMessage"] = "Файл не найден на сервере.";
                 return RedirectToAction(nameof(Index));
             }
 
             var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
 
-            _logger.LogInformation("Material {Title} (ID: {Id}) downloaded by user {UserId}",
-                material.Title, material.Id, currentUser.Id);
+            _logger.LogInformation("Учитель {TeacherId} скачал материал {MaterialId}: {Title}, Файл: {FileName}, Размер: {FileSize} байт",
+                currentUser.Id, id, material.Title, material.FileName, material.FileSize);
 
             return File(fileBytes, material.ContentType ?? "application/octet-stream", material.FileName);
         }
@@ -414,8 +439,12 @@ namespace OnlineTutor2.Controllers
 
             if (material == null) return NotFound();
 
+            var oldStatus = material.IsActive;
             material.IsActive = !material.IsActive;
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Учитель {TeacherId} изменил статус материала {MaterialId}: {Title} с {OldStatus} на {NewStatus}",
+                currentUser.Id, id, material.Title, oldStatus, material.IsActive);
 
             var status = material.IsActive ? "активирован" : "деактивирован";
             TempData["InfoMessage"] = $"Материал \"{material.Title}\" {status}.";
@@ -486,7 +515,7 @@ namespace OnlineTutor2.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Could not delete file {FilePath}", filePath);
+                _logger.LogWarning(ex, "Не удалось удалить файл {FilePath}", filePath);
             }
         }
 
