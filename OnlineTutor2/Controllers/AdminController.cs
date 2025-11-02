@@ -14,15 +14,18 @@ namespace OnlineTutor2.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ILogger<AdminController> _logger;
 
         public AdminController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            RoleManager<IdentityRole> roleManager)
+            RoleManager<IdentityRole> roleManager,
+            ILogger<AdminController> logger)
         {
             _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
+            _logger = logger;
         }
 
         // GET: Admin
@@ -154,9 +157,13 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteUser(string id)
         {
+            var adminId = _userManager.GetUserId(User);
             var user = await _userManager.FindByIdAsync(id);
-            if (user == null) return NotFound();
-
+            if (user == null)
+            {
+                _logger.LogWarning("Администратор {AdminId} попытался удалить несуществующего пользователя {UserId}", adminId, id);
+                return NotFound();
+            }
             // Удаляем связанные данные
             var student = await _context.Students.FirstOrDefaultAsync(s => s.UserId == id);
             if (student != null)
@@ -169,21 +176,26 @@ namespace OnlineTutor2.Controllers
                 _context.SpellingTestResults.RemoveRange(spellingResults);
                 _context.Grades.RemoveRange(grades);
                 _context.Students.Remove(student);
+
+                _logger.LogInformation("Удалены связанные данные студента {StudentId}: результаты тестов, оценки", student.Id);
             }
 
             var teacher = await _context.Teachers.FirstOrDefaultAsync(t => t.UserId == id);
             if (teacher != null)
             {
                 _context.Teachers.Remove(teacher);
+                _logger.LogInformation("Удален профиль учителя {TeacherId}", teacher.Id);
             }
 
             var result = await _userManager.DeleteAsync(user);
             if (result.Succeeded)
             {
+                _logger.LogInformation("Администратор {AdminId} успешно удалил пользователя {UserId}, Email: {Email}", adminId, id, user.Email);
                 TempData["SuccessMessage"] = $"Пользователь {user.FullName} успешно удален!";
             }
             else
             {
+                _logger.LogError("Ошибка удаления пользователя {UserId} администратором {AdminId}. Errors: {@Errors}", id, adminId, result.Errors);
                 TempData["ErrorMessage"] = "Ошибка при удалении пользователя.";
             }
 
@@ -195,19 +207,30 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleUserStatus(string id)
         {
+            var adminId = _userManager.GetUserId(User);
             var user = await _userManager.FindByIdAsync(id);
-            if (user == null) return NotFound();
+            if (user == null)
+            {
+                _logger.LogWarning("Администратор {AdminId} попытался изменить статус несуществующего пользователя {UserId}", adminId, id);
+                return NotFound();
+            }
 
+            var oldStatus = user.IsActive;
             user.IsActive = !user.IsActive;
             var result = await _userManager.UpdateAsync(user);
 
             if (result.Succeeded)
             {
                 var status = user.IsActive ? "активирован" : "заблокирован";
+                _logger.LogInformation("Администратор {AdminId} изменил статус пользователя {UserId} с {OldStatus} на {NewStatus}", adminId, id, oldStatus, user.IsActive);
                 TempData["InfoMessage"] = $"Пользователь {user.FullName} {status}.";
             }
+            else
+            {
+                _logger.LogError("Ошибка изменения статуса пользователя {UserId} администратором {AdminId}. Errors: {@Errors}", id, adminId, result.Errors);
+            }
 
-            return RedirectToAction(nameof(Users));
+                return RedirectToAction(nameof(Users));
         }
 
         #endregion
@@ -231,14 +254,21 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveTeacher(int id)
         {
+            var adminId = _userManager.GetUserId(User);
             var teacher = await _context.Teachers
                 .Include(t => t.User)
                 .FirstOrDefaultAsync(t => t.Id == id);
 
-            if (teacher == null) return NotFound();
+            if (teacher == null)
+            {
+                _logger.LogWarning("Администратор {AdminId} попытался одобрить несуществующего учителя {TeacherId}", adminId, id);
+                return NotFound();
+            }
 
             teacher.IsApproved = true;
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Администратор {AdminId} одобрил учителя {TeacherId}, UserId: {UserId}, Email: {Email}", adminId, id, teacher.UserId, teacher.User.Email);
 
             TempData["SuccessMessage"] = $"Учитель {teacher.User.FullName} одобрен!";
             return RedirectToAction(nameof(Teachers));
@@ -267,13 +297,22 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteClass(int id)
         {
+            var adminId = _userManager.GetUserId(User);
             var @class = await _context.Classes
                 .Include(c => c.Students)
                 .Include(c => c.Tests)
                 .Include(c => c.Materials)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
-            if (@class == null) return NotFound();
+            if (@class == null)
+            {
+                _logger.LogWarning("Администратор {AdminId} попытался удалить несуществующий класс {ClassId}", adminId, id);
+                return NotFound();
+            }
+
+            var className = @class.Name;
+            var studentsCount = @class.Students.Count;
+            var testsCount = @class.Tests.Count;
 
             // Убираем студентов из класса
             foreach (var student in @class.Students)
@@ -290,6 +329,8 @@ namespace OnlineTutor2.Controllers
             _context.Classes.Remove(@class);
             await _context.SaveChangesAsync();
 
+            _logger.LogInformation("Администратор {AdminId} удалил класс {ClassId}, Название: {ClassName}, Студентов: {StudentsCount}, Тестов: {TestsCount}", adminId, id, className, studentsCount, testsCount);
+
             TempData["SuccessMessage"] = $"Класс {@class.Name} удален!";
             return RedirectToAction(nameof(Classes));
         }
@@ -301,6 +342,7 @@ namespace OnlineTutor2.Controllers
         // GET: Admin/Tests
         public async Task<IActionResult> Tests()
         {
+            var adminId = _userManager.GetUserId(User);
             var spellingTests = await _context.SpellingTests
                 .Include(st => st.Teacher)
                 .Include(st => st.Class)
@@ -353,14 +395,24 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteSpellingTest(int id)
         {
+            var adminId = _userManager.GetUserId(User);
             var test = await _context.SpellingTests
                 .Include(st => st.TestResults)
                 .FirstOrDefaultAsync(st => st.Id == id);
 
-            if (test == null) return NotFound();
+            if (test == null)
+            {
+                _logger.LogWarning("Администратор {AdminId} попытался удалить несуществующий тест орфографии {TestId}", adminId, id);
+                return NotFound();
+            }
+
+            var testTitle = test.Title;
+            var resultsCount = test.TestResults.Count;
 
             _context.SpellingTests.Remove(test);
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Администратор {AdminId} удалил тест орфографии {TestId}, Название: {TestTitle}, Результатов: {ResultsCount}", adminId, id, testTitle, resultsCount);
 
             TempData["SuccessMessage"] = $"Тест \"{test.Title}\" удален!";
             return RedirectToAction(nameof(Tests));
@@ -443,11 +495,18 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteSpellingResult(int id)
         {
+            var adminId = _userManager.GetUserId(User);
             var result = await _context.SpellingTestResults.FindAsync(id);
-            if (result == null) return NotFound();
+            if (result == null)
+            {
+                _logger.LogWarning("Администратор {AdminId} попытался удалить несуществующий результат теста орфографии {ResultId}", adminId, id);
+                return NotFound();
+            }
 
             _context.SpellingTestResults.Remove(result);
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Администратор {AdminId} удалил результат теста орфографии {ResultId}, TestId: {TestId}, StudentId: {StudentId}", adminId, id, result.SpellingTestId, result.StudentId);
 
             TempData["SuccessMessage"] = "Результат теста удален!";
             return RedirectToAction(nameof(TestResults));
@@ -473,15 +532,28 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ClearAllResults()
         {
+            var adminId = _userManager.GetUserId(User);
+            _logger.LogWarning("Администратор {AdminId} начал очистку всех результатов тестов", adminId);
+
             var spellingResults = await _context.SpellingTestResults.ToListAsync();
             var regularResults = await _context.TestResults.ToListAsync();
+            var punctuationResults = await _context.PunctuationTestResults.ToListAsync();
+            var orthoeopyResults = await _context.OrthoeopyTestResults.ToListAsync();
+
+            var totalCount = spellingResults.Count + regularResults.Count + punctuationResults.Count + orthoeopyResults.Count;
 
             _context.SpellingTestResults.RemoveRange(spellingResults);
             _context.TestResults.RemoveRange(regularResults);
+            _context.PunctuationTestResults.RemoveRange(punctuationResults);
+            _context.OrthoeopyTestResults.RemoveRange(orthoeopyResults);
 
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = $"Удалено {spellingResults.Count + regularResults.Count} результатов тестов!";
+            _logger.LogWarning("Администратор {AdminId} удалил все результаты тестов. Всего удалено: {TotalCount} (Орфография: {SpellingCount}, " +
+                "Обычные: {RegularCount}, Пунктуация: {PunctuationCount}, Орфоэпия: {OrthoeopyCount})", adminId, totalCount, spellingResults.Count, 
+                regularResults.Count, punctuationResults.Count, orthoeopyResults.Count);
+
+            TempData["SuccessMessage"] = $"Удалено {totalCount} результатов тестов!";
             return RedirectToAction(nameof(TestResults));
         }
 
