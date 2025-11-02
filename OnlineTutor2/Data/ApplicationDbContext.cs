@@ -64,14 +64,14 @@ namespace OnlineTutor2.Data
                 .HasOne(t => t.User)
                 .WithOne(u => u.TeacherProfile)
                 .HasForeignKey<Teacher>(t => t.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Student
             modelBuilder.Entity<Student>()
                 .HasOne(s => s.User)
                 .WithOne(u => u.StudentProfile)
                 .HasForeignKey<Student>(s => s.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Student>()
                 .HasOne(s => s.Class)
@@ -94,7 +94,7 @@ namespace OnlineTutor2.Data
                 .WithMany()
                 .HasForeignKey(ce => ce.TeacherId)
                 .IsRequired()
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<CalendarEvent>()
                 .HasOne(ce => ce.Class)
