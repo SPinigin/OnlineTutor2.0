@@ -26,11 +26,14 @@
             <a asp-action="History" asp-route-testType="orthoepy" class="btn btn-@(testType == "orthoepy" ? "success" : "outline-success")">
                 <i class="fas fa-volume-up"></i> Орфоэпия
             </a>
+            <a asp-action="History" asp-route-testType="regular" class="btn btn-@(testType == "regular" ? "success" : "outline-success")">
+                <i class="fas fa-volume-up"></i> Классические
+            </a>
         </div>
     </div>
 </div>
 
-@if (!Model.SpellingResults.Any() && !Model.PunctuationResults.Any())
+@if (!Model.SpellingResults.Any() && !Model.PunctuationResults.Any() && !Model.OrthoeopyResults.Any() && !Model.RegularResults.Any())
 {
     <div class="text-center py-5">
         <i class="fas fa-clipboard-list text-muted" style="font-size: 4rem;"></i>
@@ -47,7 +50,7 @@ else
         <div class="col-md-3">
             <div class="card text-center">
                 <div class="card-body">
-                    <h4 class="text-primary">@(Model.SpellingResults.Count() + Model.PunctuationResults.Count() + Model.OrthoeopyResults.Count())</h4>
+                    <h4 class="text-primary">@(Model.SpellingResults.Count() + Model.PunctuationResults.Count() + Model.OrthoeopyResults.Count() + Model.RegularResults.Count())</h4>
                     <small class="text-muted">Тестов пройдено</small>
                 </div>
             </div>
@@ -57,17 +60,19 @@ else
                 <div class="card-body">
                     @{
                         var avgPercentage = 0.0;
-                        var totalCount = Model.SpellingResults.Count() + Model.PunctuationResults.Count() + Model.OrthoeopyResults.Count();
+                        var totalCount = Model.SpellingResults.Count() + Model.PunctuationResults.Count() + Model.OrthoeopyResults.Count() + Model.RegularResults.Count();
 
                         if (totalCount > 0)
                         {
                             var spellingAvg = Model.SpellingResults.Any() ? Model.SpellingResults.Average(r => r.Percentage) : 0;
                             var punctuationAvg = Model.PunctuationResults.Any() ? Model.PunctuationResults.Average(r => r.Percentage) : 0;
                             var orthoeopyAvg = Model.OrthoeopyResults.Any() ? Model.OrthoeopyResults.Average(r => r.Percentage) : 0;
+                            var regularAvg = Model.RegularResults.Any() ? Model.RegularResults.Average(r => r.Percentage) : 0;
 
                             avgPercentage = ((spellingAvg * Model.SpellingResults.Count()) +
                             (punctuationAvg * Model.PunctuationResults.Count()) +
-                            (orthoeopyAvg * Model.OrthoeopyResults.Count())) / totalCount;
+                            (orthoeopyAvg * Model.OrthoeopyResults.Count())) + 
+                            (regularAvg * Model.RegularResults.Count()) / totalCount;
                         }
                     }
                     <h4 class="text-success">@avgPercentage.ToString("F1")%</h4>
@@ -80,11 +85,12 @@ else
                 <div class="card-body">
                     @{
                         var maxPercentage = 0.0;
-                        if (Model.SpellingResults.Any() || Model.PunctuationResults.Any() || Model.OrthoeopyResults.Any())
+                        if (Model.SpellingResults.Any() || Model.PunctuationResults.Any() || Model.OrthoeopyResults.Any() || Model.RegularResults.Any())
                         {
                             var spellingMax = Model.SpellingResults.Any() ? Model.SpellingResults.Max(r => r.Percentage) : 0;
                             var punctuationMax = Model.PunctuationResults.Any() ? Model.PunctuationResults.Max(r => r.Percentage) : 0;
                             var orthoeopyMax = Model.OrthoeopyResults.Any() ? Model.OrthoeopyResults.Max(r => r.Percentage) : 0;
+                            var regularMax = Model.RegularResults.Any() ? Model.RegularResults.Max(r => r.Percentage) : 0;
                             maxPercentage = Math.Max(Math.Max(spellingMax, punctuationMax), orthoeopyMax);
                         }
                     }
@@ -96,7 +102,7 @@ else
         <div class="col-md-3">
             <div class="card text-center">
                 <div class="card-body">
-                    <h4 class="text-warning">@(Model.SpellingResults.Sum(r => r.Score) + Model.PunctuationResults.Sum(r => r.Score) + Model.OrthoeopyResults.Sum(r => r.Score))</h4>
+                    <h4 class="text-warning">@(Model.SpellingResults.Sum(r => r.Score) + Model.PunctuationResults.Sum(r => r.Score) + Model.OrthoeopyResults.Sum(r => r.Score) + Model.RegularResults.Sum(r => r.Score))</h4>
                     <small class="text-muted">Всего баллов</small>
                 </div>
             </div>
@@ -108,7 +114,7 @@ else
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="mb-0">
-                    <i class="fas fa-spell-check text-primary"></i> Тесты на орфографию
+                    <i class="fas fa-spell-check text-primary"></i> Тесты по орфографии
                 </h5>
             </div>
             <div class="card-body p-0">
@@ -137,7 +143,7 @@ else
                                             <strong>@result.SpellingTest.Title</strong>
                                             <br>
                                             <small class="text-muted">
-                                                @result.SpellingTest.Questions.Count вопросов
+                                                @result.SpellingTest.SpellingQuestions.Count вопросов
                                             </small>
                                         </div>
                                     </td>
@@ -217,7 +223,7 @@ else
                                             <strong>@result.PunctuationTest.Title</strong>
                                             <br>
                                             <small class="text-muted">
-                                                @result.PunctuationTest.Questions.Count вопросов
+                                                @result.PunctuationTest.PunctuationQuestions.Count вопросов
                                             </small>
                                         </div>
                                     </td>
@@ -297,7 +303,7 @@ else
                                             <strong>@result.OrthoeopyTest.Title</strong>
                                             <br>
                                             <small class="text-muted">
-                                                @result.OrthoeopyTest.Questions.Count вопросов
+                                                @result.OrthoeopyTest.OrthoeopyQuestions.Count вопросов
                                             </small>
                                         </div>
                                     </td>
