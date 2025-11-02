@@ -24,7 +24,7 @@ namespace OnlineTutor2.ViewModels
 
         [Required]
         [Range(1, 10)]
-        [Display(Name = "Максимальное попыток")]
+        [Display(Name = "Количество попыток")]
         public int MaxAttempts { get; set; } = 3;
 
         [Display(Name = "Дата начала")]
