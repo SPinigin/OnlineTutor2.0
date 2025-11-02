@@ -17,15 +17,18 @@ namespace OnlineTutor2.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IOrthoeopyQuestionImportService _questionImportService;
+        private readonly ILogger<OrthoeopyTestController> _logger;
 
         public OrthoeopyTestController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            IOrthoeopyQuestionImportService questionImportService)
+            IOrthoeopyQuestionImportService questionImportService,
+            ILogger<OrthoeopyTestController> logger)
         {
             _context = context;
             _userManager = userManager;
             _questionImportService = questionImportService;
+            _logger = logger;
         }
 
         // GET: OrthoeopyTest
@@ -77,16 +80,16 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateOrthoeopyTestViewModel model)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+
             if (ModelState.IsValid)
             {
-                var currentUser = await _userManager.GetUserAsync(User);
-
                 var test = new OrthoeopyTest
                 {
                     Title = model.Title,
                     Description = model.Description,
                     TeacherId = currentUser.Id,
-                    TestCategoryId = 6, // id=6 для тестов орфоэпии
+                    TestCategoryId = 6,
                     ClassId = model.ClassId,
                     TimeLimit = model.TimeLimit,
                     MaxAttempts = model.MaxAttempts,
@@ -100,9 +103,14 @@ namespace OnlineTutor2.Controllers
                 _context.OrthoeopyTests.Add(test);
                 await _context.SaveChangesAsync();
 
+                _logger.LogInformation("Учитель {TeacherId} создал тест орфоэпии {TestId}: {Title}, ClassId: {ClassId}, TimeLimit: {TimeLimit}",
+                    currentUser.Id, test.Id, test.Title, test.ClassId, test.TimeLimit);
+
                 TempData["SuccessMessage"] = $"Тест \"{test.Title}\" успешно создан! Теперь добавьте вопросы.";
                 return RedirectToAction(nameof(Details), new { id = test.Id });
             }
+
+            _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму создания теста орфоэпии", currentUser.Id);
 
             await LoadClasses();
             return View(model);
@@ -143,11 +151,12 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, CreateOrthoeopyTestViewModel model)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var currentUser = await _userManager.GetUserAsync(User);
                     var test = await _context.OrthoeopyTests
                         .FirstOrDefaultAsync(ot => ot.Id == id && ot.TeacherId == currentUser.Id);
 
@@ -167,11 +176,15 @@ namespace OnlineTutor2.Controllers
                     _context.Update(test);
                     await _context.SaveChangesAsync();
 
+                    _logger.LogInformation("Учитель {TeacherId} обновил тест орфоэпии {TestId}: {Title}, ClassId: {ClassId}",
+                        currentUser.Id, id, test.Title, test.ClassId);
+
                     TempData["SuccessMessage"] = $"Тест \"{test.Title}\" успешно обновлен!";
                     return RedirectToAction(nameof(Details), new { id });
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
+                    _logger.LogError(ex, "Ошибка конкурентности при обновлении теста орфоэпии {TestId} учителем {TeacherId}", id, currentUser.Id);
                     ModelState.AddModelError("", "Произошла ошибка при сохранении. Попробуйте еще раз.");
                 }
             }
@@ -208,6 +221,7 @@ namespace OnlineTutor2.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
+
             var test = await _context.OrthoeopyTests
                 .Include(ot => ot.TestResults)
                 .FirstOrDefaultAsync(ot => ot.Id == id && ot.TeacherId == currentUser.Id);
@@ -216,12 +230,17 @@ namespace OnlineTutor2.Controllers
 
             if (test.TestResults.Any())
             {
+                _logger.LogWarning("Учитель {TeacherId} попытался удалить тест орфоэпии {TestId} с результатами ({ResultsCount})",
+                   currentUser.Id, id, test.TestResults.Count);
                 TempData["ErrorMessage"] = "Нельзя удалить тест, который уже проходили ученики.";
                 return RedirectToAction(nameof(Delete), new { id });
             }
 
+            var testTitle = test.Title;
             _context.OrthoeopyTests.Remove(test);
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Учитель {TeacherId} удалил тест орфоэпии {TestId}: {Title}", currentUser.Id, id, testTitle);
 
             TempData["SuccessMessage"] = $"Тест \"{test.Title}\" успешно удален!";
             return RedirectToAction(nameof(Index));
@@ -282,9 +301,14 @@ namespace OnlineTutor2.Controllers
                 _context.OrthoeopyQuestions.Add(question);
                 await _context.SaveChangesAsync();
 
+                _logger.LogInformation("Учитель {TeacherId} добавил вопрос {QuestionId} к тесту орфоэпии {TestId}: Слово: {Word}, Позиция ударения: {StressPosition}",
+                    currentUser.Id, question.Id, model.OrthoeopyTestId, model.Word, model.StressPosition);
+
                 TempData["SuccessMessage"] = "Вопрос успешно добавлен!";
                 return RedirectToAction(nameof(Details), new { id = model.OrthoeopyTestId });
             }
+
+            _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму добавления вопроса к тесту орфоэпии {TestId}", currentUser.Id, model.OrthoeopyTestId);
 
             ViewBag.Test = test;
             ViewBag.NextOrderIndex = test.Questions.Count + 1;
@@ -338,16 +362,24 @@ namespace OnlineTutor2.Controllers
                     _context.Update(existingQuestion);
                     await _context.SaveChangesAsync();
 
+                    _logger.LogInformation("Учитель {TeacherId} обновил вопрос орфоэпии {QuestionId}: Слово: {Word}, Позиция ударения: {StressPosition}",
+                        currentUser.Id, id, model.Word, model.StressPosition);
+
                     TempData["SuccessMessage"] = "Вопрос успешно обновлен!";
                     return RedirectToAction(nameof(Details), new { id = existingQuestion.OrthoeopyTestId });
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
+                    _logger.LogError(ex, "Ошибка конкурентности при обновлении вопроса орфоэпии {QuestionId} учителем {TeacherId}", id, currentUser.Id);
                     ModelState.AddModelError("", "Произошла ошибка при сохранении. Попробуйте еще раз.");
                 }
             }
+            else
+            {
+                _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму обновления вопроса орфоэпии {QuestionId}", currentUser.Id, id);
+            }
 
-            ViewBag.Test = existingQuestion.OrthoeopyTest;
+                ViewBag.Test = existingQuestion.OrthoeopyTest;
             return View(model);
         }
 
@@ -367,6 +399,9 @@ namespace OnlineTutor2.Controllers
 
             if (question.StudentAnswers.Any())
             {
+                _logger.LogWarning("Учитель {TeacherId} попытался удалить вопрос орфоэпии {QuestionId} с ответами студентов ({AnswersCount})",
+                    currentUser.Id, id, question.StudentAnswers.Count);
+
                 return Json(new
                 {
                     success = false,
@@ -377,10 +412,14 @@ namespace OnlineTutor2.Controllers
             try
             {
                 var testId = question.OrthoeopyTestId;
+                var word = question.Word;
                 _context.OrthoeopyQuestions.Remove(question);
                 await _context.SaveChangesAsync();
 
                 await ReorderQuestions(testId);
+
+                _logger.LogInformation("Учитель {TeacherId} удалил вопрос орфоэпии {QuestionId}: {Word} из теста {TestId}",
+                    currentUser.Id, id, word, testId);
 
                 return Json(new
                 {
@@ -391,6 +430,7 @@ namespace OnlineTutor2.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Ошибка удаления вопроса орфоэпии {QuestionId} учителем {TeacherId}", id, currentUser.Id);
                 return Json(new
                 {
                     success = false,
@@ -409,8 +449,12 @@ namespace OnlineTutor2.Controllers
 
             if (test == null) return NotFound();
 
+            var oldStatus = test.IsActive;
             test.IsActive = !test.IsActive;
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Учитель {TeacherId} изменил статус теста орфоэпии {TestId}: {Title} с {OldStatus} на {NewStatus}",
+                currentUser.Id, id, test.Title, oldStatus, test.IsActive);
 
             var status = test.IsActive ? "активирован" : "деактивирован";
             TempData["InfoMessage"] = $"Тест \"{test.Title}\" {status}.";
@@ -442,6 +486,7 @@ namespace OnlineTutor2.Controllers
 
             if (test == null)
             {
+                _logger.LogWarning("Учитель {TeacherId} попытался импортировать вопросы к несуществующему или чужому тесту орфоэпии {TestId}", currentUser.Id, model.OrthoeopyTestId);
                 TempData["ErrorMessage"] = "Тест не найден";
                 return RedirectToAction(nameof(Index));
             }
@@ -450,6 +495,7 @@ namespace OnlineTutor2.Controllers
 
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму импорта вопросов для теста орфоэпии {TestId}", currentUser.Id, model.OrthoeopyTestId);
                 return View(model);
             }
 
@@ -463,6 +509,8 @@ namespace OnlineTutor2.Controllers
 
                 if (model.ExcelFile.Length > 10 * 1024 * 1024)
                 {
+                    _logger.LogWarning("Учитель {TeacherId} попытался импортировать слишком большой файл ({FileSize} байт) для теста орфоэпии {TestId}",
+                        currentUser.Id, model.ExcelFile.Length, model.OrthoeopyTestId);
                     ModelState.AddModelError("ExcelFile", "Размер файла не должен превышать 10 МБ");
                     return View(model);
                 }
@@ -479,6 +527,7 @@ namespace OnlineTutor2.Controllers
 
                 if (questions == null || !questions.Any())
                 {
+                    _logger.LogWarning("Учитель {TeacherId} импортировал пустой файл для теста орфоэпии {TestId}", currentUser.Id, model.OrthoeopyTestId);
                     TempData["ErrorMessage"] = "Файл не содержит данных для импорта";
                     return View(model);
                 }
@@ -494,10 +543,14 @@ namespace OnlineTutor2.Controllers
                 HttpContext.Session.SetString(sessionKey, JsonSerializer.Serialize(importData));
                 TempData["ImportSessionKey"] = sessionKey;
 
+                _logger.LogInformation("Учитель {TeacherId} инициировал импорт {QuestionsCount} вопросов для теста орфоэпии {TestId}",
+                    currentUser.Id, questions.Count, model.OrthoeopyTestId);
+
                 return RedirectToAction(nameof(PreviewQuestions));
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Ошибка импорта вопросов для теста орфоэпии {TestId} учителем {TeacherId}", model.OrthoeopyTestId, currentUser.Id);
                 TempData["ErrorMessage"] = $"Произошла ошибка: {ex.Message}";
                 return View(model);
             }
@@ -563,6 +616,7 @@ namespace OnlineTutor2.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Ошибка обработки предпросмотра импорта");
                 TempData["ErrorMessage"] = $"Ошибка обработки данных: {ex.Message}";
                 return RedirectToAction(nameof(Index));
             }
@@ -633,11 +687,15 @@ namespace OnlineTutor2.Controllers
                 await _context.SaveChangesAsync();
                 HttpContext.Session.Remove(sessionKey);
 
+                _logger.LogInformation("Учитель {TeacherId} подтвердил импорт {QuestionsCount} вопросов для теста орфоэпии {TestId}",
+                    currentUser.Id, validQuestions.Count, testId);
+
                 TempData["SuccessMessage"] = $"Успешно импортировано {validQuestions.Count} вопросов!";
                 return RedirectToAction(nameof(Details), new { id = testId });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Ошибка подтверждения импорта вопросов орфоэпии");
                 TempData["ErrorMessage"] = $"Ошибка при импорте: {ex.Message}";
                 return RedirectToAction(nameof(Index));
             }
@@ -646,6 +704,8 @@ namespace OnlineTutor2.Controllers
         // GET: OrthoeopyTest/DownloadQuestionTemplate
         public async Task<IActionResult> DownloadQuestionTemplate()
         {
+            var currentUser = _userManager.GetUserAsync(User);
+
             try
             {
                 var templateBytes = await _questionImportService.GenerateTemplateAsync();
@@ -655,6 +715,7 @@ namespace OnlineTutor2.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Ошибка генерации шаблона вопросов орфоэпии для учителя {TeacherId}", currentUser.Id);
                 TempData["ErrorMessage"] = $"Ошибка генерации шаблона: {ex.Message}";
                 return RedirectToAction(nameof(Index));
             }
