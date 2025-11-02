@@ -11,8 +11,12 @@ namespace OnlineTutor2.Data
         }
 
         // DbSets
+
+        // Users and Profiles
         public DbSet<Teacher> Teachers { get; set; }
         public DbSet<Student> Students { get; set; }
+
+        // Classes and Education
         public DbSet<Class> Classes { get; set; }
         public DbSet<Assignment> Assignments { get; set; }
         public DbSet<Grade> Grades { get; set; }
@@ -22,25 +26,25 @@ namespace OnlineTutor2.Data
         // Test Categories
         public DbSet<TestCategory> TestCategories { get; set; }
 
-        // RegularTests
+        // Regular Tests
         public DbSet<RegularTest> RegularTests { get; set; }
         public DbSet<RegularQuestion> RegularQuestions { get; set; }
         public DbSet<RegularTestResult> RegularTestResults { get; set; }
         public DbSet<RegularAnswer> RegularAnswers { get; set; }
 
-        // SpellingTests
+        // Spelling Tests
         public DbSet<SpellingTest> SpellingTests { get; set; }
         public DbSet<SpellingQuestion> SpellingQuestions { get; set; }
         public DbSet<SpellingTestResult> SpellingTestResults { get; set; }
         public DbSet<SpellingAnswer> SpellingAnswers { get; set; }
 
-        // PunctuationTests
+        // Punctuation Tests
         public DbSet<PunctuationTest> PunctuationTests { get; set; }
         public DbSet<PunctuationQuestion> PunctuationQuestions { get; set; }
         public DbSet<PunctuationTestResult> PunctuationTestResults { get; set; }
         public DbSet<PunctuationAnswer> PunctuationAnswers { get; set; }
 
-        // OrthoeopyTests
+        // Orthoeopy Tests
         public DbSet<OrthoeopyTest> OrthoeopyTests { get; set; }
         public DbSet<OrthoeopyQuestion> OrthoeopyQuestions { get; set; }
         public DbSet<OrthoeopyTestResult> OrthoeopyTestResults { get; set; }
@@ -158,15 +162,21 @@ namespace OnlineTutor2.Data
 
             // RegularTest
             modelBuilder.Entity<RegularTest>()
-                .HasOne(t => t.Teacher)
+                .HasOne(rt => rt.Teacher)
                 .WithMany(u => u.CreatedTests)
-                .HasForeignKey(t => t.TeacherId)
+                .HasForeignKey(rt => rt.TeacherId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<RegularTest>()
-                .HasOne(t => t.Class)
+                .HasOne(rt => rt.TestCategory)
+                .WithMany()
+                .HasForeignKey(rt => rt.TestCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<RegularTest>()
+                .HasOne(rt => rt.Class)
                 .WithMany(c => c.RegularTests)
-                .HasForeignKey(t => t.ClassId)
+                .HasForeignKey(rt => rt.ClassId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             // RegularQuestion
@@ -204,20 +214,20 @@ namespace OnlineTutor2.Data
 
             // SpellingTest
             modelBuilder.Entity<SpellingTest>()
-                .HasOne(st => st.TestCategory)
-                .WithMany(tc => tc.SpellingTests)
-                .HasForeignKey(st => st.TestCategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<SpellingTest>()
                 .HasOne(st => st.Teacher)
                 .WithMany()
                 .HasForeignKey(st => st.TeacherId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<SpellingTest>()
+                .HasOne(st => st.TestCategory)
+                .WithMany(tc => tc.SpellingTests)
+                .HasForeignKey(st => st.TestCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<SpellingTest>()
                 .HasOne(st => st.Class)
-                .WithMany()
+                .WithMany(c => c.SpellingTests)
                 .HasForeignKey(st => st.ClassId)
                 .OnDelete(DeleteBehavior.SetNull);
 
@@ -237,7 +247,7 @@ namespace OnlineTutor2.Data
 
             modelBuilder.Entity<SpellingTestResult>()
                 .HasOne(str => str.Student)
-                .WithMany()
+                .WithMany(s => s.SpellingTestResults)
                 .HasForeignKey(str => str.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -256,20 +266,20 @@ namespace OnlineTutor2.Data
 
             // PunctuationTest
             modelBuilder.Entity<PunctuationTest>()
-                .HasOne(pt => pt.TestCategory)
-                .WithMany(tc => tc.PunctuationTests)
-                .HasForeignKey(pt => pt.TestCategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<PunctuationTest>()
                 .HasOne(pt => pt.Teacher)
                 .WithMany()
                 .HasForeignKey(pt => pt.TeacherId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<PunctuationTest>()
+                .HasOne(pt => pt.TestCategory)
+                .WithMany(tc => tc.PunctuationTests)
+                .HasForeignKey(pt => pt.TestCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PunctuationTest>()
                 .HasOne(pt => pt.Class)
-                .WithMany()
+                .WithMany(c => c.PunctuationTests)
                 .HasForeignKey(pt => pt.ClassId)
                 .OnDelete(DeleteBehavior.SetNull);
 
@@ -289,7 +299,7 @@ namespace OnlineTutor2.Data
 
             modelBuilder.Entity<PunctuationTestResult>()
                 .HasOne(ptr => ptr.Student)
-                .WithMany()
+                .WithMany(s => s.PunctuationTestResults)
                 .HasForeignKey(ptr => ptr.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -308,20 +318,20 @@ namespace OnlineTutor2.Data
 
             // OrthoeopyTest
             modelBuilder.Entity<OrthoeopyTest>()
-                .HasOne(ot => ot.TestCategory)
-                .WithMany(tc => tc.OrthoeopyTests)
-                .HasForeignKey(ot => ot.TestCategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<OrthoeopyTest>()
                 .HasOne(ot => ot.Teacher)
                 .WithMany()
                 .HasForeignKey(ot => ot.TeacherId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<OrthoeopyTest>()
+                .HasOne(ot => ot.TestCategory)
+                .WithMany(tc => tc.OrthoeopyTests)
+                .HasForeignKey(ot => ot.TestCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<OrthoeopyTest>()
                 .HasOne(ot => ot.Class)
-                .WithMany()
+                .WithMany(c => c.OrthoeopyTests)
                 .HasForeignKey(ot => ot.ClassId)
                 .OnDelete(DeleteBehavior.SetNull);
 
@@ -341,7 +351,7 @@ namespace OnlineTutor2.Data
 
             modelBuilder.Entity<OrthoeopyTestResult>()
                 .HasOne(otr => otr.Student)
-                .WithMany()
+                .WithMany(s => s.OrthoeopyTestResults)
                 .HasForeignKey(otr => otr.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
