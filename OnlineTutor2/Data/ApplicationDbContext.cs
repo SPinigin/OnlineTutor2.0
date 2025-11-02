@@ -165,7 +165,7 @@ namespace OnlineTutor2.Data
 
             modelBuilder.Entity<RegularTest>()
                 .HasOne(t => t.Class)
-                .WithMany(c => c.Tests)
+                .WithMany(c => c.RegularTests)
                 .HasForeignKey(t => t.ClassId)
                 .OnDelete(DeleteBehavior.SetNull);
 
@@ -180,12 +180,12 @@ namespace OnlineTutor2.Data
             modelBuilder.Entity<RegularTestResult>()
                 .HasOne(tr => tr.RegularTest)
                 .WithMany(t => t.RegularTestResults)
-                .HasForeignKey(tr => tr.TestId)
+                .HasForeignKey(tr => tr.RegularTestId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<RegularTestResult>()
                 .HasOne(tr => tr.Student)
-                .WithMany(s => s.TestResults)
+                .WithMany(s => s.RegularTestResults)
                 .HasForeignKey(tr => tr.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -295,13 +295,13 @@ namespace OnlineTutor2.Data
 
             // PunctuationAnswer
             modelBuilder.Entity<PunctuationAnswer>()
-                .HasOne(pa => pa.TestResult)
-                .WithMany(ptr => ptr.Answers)
+                .HasOne(pa => pa.PunctuationTestResult)
+                .WithMany(ptr => ptr.PunctuationAnswers)
                 .HasForeignKey(pa => pa.PunctuationTestResultId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<PunctuationAnswer>()
-                .HasOne(pa => pa.Question)
+                .HasOne(pa => pa.PunctuationQuestion)
                 .WithMany(pq => pq.StudentAnswers)
                 .HasForeignKey(pa => pa.PunctuationQuestionId)
                 .OnDelete(DeleteBehavior.Restrict);
