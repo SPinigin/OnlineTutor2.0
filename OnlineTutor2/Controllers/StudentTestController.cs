@@ -14,11 +14,16 @@ namespace OnlineTutor2.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ILogger<StudentTestController> _logger;
 
-        public StudentTestController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public StudentTestController(
+            ApplicationDbContext context, 
+            UserManager<ApplicationUser> userManager,
+            ILogger<StudentTestController> logger)
         {
             _context = context;
             _userManager = userManager;
+            _logger = logger;
         }
 
         // GET: StudentTest - Список всех доступных тестов
@@ -31,6 +36,7 @@ namespace OnlineTutor2.Controllers
 
             if (student == null)
             {
+                _logger.LogWarning("Профиль студента не найден для пользователя {UserId}", currentUser.Id);
                 TempData["ErrorMessage"] = "Профиль ученика не найден.";
                 return RedirectToAction("Index", "Student");
             }
@@ -125,6 +131,8 @@ namespace OnlineTutor2.Controllers
 
             if (ongoingResult != null)
             {
+                _logger.LogInformation("Студент {StudentId} продолжает незавершенный тест орфографии {TestId}, ResultId: {ResultId}",
+                    student.Id, id, ongoingResult.Id);
                 return RedirectToAction(nameof(TakeSpelling), new { id = ongoingResult.Id });
             }
 
@@ -140,6 +148,9 @@ namespace OnlineTutor2.Controllers
 
             _context.SpellingTestResults.Add(testResult);
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Студент {StudentId} начал тест орфографии {TestId}, ResultId: {ResultId}, Попытка: {AttemptNumber}",
+                student.Id, id, testResult.Id, testResult.AttemptNumber);
 
             return RedirectToAction(nameof(TakeSpelling), new { id = testResult.Id });
         }
@@ -171,6 +182,8 @@ namespace OnlineTutor2.Controllers
 
             if (timeElapsed >= timeLimit)
             {
+                _logger.LogInformation("Время теста орфографии {ResultId} истекло для студента {StudentId}. Прошло: {TimeElapsed}, Лимит: {TimeLimit}",
+                    id, student.Id, timeElapsed, timeLimit);
                 await CompleteSpellingTest(testResult);
                 return RedirectToAction(nameof(SpellingResult), new { id = testResult.Id });
             }
@@ -240,6 +253,9 @@ namespace OnlineTutor2.Controllers
 
             await _context.SaveChangesAsync();
 
+            _logger.LogInformation("Студент {StudentId} ответил на вопрос {QuestionId} в тесте орфографии {ResultId}. Правильно: {IsCorrect}, Баллы: {Points}",
+                student.Id, model.QuestionId, model.TestResultId, isCorrect, points);
+
             return Json(new
             {
                 success = true,
@@ -254,9 +270,10 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CompleteSpelling(int testResultId)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+
             try
             {
-                var currentUser = await _userManager.GetUserAsync(User);
                 var student = await _context.Students
                     .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
 
@@ -276,11 +293,15 @@ namespace OnlineTutor2.Controllers
 
                 await CompleteSpellingTest(testResult);
 
+                _logger.LogInformation("Студент {StudentId} завершил тест орфографии {ResultId}. Баллы: {Score}/{MaxScore}, Процент: {Percentage}", 
+                    student.Id, testResultId, testResult.Score, testResult.MaxScore, testResult.Percentage);
+
                 TempData["SuccessMessage"] = "Тест успешно завершен!";
                 return RedirectToAction("Result", new { id = testResult.Id });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Ошибка завершения теста орфографии {ResultId} студентом {StudentId}", testResultId, currentUser.Id);
                 TempData["ErrorMessage"] = "Произошла ошибка при завершении теста.";
                 Console.WriteLine(ex);
                 return RedirectToAction(nameof(Index));
@@ -339,6 +360,8 @@ namespace OnlineTutor2.Controllers
             var attemptCount = test.TestResults.Count(tr => tr.StudentId == student.Id);
             if (attemptCount >= test.MaxAttempts)
             {
+                _logger.LogWarning("Студент {StudentId} превысил лимит попыток ({MaxAttempts}) для теста пунктуации {TestId}",
+                    student.Id, test.MaxAttempts, id);
                 TempData["ErrorMessage"] = $"Превышено максимальное количество попыток ({test.MaxAttempts}).";
                 return RedirectToAction(nameof(Index));
             }
@@ -348,6 +371,8 @@ namespace OnlineTutor2.Controllers
 
             if (ongoingResult != null)
             {
+                _logger.LogInformation("Студент {StudentId} продолжает незавершенный тест пунктуации {TestId}, ResultId: {ResultId}",
+                    student.Id, id, ongoingResult.Id);
                 return RedirectToAction(nameof(TakePunctuation), new { id = ongoingResult.Id });
             }
 
@@ -363,6 +388,9 @@ namespace OnlineTutor2.Controllers
 
             _context.PunctuationTestResults.Add(testResult);
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Студент {StudentId} начал тест пунктуации {TestId}, ResultId: {ResultId}, Попытка: {AttemptNumber}",
+                student.Id, id, testResult.Id, testResult.AttemptNumber);
 
             return RedirectToAction(nameof(TakePunctuation), new { id = testResult.Id });
         }
@@ -394,6 +422,8 @@ namespace OnlineTutor2.Controllers
 
             if (timeElapsed >= timeLimit)
             {
+                _logger.LogInformation("Время теста пунктуации {ResultId} истекло для студента {StudentId}. Прошло: {TimeElapsed}, Лимит: {TimeLimit}",
+                    id, student.Id, timeElapsed, timeLimit);
                 await CompletePunctuationTest(testResult);
                 return RedirectToAction(nameof(PunctuationResult), new { id = testResult.Id });
             }
@@ -463,6 +493,9 @@ namespace OnlineTutor2.Controllers
 
             await _context.SaveChangesAsync();
 
+            _logger.LogInformation("Студент {StudentId} ответил на вопрос {QuestionId} в тесте пунктуации {ResultId}. Правильно: {IsCorrect}, Баллы: {Points}",
+                student.Id, model.QuestionId, model.TestResultId, isCorrect, points);
+
             return Json(new
             {
                 success = true,
@@ -499,13 +532,16 @@ namespace OnlineTutor2.Controllers
 
                 await CompletePunctuationTest(testResult);
 
+                _logger.LogInformation("Студент {StudentId} завершил тест пунктуации {ResultId}. Баллы: {Score}/{MaxScore}, Процент: {Percentage}",
+                    student.Id, testResultId, testResult.Score, testResult.MaxScore, testResult.Percentage);
+
                 TempData["SuccessMessage"] = "Тест успешно завершен!";
                 return RedirectToAction("Result", new { id = testResult.Id });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Ошибка завершения теста пунктуации {ResultId} студентом {StudentId}", testResultId, _userManager.GetUserId(User));
                 TempData["ErrorMessage"] = "Произошла ошибка при завершении теста.";
-                Console.WriteLine(ex);
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -618,6 +654,8 @@ namespace OnlineTutor2.Controllers
             var attemptCount = test.TestResults.Count(tr => tr.StudentId == student.Id);
             if (attemptCount >= test.MaxAttempts)
             {
+                _logger.LogWarning("Студент {StudentId} превысил лимит попыток ({MaxAttempts}) для теста орфоэпии {TestId}",
+                    student.Id, test.MaxAttempts, id);
                 TempData["ErrorMessage"] = $"Превышено максимальное количество попыток ({test.MaxAttempts}).";
                 return RedirectToAction(nameof(Index));
             }
@@ -627,6 +665,8 @@ namespace OnlineTutor2.Controllers
 
             if (ongoingResult != null)
             {
+                _logger.LogInformation("Студент {StudentId} продолжает незавершенный тест орфоэпии {TestId}, ResultId: {ResultId}",
+                    student.Id, id, ongoingResult.Id);
                 return RedirectToAction(nameof(TakeOrthoepy), new { id = ongoingResult.Id });
             }
 
@@ -642,6 +682,9 @@ namespace OnlineTutor2.Controllers
 
             _context.OrthoeopyTestResults.Add(testResult);
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Студент {StudentId} начал тест орфоэпии {TestId}, ResultId: {ResultId}, Попытка: {AttemptNumber}",
+                student.Id, id, testResult.Id, testResult.AttemptNumber);
 
             return RedirectToAction(nameof(TakeOrthoepy), new { id = testResult.Id });
         }
@@ -673,6 +716,8 @@ namespace OnlineTutor2.Controllers
 
             if (timeElapsed >= timeLimit)
             {
+                _logger.LogInformation("Время теста орфоэпии {ResultId} истекло для студента {StudentId}. Прошло: {TimeElapsed}, Лимит: {TimeLimit}",
+                    id, student.Id, timeElapsed, timeLimit);
                 await CompleteOrthoeopyTest(testResult);
                 return RedirectToAction(nameof(OrthoeopyResult), new { id = testResult.Id });
             }
@@ -742,6 +787,9 @@ namespace OnlineTutor2.Controllers
 
             await _context.SaveChangesAsync();
 
+            _logger.LogInformation("Студент {StudentId} ответил на вопрос {QuestionId} в тесте орфоэпии {ResultId}. Выбрана позиция: {SelectedPosition}, Правильная: {CorrectPosition}, Правильно: {IsCorrect}, Баллы: {Points}",
+                student.Id, QuestionId, TestResultId, SelectedStressPosition, question.StressPosition, isCorrect, points);
+
             return Json(new
             {
                 success = true,
@@ -756,9 +804,10 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CompleteOrthoepy(int testResultId)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+
             try
             {
-                var currentUser = await _userManager.GetUserAsync(User);
                 var student = await _context.Students
                     .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
 
@@ -777,11 +826,15 @@ namespace OnlineTutor2.Controllers
 
                 await CompleteOrthoeopyTest(testResult);
 
+                _logger.LogInformation("Студент {StudentId} завершил тест орфоэпии {ResultId}. Баллы: {Score}/{MaxScore}, Процент: {Percentage}",
+                    student.Id, testResultId, testResult.Score, testResult.MaxScore, testResult.Percentage);
+
                 TempData["SuccessMessage"] = "Тест успешно завершен!";
                 return RedirectToAction("Result", new { id = testResult.Id });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Ошибка завершения теста орфоэпии {ResultId} студентом {StudentId}", testResultId, currentUser.Id);
                 TempData["ErrorMessage"] = "Произошла ошибка при завершении теста.";
                 Console.WriteLine(ex);
                 return RedirectToAction(nameof(Index));
