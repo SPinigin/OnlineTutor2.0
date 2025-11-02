@@ -276,14 +276,14 @@ namespace OnlineTutor2.Data
             // PunctuationQuestion
             modelBuilder.Entity<PunctuationQuestion>()
                 .HasOne(pq => pq.PunctuationTest)
-                .WithMany(pt => pt.Questions)
+                .WithMany(pt => pt.PunctuationQuestions)
                 .HasForeignKey(pq => pq.PunctuationTestId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // PunctuationTestResult
             modelBuilder.Entity<PunctuationTestResult>()
                 .HasOne(ptr => ptr.PunctuationTest)
-                .WithMany(pt => pt.TestResults)
+                .WithMany(pt => pt.PunctuationTestResults)
                 .HasForeignKey(ptr => ptr.PunctuationTestId)
                 .OnDelete(DeleteBehavior.Cascade);
 

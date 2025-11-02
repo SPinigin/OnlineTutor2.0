@@ -69,35 +69,65 @@ namespace OnlineTutor2.Controllers
 
             switch (id)
             {
-                case 1: // Тесты на орфографию
+                case 1: // Тесты по орфографии
                     var spellingTests = await _context.SpellingTests
                         .Where(st => st.TeacherId == currentUser.Id && st.TestCategoryId == id)
                         .Include(st => st.Class)
-                        .Include(st => st.Questions)
-                        .Include(st => st.TestResults)
+                        .Include(st => st.SpellingQuestions)
+                        .Include(st => st.SpellingTestResults)
                         .OrderByDescending(st => st.CreatedAt)
                         .ToListAsync();
                     return View("SpellingTests", spellingTests);
 
-                case 5: // Тесты на пунктуацию
+                case 3: // Тесты классические
+                    var regularTests = await _context.RegularTests
+                        .Where(rt => rt.TeacherId == currentUser.Id && rt.TestCategoryId == id)
+                        .Include(rt => rt.Class)
+                        .Include(rt => rt.RegularQuestions)
+                        .Include(rt => rt.RegularTestResults)
+                        .OrderByDescending(rt => rt.CreatedAt)
+                        .ToListAsync();
+                    return View("RegularTests", regularTests);
+
+                //case 4: // Тесты со свободными ответами
+                //    var regularTests = await _context.RegularTests
+                //        .Where(rt => rt.TeacherId == currentUser.Id && rt.TestCategoryId == id)
+                //        .Include(rt => rt.Class)
+                //        .Include(rt => rt.RegularQuestions)
+                //        .Include(rt => rt.RegularTestResults)
+                //        .OrderByDescending(rt => rt.CreatedAt)
+                //        .ToListAsync();
+                //    return View("RegularTests", regularTests);
+
+                case 5: // Тесты по пунктуации
                     var punctuationTests = await _context.PunctuationTests
                         .Where(pt => pt.TeacherId == currentUser.Id && pt.TestCategoryId == id)
                         .Include(pt => pt.Class)
-                        .Include(pt => pt.Questions)
-                        .Include(pt => pt.TestResults)
+                        .Include(pt => pt.PunctuationQuestions)
+                        .Include(pt => pt.PunctuationTestResults)
                         .OrderByDescending(pt => pt.CreatedAt)
                         .ToListAsync();
                     return View("PunctuationTests", punctuationTests);
 
-                case 6: // Тесты на орфоэпию
+                case 6: // Тесты по орфоэпии
                     var orthoeopyTests = await _context.OrthoeopyTests
                         .Where(ot => ot.TeacherId == currentUser.Id && ot.TestCategoryId == id)
                         .Include(ot => ot.Class)
-                        .Include(ot => ot.Questions)
-                        .Include(ot => ot.TestResults)
+                        .Include(ot => ot.OrthoeopyQuestions)
+                        .Include(ot => ot.OrthoeopyTestResults)
                         .OrderByDescending(ot => ot.CreatedAt)
                         .ToListAsync();
                     return View("OrthoeopyTests", orthoeopyTests);
+
+                //case 7: // Тесты по средствам выразительности
+                //    var orthoeopyTests = await _context.OrthoeopyTests
+                //        .Where(ot => ot.TeacherId == currentUser.Id && ot.TestCategoryId == id)
+                //        .Include(ot => ot.Class)
+                //        .Include(ot => ot.OrthoeopyQuestions)
+                //        .Include(ot => ot.OrthoeopyTestResults)
+                //        .OrderByDescending(ot => ot.CreatedAt)
+                //        .ToListAsync();
+                //    return View("OrthoeopyTests", orthoeopyTests);
 
                 default:
                     return View("EmptyCategory");

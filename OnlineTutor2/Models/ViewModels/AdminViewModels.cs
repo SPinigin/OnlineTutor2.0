@@ -11,6 +11,8 @@ namespace OnlineTutor2.ViewModels
         public int TotalClasses { get; set; }
         public int TotalSpellingTests { get; set; }
         public int TotalRegularTests { get; set; }
+        public int TotalPunctuationTests { get; set; }
+        public int TotalOrthoeopyTests { get; set; }
         public int TotalTestResults { get; set; }
         public int PendingTeachers { get; set; }
 

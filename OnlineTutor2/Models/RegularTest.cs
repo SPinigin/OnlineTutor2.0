@@ -15,6 +15,7 @@ namespace OnlineTutor2.Models
 
         [Required]
         public string TeacherId { get; set; }
+        public int TestCategoryId { get; set; } = 3;
 
         public int? ClassId { get; set; }
 
@@ -34,6 +35,7 @@ namespace OnlineTutor2.Models
 
         // Навигационные свойства
         public virtual ApplicationUser Teacher { get; set; }
+        public virtual TestCategory TestCategory { get; set; } = null!;
         public virtual Class? Class { get; set; }
         public virtual ICollection<RegularQuestion> RegularQuestions { get; set; } = new List<RegularQuestion>();
         public virtual ICollection<RegularTestResult> RegularTestResults { get; set; } = new List<RegularTestResult>();

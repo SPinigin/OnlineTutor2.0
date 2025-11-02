@@ -38,8 +38,10 @@ namespace OnlineTutor2.Controllers
                 TotalTeachers = await _context.Teachers.CountAsync(),
                 TotalClasses = await _context.Classes.CountAsync(),
                 TotalSpellingTests = await _context.SpellingTests.CountAsync(),
-                TotalRegularTests = await _context.Tests.CountAsync(),
-                TotalTestResults = await _context.SpellingTestResults.CountAsync() + await _context.TestResults.CountAsync(),
+                TotalRegularTests = await _context.RegularTests.CountAsync(),
+                TotalPunctuationTests = await _context.PunctuationTests.CountAsync(),
+                TotalOrthoeopyTests = await _context.OrthoeopyTests.CountAsync(),
+                TotalTestResults = await _context.SpellingTestResults.CountAsync() + await _context.PunctuationTestResults.CountAsync() + await _context.RegularTestResults.CountAsync() + await _context.OrthoeopyTestResults.CountAsync(),
                 PendingTeachers = await _context.Teachers.CountAsync(t => !t.IsApproved),
 
                 RecentUsers = await _userManager.Users
@@ -168,12 +170,16 @@ namespace OnlineTutor2.Controllers
             var student = await _context.Students.FirstOrDefaultAsync(s => s.UserId == id);
             if (student != null)
             {
-                var testResults = _context.TestResults.Where(tr => tr.StudentId == student.Id);
+                var regularResults = _context.RegularTestResults.Where(tr => tr.StudentId == student.Id);
                 var spellingResults = _context.SpellingTestResults.Where(str => str.StudentId == student.Id);
+                var punctuationResults = _context.PunctuationTestResults.Where(str => str.StudentId == student.Id);
+                var orthoeopyResults = _context.OrthoeopyTestResults.Where(str => str.StudentId == student.Id);
                 var grades = _context.Grades.Where(g => g.StudentId == student.Id);
 
-                _context.TestResults.RemoveRange(testResults);
+                _context.RegularTestResults.RemoveRange(regularResults);
                 _context.SpellingTestResults.RemoveRange(spellingResults);
+                _context.PunctuationTestResults.RemoveRange(punctuationResults);
+                _context.OrthoeopyTestResults.RemoveRange(orthoeopyResults);
                 _context.Grades.RemoveRange(grades);
                 _context.Students.Remove(student);
 
@@ -343,11 +349,12 @@ namespace OnlineTutor2.Controllers
         public async Task<IActionResult> Tests()
         {
             var adminId = _userManager.GetUserId(User);
+
             var spellingTests = await _context.SpellingTests
                 .Include(st => st.Teacher)
                 .Include(st => st.Class)
-                .Include(st => st.Questions)
-                .Include(st => st.TestResults)
+                .Include(st => st.SpellingQuestions)
+                .Include(st => st.SpellingTestResults)
                 .Select(st => new AdminTestViewModel
                 {
                     Id = st.Id,
@@ -355,19 +362,19 @@ namespace OnlineTutor2.Controllers
                     Type = "Орфография",
                     TeacherName = st.Teacher.FullName,
                     ClassName = st.Class != null ? st.Class.Name : "Все ученики",
-                    QuestionsCount = st.Questions.Count,
-                    ResultsCount = st.TestResults.Count,
+                    QuestionsCount = st.SpellingQuestions.Count,
+                    ResultsCount = st.SpellingTestResults.Count,
                     CreatedAt = st.CreatedAt,
                     IsActive = st.IsActive,
                     ControllerName = "SpellingTest"
                 })
                 .ToListAsync();
 
-            var regularTests = await _context.Tests
+            var regularTests = await _context.RegularTests
                 .Include(t => t.Teacher)
                 .Include(t => t.Class)
-                .Include(t => t.Questions)
-                .Include(t => t.TestResults)
+                .Include(t => t.RegularQuestions)
+                .Include(t => t.RegularTestResults)
                 .Select(t => new AdminTestViewModel
                 {
                     Id = t.Id,
@@ -375,11 +382,11 @@ namespace OnlineTutor2.Controllers
                     Type = "Обычный",
                     TeacherName = t.Teacher.FullName,
                     ClassName = t.Class != null ? t.Class.Name : "Все ученики",
-                    QuestionsCount = t.Questions.Count,
-                    ResultsCount = t.TestResults.Count,
+                    QuestionsCount = t.RegularQuestions.Count,
+                    ResultsCount = t.RegularTestResults.Count,
                     CreatedAt = t.CreatedAt,
                     IsActive = t.IsActive,
-                    ControllerName = "Test"
+                    ControllerName = "RegularTest"
                 })
                 .ToListAsync();
 
@@ -397,7 +404,7 @@ namespace OnlineTutor2.Controllers
         {
             var adminId = _userManager.GetUserId(User);
             var test = await _context.SpellingTests
-                .Include(st => st.TestResults)
+                .Include(st => st.SpellingTestResults)
                 .FirstOrDefaultAsync(st => st.Id == id);
 
             if (test == null)
@@ -407,7 +414,7 @@ namespace OnlineTutor2.Controllers
             }
 
             var testTitle = test.Title;
-            var resultsCount = test.TestResults.Count;
+            var resultsCount = test.SpellingTestResults.Count;
 
             _context.SpellingTests.Remove(test);
             await _context.SaveChangesAsync();
@@ -423,13 +430,13 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteRegularTest(int id)
         {
-            var test = await _context.Tests
-                .Include(t => t.TestResults)
+            var test = await _context.RegularTests
+                .Include(t => t.RegularTestResults)
                 .FirstOrDefaultAsync(t => t.Id == id);
 
             if (test == null) return NotFound();
 
-            _context.Tests.Remove(test);
+            _context.RegularTests.Remove(test);
             await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = $"Тест \"{test.Title}\" удален!";
@@ -463,14 +470,14 @@ namespace OnlineTutor2.Controllers
                 })
                 .ToListAsync();
 
-            var regularResults = await _context.TestResults
-                .Include(tr => tr.Test)
+            var regularResults = await _context.RegularTestResults
+                .Include(tr => tr.RegularTest)
                 .Include(tr => tr.Student)
                     .ThenInclude(s => s.User)
                 .Select(tr => new AdminTestResultViewModel
                 {
                     Id = tr.Id,
-                    TestTitle = tr.Test.Title,
+                    TestTitle = tr.RegularTest.Title,
                     TestType = "Обычный",
                     StudentName = tr.Student.User.FullName,
                     Score = tr.Score,
@@ -483,7 +490,50 @@ namespace OnlineTutor2.Controllers
                 })
                 .ToListAsync();
 
-            var allResults = spellingResults.Concat(regularResults)
+            var punctuationResults = await _context.PunctuationTestResults
+                .Include(tr => tr.PunctuationTest)
+                .Include(tr => tr.Student)
+                    .ThenInclude(s => s.User)
+                .Select(tr => new AdminTestResultViewModel
+                {
+                    Id = tr.Id,
+                    TestTitle = tr.PunctuationTest.Title,
+                    TestType = "Пунктуация",
+                    StudentName = tr.Student.User.FullName,
+                    Score = tr.Score,
+                    MaxScore = tr.MaxScore,
+                    Percentage = tr.Percentage,
+                    StartedAt = tr.StartedAt,
+                    CompletedAt = tr.CompletedAt,
+                    IsCompleted = tr.IsCompleted,
+                    ResultType = "Punctuation"
+                })
+                .ToListAsync();
+
+            var orthoeopyResults = await _context.OrthoeopyTestResults
+                .Include(tr => tr.OrthoeopyTest)
+                .Include(tr => tr.Student)
+                    .ThenInclude(s => s.User)
+                .Select(tr => new AdminTestResultViewModel
+                {
+                    Id = tr.Id,
+                    TestTitle = tr.OrthoeopyTest.Title,
+                    TestType = "Орфоэпия",
+                    StudentName = tr.Student.User.FullName,
+                    Score = tr.Score,
+                    MaxScore = tr.MaxScore,
+                    Percentage = tr.Percentage,
+                    StartedAt = tr.StartedAt,
+                    CompletedAt = tr.CompletedAt,
+                    IsCompleted = tr.IsCompleted,
+                    ResultType = "Orthoeopy"
+                })
+                .ToListAsync();
+
+            var allResults = spellingResults
+                .Concat(regularResults)
+                .Concat(punctuationResults)
+                .Concat(orthoeopyResults)
                 .OrderByDescending(r => r.StartedAt)
                 .ToList();
 
@@ -517,10 +567,10 @@ namespace OnlineTutor2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteRegularResult(int id)
         {
-            var result = await _context.TestResults.FindAsync(id);
+            var result = await _context.RegularTestResults.FindAsync(id);
             if (result == null) return NotFound();
 
-            _context.TestResults.Remove(result);
+            _context.RegularTestResults.Remove(result);
             await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = "Результат теста удален!";
@@ -536,14 +586,14 @@ namespace OnlineTutor2.Controllers
             _logger.LogWarning("Администратор {AdminId} начал очистку всех результатов тестов", adminId);
 
             var spellingResults = await _context.SpellingTestResults.ToListAsync();
-            var regularResults = await _context.TestResults.ToListAsync();
+            var regularResults = await _context.RegularTestResults.ToListAsync();
             var punctuationResults = await _context.PunctuationTestResults.ToListAsync();
             var orthoeopyResults = await _context.OrthoeopyTestResults.ToListAsync();
 
             var totalCount = spellingResults.Count + regularResults.Count + punctuationResults.Count + orthoeopyResults.Count;
 
             _context.SpellingTestResults.RemoveRange(spellingResults);
-            _context.TestResults.RemoveRange(regularResults);
+            _context.RegularTestResults.RemoveRange(regularResults);
             _context.PunctuationTestResults.RemoveRange(punctuationResults);
             _context.OrthoeopyTestResults.RemoveRange(orthoeopyResults);
 
@@ -573,11 +623,11 @@ namespace OnlineTutor2.Controllers
                     TotalTeachers = await _context.Teachers.CountAsync(),
                     TotalClasses = await _context.Classes.CountAsync(),
                     TotalSpellingTests = await _context.SpellingTests.CountAsync(),
-                    TotalRegularTests = await _context.Tests.CountAsync(),
+                    TotalRegularTests = await _context.RegularTests.CountAsync(),
                     TotalSpellingQuestions = await _context.SpellingQuestions.CountAsync(),
-                    TotalRegularQuestions = await _context.Questions.CountAsync(),
+                    TotalRegularQuestions = await _context.RegularQuestions.CountAsync(),
                     TotalSpellingResults = await _context.SpellingTestResults.CountAsync(),
-                    TotalRegularResults = await _context.TestResults.CountAsync(),
+                    TotalRegularResults = await _context.RegularTestResults.CountAsync(),
                     TotalMaterials = await _context.Materials.CountAsync()
                 }
             };
