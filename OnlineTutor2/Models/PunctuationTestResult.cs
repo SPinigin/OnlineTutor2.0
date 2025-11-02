@@ -25,6 +25,6 @@
         // Навигационные свойства
         public virtual PunctuationTest PunctuationTest { get; set; }
         public virtual Student Student { get; set; }
-        public virtual ICollection<PunctuationAnswer> Answers { get; set; } = new List<PunctuationAnswer>();
+        public virtual ICollection<PunctuationAnswer> PunctuationAnswers { get; set; } = new List<PunctuationAnswer>();
     }
 }

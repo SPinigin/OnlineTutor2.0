@@ -51,8 +51,8 @@ namespace OnlineTutor2.Controllers
             {
                 viewModel.SpellingTests = await _context.SpellingTests
                     .Include(st => st.Class)
-                    .Include(st => st.Questions)
-                    .Include(st => st.TestResults.Where(tr => tr.StudentId == student.Id))
+                    .Include(st => st.SpellingQuestions)
+                    .Include(st => st.SpellingTestResults.Where(tr => tr.StudentId == student.Id))
                     .Where(st => st.IsActive &&
                                (st.ClassId == null || st.ClassId == student.ClassId) &&
                                (st.StartDate == null || st.StartDate <= DateTime.Now) &&
@@ -66,8 +66,8 @@ namespace OnlineTutor2.Controllers
             {
                 viewModel.PunctuationTests = await _context.PunctuationTests
                     .Include(pt => pt.Class)
-                    .Include(pt => pt.Questions)
-                    .Include(pt => pt.TestResults.Where(tr => tr.StudentId == student.Id))
+                    .Include(pt => pt.PunctuationQuestions)
+                    .Include(pt => pt.PunctuationTestResults.Where(tr => tr.StudentId == student.Id))
                     .Where(pt => pt.IsActive &&
                                (pt.ClassId == null || pt.ClassId == student.ClassId) &&
                                (pt.StartDate == null || pt.StartDate <= DateTime.Now) &&
@@ -81,8 +81,8 @@ namespace OnlineTutor2.Controllers
             {
                 viewModel.OrthoeopyTests = await _context.OrthoeopyTests
                     .Include(ot => ot.Class)
-                    .Include(ot => ot.Questions)
-                    .Include(ot => ot.TestResults.Where(tr => tr.StudentId == student.Id))
+                    .Include(ot => ot.OrthoeopyQuestions)
+                    .Include(ot => ot.OrthoeopyTestResults.Where(tr => tr.StudentId == student.Id))
                     .Where(ot => ot.IsActive &&
                                (ot.ClassId == null || ot.ClassId == student.ClassId) &&
                                (ot.StartDate == null || ot.StartDate <= DateTime.Now) &&
@@ -107,8 +107,8 @@ namespace OnlineTutor2.Controllers
             if (student == null) return NotFound();
 
             var test = await _context.SpellingTests
-                .Include(st => st.Questions.OrderBy(q => q.OrderIndex))
-                .Include(st => st.TestResults.Where(tr => tr.StudentId == student.Id))
+                .Include(st => st.SpellingQuestions.OrderBy(q => q.OrderIndex))
+                .Include(st => st.SpellingTestResults.Where(tr => tr.StudentId == student.Id))
                 .FirstOrDefaultAsync(st => st.Id == id && st.IsActive);
 
             if (test == null) return NotFound();
@@ -119,14 +119,14 @@ namespace OnlineTutor2.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var attemptCount = test.TestResults.Count(tr => tr.StudentId == student.Id);
+            var attemptCount = test.SpellingTestResults.Count(tr => tr.StudentId == student.Id);
             if (attemptCount >= test.MaxAttempts)
             {
                 TempData["ErrorMessage"] = $"Превышено количество попыток ({test.MaxAttempts}).";
                 return RedirectToAction(nameof(Index));
             }
 
-            var ongoingResult = test.TestResults
+            var ongoingResult = test.SpellingTestResults
                 .FirstOrDefault(tr => tr.StudentId == student.Id && !tr.IsCompleted);
 
             if (ongoingResult != null)
@@ -142,7 +142,7 @@ namespace OnlineTutor2.Controllers
                 StudentId = student.Id,
                 StartedAt = DateTime.Now,
                 AttemptNumber = attemptCount + 1,
-                MaxScore = test.Questions.Sum(q => q.Points),
+                MaxScore = test.SpellingQuestions.Sum(q => q.Points),
                 IsCompleted = false
             };
 
@@ -166,8 +166,8 @@ namespace OnlineTutor2.Controllers
 
             var testResult = await _context.SpellingTestResults
                 .Include(tr => tr.SpellingTest)
-                    .ThenInclude(st => st.Questions.OrderBy(q => q.OrderIndex))
-                .Include(tr => tr.Answers)
+                    .ThenInclude(st => st.SpellingQuestions.OrderBy(q => q.OrderIndex))
+                .Include(tr => tr.SpellingAnswers)
                 .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
 
             if (testResult == null) return NotFound();
@@ -211,7 +211,7 @@ namespace OnlineTutor2.Controllers
 
             var testResult = await _context.SpellingTestResults
                 .Include(tr => tr.SpellingTest)
-                .Include(tr => tr.Answers)
+                .Include(tr => tr.SpellingAnswers)
                 .FirstOrDefaultAsync(tr => tr.Id == model.TestResultId && tr.StudentId == student.Id);
 
             if (testResult == null || testResult.IsCompleted)
@@ -223,7 +223,7 @@ namespace OnlineTutor2.Controllers
             if (question == null)
                 return Json(new { success = false, message = "Вопрос не найден" });
 
-            var existingAnswer = testResult.Answers
+            var existingAnswer = testResult.SpellingAnswers
                 .FirstOrDefault(a => a.SpellingQuestionId == model.QuestionId);
 
             bool isCorrect = CheckSpellingAnswer(question.CorrectLetter, model.StudentAnswer);
@@ -280,7 +280,7 @@ namespace OnlineTutor2.Controllers
                 if (student == null) return NotFound();
 
                 var testResult = await _context.SpellingTestResults
-                    .Include(tr => tr.Answers)
+                    .Include(tr => tr.SpellingAnswers)
                     .FirstOrDefaultAsync(tr => tr.Id == testResultId && tr.StudentId == student.Id);
 
                 if (testResult == null) return NotFound();
@@ -319,9 +319,9 @@ namespace OnlineTutor2.Controllers
 
             var testResult = await _context.SpellingTestResults
                 .Include(tr => tr.SpellingTest)
-                    .ThenInclude(st => st.Questions.OrderBy(q => q.OrderIndex))
-                .Include(tr => tr.Answers)
-                    .ThenInclude(a => a.Question)
+                    .ThenInclude(st => st.SpellingQuestions.OrderBy(q => q.OrderIndex))
+                .Include(tr => tr.SpellingAnswers)
+                    .ThenInclude(a => a.SpellingQuestion)
                 .Include(tr => tr.Student)
                     .ThenInclude(s => s.User)
                 .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
@@ -345,8 +345,8 @@ namespace OnlineTutor2.Controllers
             if (student == null) return NotFound();
 
             var test = await _context.PunctuationTests
-                .Include(pt => pt.Questions.OrderBy(q => q.OrderIndex))
-                .Include(pt => pt.TestResults.Where(tr => tr.StudentId == student.Id))
+                .Include(pt => pt.PunctuationQuestions.OrderBy(q => q.OrderIndex))
+                .Include(pt => pt.PunctuationTestResults.Where(tr => tr.StudentId == student.Id))
                 .FirstOrDefaultAsync(pt => pt.Id == id && pt.IsActive);
 
             if (test == null) return NotFound();
@@ -357,7 +357,7 @@ namespace OnlineTutor2.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var attemptCount = test.TestResults.Count(tr => tr.StudentId == student.Id);
+            var attemptCount = test.PunctuationTestResults.Count(tr => tr.StudentId == student.Id);
             if (attemptCount >= test.MaxAttempts)
             {
                 _logger.LogWarning("Студент {StudentId} превысил лимит попыток ({MaxAttempts}) для теста пунктуации {TestId}",
@@ -366,7 +366,7 @@ namespace OnlineTutor2.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var ongoingResult = test.TestResults
+            var ongoingResult = test.PunctuationTestResults
                 .FirstOrDefault(tr => tr.StudentId == student.Id && !tr.IsCompleted);
 
             if (ongoingResult != null)
@@ -382,7 +382,7 @@ namespace OnlineTutor2.Controllers
                 StudentId = student.Id,
                 StartedAt = DateTime.Now,
                 AttemptNumber = attemptCount + 1,
-                MaxScore = test.Questions.Sum(q => q.Points),
+                MaxScore = test.PunctuationQuestions.Sum(q => q.Points),
                 IsCompleted = false
             };
 
@@ -406,8 +406,8 @@ namespace OnlineTutor2.Controllers
 
             var testResult = await _context.PunctuationTestResults
                 .Include(tr => tr.PunctuationTest)
-                    .ThenInclude(pt => pt.Questions.OrderBy(q => q.OrderIndex))
-                .Include(tr => tr.Answers)
+                    .ThenInclude(pt => pt.PunctuationQuestions.OrderBy(q => q.OrderIndex))
+                .Include(tr => tr.PunctuationAnswers)
                 .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
 
             if (testResult == null) return NotFound();
@@ -441,7 +441,7 @@ namespace OnlineTutor2.Controllers
         // POST: StudentTest/SubmitPunctuationAnswer - Сохранение ответа на пунктуацию
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SubmitPunctuationAnswer(SubmitSpellingAnswerViewModel model) // Используем ту же модель
+        public async Task<IActionResult> SubmitPunctuationAnswer(SubmitPunctuationAnswerViewModel model)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var student = await _context.Students
@@ -451,7 +451,7 @@ namespace OnlineTutor2.Controllers
 
             var testResult = await _context.PunctuationTestResults
                 .Include(tr => tr.PunctuationTest)
-                .Include(tr => tr.Answers)
+                .Include(tr => tr.PunctuationAnswers)
                 .FirstOrDefaultAsync(tr => tr.Id == model.TestResultId && tr.StudentId == student.Id);
 
             if (testResult == null || testResult.IsCompleted)
@@ -463,7 +463,7 @@ namespace OnlineTutor2.Controllers
             if (question == null)
                 return Json(new { success = false, message = "Вопрос не найден" });
 
-            var existingAnswer = testResult.Answers
+            var existingAnswer = testResult.PunctuationAnswers
                 .FirstOrDefault(a => a.PunctuationQuestionId == model.QuestionId);
 
             bool isCorrect = CheckPunctuationAnswer(question.CorrectPositions, model.StudentAnswer);
@@ -519,7 +519,7 @@ namespace OnlineTutor2.Controllers
                 if (student == null) return NotFound();
 
                 var testResult = await _context.PunctuationTestResults
-                    .Include(tr => tr.Answers)
+                    .Include(tr => tr.PunctuationAnswers)
                     .FirstOrDefaultAsync(tr => tr.Id == testResultId && tr.StudentId == student.Id);
 
                 if (testResult == null) return NotFound();
@@ -557,9 +557,9 @@ namespace OnlineTutor2.Controllers
 
             var testResult = await _context.PunctuationTestResults
                 .Include(tr => tr.PunctuationTest)
-                    .ThenInclude(pt => pt.Questions.OrderBy(q => q.OrderIndex))
-                .Include(tr => tr.Answers)
-                    .ThenInclude(a => a.Question)
+                    .ThenInclude(pt => pt.PunctuationQuestions.OrderBy(q => q.OrderIndex))
+                .Include(tr => tr.PunctuationAnswers)
+                    .ThenInclude(a => a.PunctuationQuestion)
                 .Include(tr => tr.Student)
                     .ThenInclude(s => s.User)
                 .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
@@ -580,9 +580,9 @@ namespace OnlineTutor2.Controllers
             // Пробуем найти результат spelling теста
             var spellingResult = await _context.SpellingTestResults
                 .Include(tr => tr.SpellingTest)
-                    .ThenInclude(st => st.Questions.OrderBy(q => q.OrderIndex))
-                .Include(tr => tr.Answers)
-                    .ThenInclude(a => a.Question)
+                    .ThenInclude(st => st.SpellingQuestions.OrderBy(q => q.OrderIndex))
+                .Include(tr => tr.SpellingAnswers)
+                    .ThenInclude(a => a.SpellingQuestion)
                 .Include(tr => tr.Student)
                     .ThenInclude(s => s.User)
                 .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
@@ -595,9 +595,9 @@ namespace OnlineTutor2.Controllers
             // Пробуем найти punctuation тест
             var punctuationResult = await _context.PunctuationTestResults
                 .Include(tr => tr.PunctuationTest)
-                    .ThenInclude(pt => pt.Questions.OrderBy(q => q.OrderIndex))
-                .Include(tr => tr.Answers)
-                    .ThenInclude(a => a.Question)
+                    .ThenInclude(pt => pt.PunctuationQuestions.OrderBy(q => q.OrderIndex))
+                .Include(tr => tr.PunctuationAnswers)
+                    .ThenInclude(a => a.PunctuationQuestion)
                 .Include(tr => tr.Student)
                     .ThenInclude(s => s.User)
                 .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
@@ -610,9 +610,24 @@ namespace OnlineTutor2.Controllers
             // Пробуем найти orthoepy тест
             var orthoeopyResult = await _context.OrthoeopyTestResults
                 .Include(tr => tr.OrthoeopyTest)
-                    .ThenInclude(ot => ot.Questions.OrderBy(q => q.OrderIndex))
-                .Include(tr => tr.Answers)
-                    .ThenInclude(a => a.Question)
+                    .ThenInclude(ot => ot.OrthoeopyQuestions.OrderBy(q => q.OrderIndex))
+                .Include(tr => tr.OrthoeopyAnswers)
+                    .ThenInclude(a => a.OrthoeopyQuestion)
+                .Include(tr => tr.Student)
+                    .ThenInclude(s => s.User)
+                .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
+
+            if (orthoeopyResult != null)
+            {
+                return View(orthoeopyResult);
+            }
+
+            // Пробуем найти orthoepy тест
+            var regularResult = await _context.RegularTestResults
+                .Include(tr => tr.RegularTest)
+                    .ThenInclude(ot => ot.RegularQuestions.OrderBy(q => q.OrderIndex))
+                .Include(tr => tr.RegularAnswers)
+                    .ThenInclude(a => a.RegularQuestion)
                 .Include(tr => tr.Student)
                     .ThenInclude(s => s.User)
                 .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
@@ -639,8 +654,8 @@ namespace OnlineTutor2.Controllers
             if (student == null) return NotFound();
 
             var test = await _context.OrthoeopyTests
-                .Include(ot => ot.Questions.OrderBy(q => q.OrderIndex))
-                .Include(ot => ot.TestResults.Where(tr => tr.StudentId == student.Id))
+                .Include(ot => ot.OrthoeopyQuestions.OrderBy(q => q.OrderIndex))
+                .Include(ot => ot.OrthoeopyTestResults.Where(tr => tr.StudentId == student.Id))
                 .FirstOrDefaultAsync(ot => ot.Id == id && ot.IsActive);
 
             if (test == null) return NotFound();
@@ -651,7 +666,7 @@ namespace OnlineTutor2.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var attemptCount = test.TestResults.Count(tr => tr.StudentId == student.Id);
+            var attemptCount = test.OrthoeopyTestResults.Count(tr => tr.StudentId == student.Id);
             if (attemptCount >= test.MaxAttempts)
             {
                 _logger.LogWarning("Студент {StudentId} превысил лимит попыток ({MaxAttempts}) для теста орфоэпии {TestId}",
@@ -660,7 +675,7 @@ namespace OnlineTutor2.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var ongoingResult = test.TestResults
+            var ongoingResult = test.OrthoeopyTestResults
                 .FirstOrDefault(tr => tr.StudentId == student.Id && !tr.IsCompleted);
 
             if (ongoingResult != null)
@@ -676,7 +691,7 @@ namespace OnlineTutor2.Controllers
                 StudentId = student.Id,
                 StartedAt = DateTime.Now,
                 AttemptNumber = attemptCount + 1,
-                MaxScore = test.Questions.Sum(q => q.Points),
+                MaxScore = test.OrthoeopyQuestions.Sum(q => q.Points),
                 IsCompleted = false
             };
 
@@ -700,8 +715,8 @@ namespace OnlineTutor2.Controllers
 
             var testResult = await _context.OrthoeopyTestResults
                 .Include(tr => tr.OrthoeopyTest)
-                    .ThenInclude(ot => ot.Questions.OrderBy(q => q.OrderIndex))
-                .Include(tr => tr.Answers)
+                    .ThenInclude(ot => ot.OrthoeopyQuestions.OrderBy(q => q.OrderIndex))
+                .Include(tr => tr.OrthoeopyAnswers)
                 .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
 
             if (testResult == null) return NotFound();
@@ -745,7 +760,7 @@ namespace OnlineTutor2.Controllers
 
             var testResult = await _context.OrthoeopyTestResults
                 .Include(tr => tr.OrthoeopyTest)
-                .Include(tr => tr.Answers)
+                .Include(tr => tr.OrthoeopyAnswers)
                 .FirstOrDefaultAsync(tr => tr.Id == TestResultId && tr.StudentId == student.Id);
 
             if (testResult == null || testResult.IsCompleted)
@@ -757,7 +772,7 @@ namespace OnlineTutor2.Controllers
             if (question == null)
                 return Json(new { success = false, message = "Вопрос не найден" });
 
-            var existingAnswer = testResult.Answers
+            var existingAnswer = testResult.OrthoeopyAnswers
                 .FirstOrDefault(a => a.OrthoeopyQuestionId == QuestionId);
 
             bool isCorrect = question.StressPosition == SelectedStressPosition;
@@ -814,7 +829,7 @@ namespace OnlineTutor2.Controllers
                 if (student == null) return NotFound();
 
                 var testResult = await _context.OrthoeopyTestResults
-                    .Include(tr => tr.Answers)
+                    .Include(tr => tr.OrthoeopyAnswers)
                     .FirstOrDefaultAsync(tr => tr.Id == testResultId && tr.StudentId == student.Id);
 
                 if (testResult == null) return NotFound();
@@ -852,9 +867,9 @@ namespace OnlineTutor2.Controllers
 
             var testResult = await _context.OrthoeopyTestResults
                 .Include(tr => tr.OrthoeopyTest)
-                    .ThenInclude(ot => ot.Questions.OrderBy(q => q.OrderIndex))
-                .Include(tr => tr.Answers)
-                    .ThenInclude(a => a.Question)
+                    .ThenInclude(ot => ot.OrthoeopyQuestions.OrderBy(q => q.OrderIndex))
+                .Include(tr => tr.OrthoeopyAnswers)
+                    .ThenInclude(a => a.OrthoeopyQuestion)
                 .Include(tr => tr.Student)
                     .ThenInclude(s => s.User)
                 .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
@@ -1010,7 +1025,7 @@ namespace OnlineTutor2.Controllers
         {
             testResult.CompletedAt = DateTime.Now;
             testResult.IsCompleted = true;
-            testResult.Score = testResult.Answers.Sum(a => a.Points);
+            testResult.Score = testResult.SpellingAnswers.Sum(a => a.Points);
             testResult.Percentage = testResult.MaxScore > 0
                 ? Math.Round((double)testResult.Score / testResult.MaxScore * 100, 2)
                 : 0;
@@ -1022,7 +1037,7 @@ namespace OnlineTutor2.Controllers
         {
             testResult.CompletedAt = DateTime.Now;
             testResult.IsCompleted = true;
-            testResult.Score = testResult.Answers.Sum(a => a.Points);
+            testResult.Score = testResult.PunctuationAnswers.Sum(a => a.Points);
             testResult.Percentage = testResult.MaxScore > 0
                 ? Math.Round((double)testResult.Score / testResult.MaxScore * 100, 2)
                 : 0;
@@ -1034,7 +1049,19 @@ namespace OnlineTutor2.Controllers
         {
             testResult.CompletedAt = DateTime.Now;
             testResult.IsCompleted = true;
-            testResult.Score = testResult.Answers.Sum(a => a.Points);
+            testResult.Score = testResult.OrthoeopyAnswers.Sum(a => a.Points);
+            testResult.Percentage = testResult.MaxScore > 0
+                ? Math.Round((double)testResult.Score / testResult.MaxScore * 100, 2)
+                : 0;
+
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task CompleteRegularTest(RegularTestResult testResult)
+        {
+            testResult.CompletedAt = DateTime.Now;
+            testResult.IsCompleted = true;
+            testResult.Score = testResult.RegularAnswers.Sum(a => a.Points);
             testResult.Percentage = testResult.MaxScore > 0
                 ? Math.Round((double)testResult.Score / testResult.MaxScore * 100, 2)
                 : 0;

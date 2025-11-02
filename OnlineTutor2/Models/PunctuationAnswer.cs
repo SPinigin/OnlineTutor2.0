@@ -20,7 +20,7 @@ namespace OnlineTutor2.Models
         public DateTime AnsweredAt { get; set; } = DateTime.Now;
 
         // Навигационные свойства
-        public virtual PunctuationTestResult TestResult { get; set; }
-        public virtual PunctuationQuestion Question { get; set; }
+        public virtual PunctuationTestResult PunctuationTestResult { get; set; }
+        public virtual PunctuationQuestion PunctuationQuestion { get; set; }
     }
 }
