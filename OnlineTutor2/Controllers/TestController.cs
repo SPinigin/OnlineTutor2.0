@@ -39,16 +39,31 @@ namespace OnlineTutor2.Controllers
                             .Where(st => st.TeacherId == currentUser.Id && st.TestCategoryId == category.Id)
                             .ToListAsync();
                         break;
-                    case 5: // Тесты на пунктуацию
+                    case 2: // Тесты на пунктуацию
                         category.PunctuationTests = await _context.PunctuationTests
                             .Where(pt => pt.TeacherId == currentUser.Id && pt.TestCategoryId == category.Id)
                             .ToListAsync();
                         break;
-                    case 6: // Тесты на орфоэпию
+                    case 3: // Тесты на орфоэпию
                         category.OrthoeopyTests = await _context.OrthoeopyTests
                             .Where(ot => ot.TeacherId == currentUser.Id && ot.TestCategoryId == category.Id)
                             .ToListAsync();
                         break;
+                    case 4: // Тесты классические
+                        category.RegularTests = await _context.RegularTests
+                            .Where(ot => ot.TeacherId == currentUser.Id && ot.TestCategoryId == category.Id)
+                            .ToListAsync();
+                        break;
+                    //case 5: // Свободные ответы
+                    //    category.RegularTests = await _context.RegularTests
+                    //        .Where(ot => ot.TeacherId == currentUser.Id && ot.TestCategoryId == category.Id)
+                    //        .ToListAsync();
+                    //    break;
+                    //case 6: // Средства выразительности
+                    //    category.RegularTests = await _context.RegularTests
+                    //        .Where(ot => ot.TeacherId == currentUser.Id && ot.TestCategoryId == category.Id)
+                    //        .ToListAsync();
+                    //    break;
                 }
             }
 
