@@ -1,0 +1,289 @@
+﻿@model OnlineTutor2.ViewModels.CreateRegularQuestionViewModel
+@{
+    ViewData["Title"] = "Добавить вопрос";
+    var test = ViewBag.Test as OnlineTutor2.Models.RegularTest;
+}
+
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="Index"><i class="fas fa-list-ul"></i> Классические тесты</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a asp-action="Details" asp-route-id="@test.Id">@test.Title</a>
+            </li>
+            <li class="breadcrumb-item active">Добавить вопрос</li>
+        </ol>
+    </nav>
+    <h2><i class="fas fa-plus text-success"></i> Добавить вопрос</h2>
+    <p class="text-muted">Создайте новый вопрос для теста "@test.Title"</p>
+</div>
+
+<form asp-action="AddQuestion" method="post" id="questionForm">
+    <input type="hidden" asp-for="TestId" />
+    <input type="hidden" asp-for="OrderIndex" />
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-question-circle"></i> Основная информация</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    <label asp-for="Text" class="form-label"></label>
+                    <textarea asp-for="Text" class="form-control" rows="3"
+                              placeholder="Введите текст вопроса..."></textarea>
+                    <span asp-validation-for="Text" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label asp-for="Type" class="form-label"></label>
+                    <select asp-for="Type" class="form-select" asp-items="ViewBag.QuestionTypes"
+                            onchange="updateQuestionTypeUI()">
+                    </select>
+                    <span asp-validation-for="Type" class="text-danger"></span>
+                    <small class="text-muted d-block mt-1" id="typeDescription">
+                        Выберите один правильный вариант ответа
+                    </small>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Points" class="form-label"></label>
+                    <input asp-for="Points" type="number" class="form-control" min="1" max="100" />
+                    <span asp-validation-for="Points" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <label asp-for="Hint" class="form-label"></label>
+                    <textarea asp-for="Hint" class="form-control" rows="2"
+                              placeholder="Подсказка для ученика (необязательно)"></textarea>
+                    <span asp-validation-for="Hint" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <label asp-for="Explanation" class="form-label"></label>
+                    <textarea asp-for="Explanation" class="form-control" rows="2"
+                              placeholder="Объяснение правильного ответа (необязательно)"></textarea>
+                    <span asp-validation-for="Explanation" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-check-square"></i> Варианты ответов</h5>
+                <button type="button" class="btn btn-light btn-sm" onclick="addOption()">
+                    <i class="fas fa-plus"></i> Добавить вариант
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div id="optionsContainer">
+            </div>
+
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-info-circle"></i>
+                <strong id="optionsHint">
+                    Минимум 2 варианта, отметьте 1 правильный
+                </strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between">
+        <a asp-action="Details" asp-route-id="@test.Id" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Отмена
+        </a>
+        <button type="submit" class="btn btn-success">
+            <i class="fas fa-check"></i> Добавить вопрос
+        </button>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        let optionIndex = 0;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Добавляем начальные варианты в зависимости от типа
+            const questionType = parseInt(document.querySelector('[name="Type"]').value) || 1;
+            initializeOptions(questionType);
+        });
+
+        function updateQuestionTypeUI() {
+            const select = document.querySelector('[name="Type"]');
+            const type = parseInt(select.value);
+            const description = document.getElementById('typeDescription');
+            const hint = document.getElementById('optionsHint');
+
+            switch(type) {
+                case 1: // SingleChoice
+                    description.textContent = 'Выберите один правильный вариант ответа';
+                    hint.textContent = 'Минимум 2 варианта, отметьте 1 правильный';
+                    break;
+                case 2: // MultipleChoice
+                    description.textContent = 'Выберите все правильные варианты ответов';
+                    hint.textContent = 'Минимум 3 варианта, отметьте минимум 2 правильных';
+                    break;
+                case 3: // TrueFalse
+                    description.textContent = 'Определите, верно или неверно утверждение';
+                    hint.textContent = 'Ровно 2 варианта: Верно и Неверно';
+                    break;
+            }
+
+            // Пересоздаем варианты ответов
+            document.getElementById('optionsContainer').innerHTML = '';
+            optionIndex = 0;
+            initializeOptions(type);
+        }
+
+        function initializeOptions(type) {
+            if (type === 3) { // TrueFalse
+                addOption('Верно', false);
+                addOption('Неверно', false);
+            } else {
+                // Добавляем 4 пустых варианта по умолчанию
+                for (let i = 0; i < 4; i++) {
+                    addOption();
+                }
+            }
+        }
+
+        function addOption(text = '', isCorrect = false) {
+            const container = document.getElementById('optionsContainer');
+            const type = parseInt(document.querySelector('[name="Type"]').value);
+
+            const div = document.createElement('div');
+            div.className = 'mb-3 option-item';
+            div.dataset.optionIndex = optionIndex;
+
+            const inputType = type === 2 ? 'checkbox' : 'radio'; // Multiple choice = checkbox, остальные = radio
+            const inputName = type === 2 ? `option_correct_${optionIndex}` : 'option_correct';
+
+            div.innerHTML = `
+                <div class="input-group">
+                    <div class="input-group-text">
+                        <input type="${inputType}"
+                               name="${inputName}"
+                               value="${optionIndex}"
+                               ${isCorrect ? 'checked' : ''}
+                               class="form-check-input mt-0 option-checkbox"
+                               onchange="updateOptionCorrectValue(${optionIndex})">
+                    </div>
+                    <input type="text"
+                           name="Options[${optionIndex}].Text"
+                           class="form-control"
+                           placeholder="Вариант ответа ${optionIndex + 1}"
+                           value="${text}"
+                           ${type === 3 ? 'readonly' : ''}>
+                    <input type="hidden"
+                           name="Options[${optionIndex}].IsCorrect"
+                           value="${isCorrect}"
+                           class="option-iscorrect">
+                    <input type="hidden"
+                           name="Options[${optionIndex}].OrderIndex"
+                           value="${optionIndex + 1}">
+                    ${type !== 3 ? `
+                    <button type="button" class="btn btn-outline-danger" onclick="removeOption(${optionIndex})">
+                        <i class="fas fa-trash"></i>
+                    </button>` : ''}
+                </div>
+            `;
+
+            container.appendChild(div);
+            optionIndex++;
+        }
+
+        function removeOption(index) {
+            const item = document.querySelector(`[data-option-index="${index}"]`);
+            if (item) {
+                item.remove();
+            }
+        }
+
+        function updateOptionCorrectValue(index) {
+            const type = parseInt(document.querySelector('[name="Type"]').value);
+
+            if (type === 1 || type === 3) { // Single choice or True/False
+                // Снимаем отметку со всех остальных
+                document.querySelectorAll('.option-iscorrect').forEach(input => {
+                    input.value = 'false';
+                });
+                document.querySelectorAll('.option-checkbox').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+
+                // Отмечаем выбранный
+                const selectedCheckbox = document.querySelector(`input[value="${index}"].option-checkbox`);
+                if (selectedCheckbox) {
+                    selectedCheckbox.checked = true;
+                }
+            }
+
+            // Обновляем скрытое поле для выбранного варианта
+            const hiddenInput = document.querySelector(`[data-option-index="${index}"] .option-iscorrect`);
+            const checkbox = document.querySelector(`[data-option-index="${index}"] .option-checkbox`);
+
+            if (hiddenInput && checkbox) {
+                hiddenInput.value = checkbox.checked ? 'true' : 'false';
+            }
+        }
+
+        // Обработка отправки формы
+        document.getElementById('questionForm').addEventListener('submit', function(e) {
+            const type = parseInt(document.querySelector('[name="Type"]').value);
+            const options = Array.from(document.querySelectorAll('.option-item'));
+            const filledOptions = options.filter(opt => {
+                const textInput = opt.querySelector('input[type="text"]');
+                return textInput && textInput.value.trim() !== '';
+            });
+
+            // Валидация
+            if (type === 3 && filledOptions.length !== 2) {
+                e.preventDefault();
+                alert('Для вопроса Верно/Неверно должно быть ровно 2 варианта');
+                return false;
+            }
+
+            if (type === 1 && filledOptions.length < 2) {
+                e.preventDefault();
+                alert('Для одиночного выбора нужно минимум 2 варианта ответа');
+                return false;
+            }
+
+            if (type === 2 && filledOptions.length < 3) {
+                e.preventDefault();
+                alert('Для множественного выбора нужно минимум 3 варианта ответа');
+                return false;
+            }
+
+            // Проверяем наличие правильных ответов
+            const correctCount = Array.from(document.querySelectorAll('.option-iscorrect'))
+                .filter(input => input.value === 'true').length;
+
+            if (type === 1 || type === 3) {
+                if (correctCount !== 1) {
+                    e.preventDefault();
+                    alert('Необходимо отметить ровно 1 правильный ответ');
+                    return false;
+                }
+            } else if (type === 2) {
+                if (correctCount < 2) {
+                    e.preventDefault();
+                    alert('Для множественного выбора нужно минимум 2 правильных ответа');
+                    return false;
+                }
+            }
+        });
+    </script>
+}
