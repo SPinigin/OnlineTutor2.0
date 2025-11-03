@@ -99,10 +99,8 @@
                         }
                         else if (question.Type == QuestionType.MultipleChoice)
                         {
+                            var selectedIds = existingAnswer?.SelectedOptionIds?.Split(',').Select(id => int.Parse(id)).ToList() ?? new List<int>();
                             
-                            @{
-                                var selectedIds = existingAnswer?.SelectedOptionIds?.Split(',').Select(id => int.Parse(id)).ToList() ?? new List<int>();
-                            }
                             @foreach (var option in question.Options.OrderBy(o => o.OrderIndex))
                             {
                                 var isSelected = selectedIds.Contains(option.Id);
