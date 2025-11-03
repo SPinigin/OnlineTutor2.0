@@ -16,7 +16,9 @@ namespace OnlineTutor2.Controllers
         private readonly ILogger<ClassController> _logger;
 
 
-        public ClassController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, ILogger<ClassController> logger)
+        public ClassController(ApplicationDbContext context, 
+            UserManager<ApplicationUser> userManager, 
+            ILogger<ClassController> logger)
         {
             _context = context;
             _userManager = userManager;

@@ -12,7 +12,8 @@ namespace OnlineTutor2.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _context;
 
-        public HomeController(UserManager<ApplicationUser> userManager, ApplicationDbContext context)
+        public HomeController(UserManager<ApplicationUser> userManager, 
+            ApplicationDbContext context)
         {
             _userManager = userManager;
             _context = context;
