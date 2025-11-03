@@ -9,14 +9,25 @@ namespace OnlineTutor2.Models
         [Required]
         public int TestId { get; set; }
 
+        [Required(ErrorMessage = "Текст вопроса обязателен")]
+        [StringLength(1000, ErrorMessage = "Текст вопроса не может превышать 1000 символов")]
+        [Display(Name = "Текст вопроса")]
+        public string Text { get; set; } = string.Empty;
+
         [Required]
-        public string Text { get; set; }
+        [Display(Name = "Тип вопроса")]
+        public QuestionType Type { get; set; } = QuestionType.SingleChoice;
 
-        public QuestionType Type { get; set; }
-
+        [Range(1, 100, ErrorMessage = "Баллы должны быть от 1 до 100")]
+        [Display(Name = "Баллы за правильный ответ")]
         public int Points { get; set; } = 1;
 
+        [Display(Name = "Порядковый номер")]
         public int OrderIndex { get; set; }
+
+        [StringLength(500, ErrorMessage = "Подсказка не может превышать 500 символов")]
+        [Display(Name = "Подсказка (необязательно)")]
+        public string? Hint { get; set; }
 
         // Навигационные свойства
         public virtual RegularTest RegularTest { get; set; }
