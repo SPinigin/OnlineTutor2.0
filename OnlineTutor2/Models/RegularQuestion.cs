@@ -29,6 +29,10 @@ namespace OnlineTutor2.Models
         [Display(Name = "Подсказка (необязательно)")]
         public string? Hint { get; set; }
 
+        [StringLength(1000, ErrorMessage = "Объяснение не может превышать 1000 символов")]
+        [Display(Name = "Объяснение правильного ответа")]
+        public string? Explanation { get; set; }
+
         // Навигационные свойства
         public virtual RegularTest RegularTest { get; set; }
         public virtual ICollection<RegularQuestionOption> Options { get; set; } = new List<RegularQuestionOption>();
