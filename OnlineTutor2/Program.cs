@@ -123,6 +123,10 @@ try
 catch (Exception ex)
 {
     logger.Error(ex, "Приложение остановлено из-за критической ошибки");
+    if (ex.InnerException != null)
+    {
+        logger.Error(ex.InnerException, "Inner exception details");
+    }
     throw;
 }
 finally

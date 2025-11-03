@@ -182,7 +182,7 @@ namespace OnlineTutor2.Data
 
             modelBuilder.Entity<RegularTest>()
                 .HasOne(rt => rt.TestCategory)
-                .WithMany()
+                .WithMany(tc => tc.RegularTests)
                 .HasForeignKey(rt => rt.TestCategoryId)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Restrict);
