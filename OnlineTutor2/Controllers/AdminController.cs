@@ -822,5 +822,175 @@ namespace OnlineTutor2.Controllers
 
         #endregion
 
+        #region Statistics
+
+        // GET: Admin/Statistics
+        public async Task<IActionResult> Statistics()
+        {
+            var stats = new AdminStatisticsViewModel();
+            var now = DateTime.Now;
+            var thirtyDaysAgo = now.AddDays(-30);
+
+            // Регистрации пользователей за последние 30 дней
+            var registrations = await _context.Users
+                .Where(u => u.CreatedAt >= thirtyDaysAgo)
+                .GroupBy(u => u.CreatedAt.Date)
+                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .OrderBy(x => x.Date)
+                .ToListAsync();
+
+            stats.UserRegistrationsByDate = registrations.ToDictionary(x => x.Date, x => x.Count);
+
+            // Заполняем пропущенные дни нулями
+            for (var date = thirtyDaysAgo.Date; date <= now.Date; date = date.AddDays(1))
+            {
+                if (!stats.UserRegistrationsByDate.ContainsKey(date))
+                {
+                    stats.UserRegistrationsByDate[date] = 0;
+                }
+            }
+            stats.UserRegistrationsByDate = stats.UserRegistrationsByDate.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
+
+            // Тесты по типам
+            stats.TestsByType = new Dictionary<string, int>
+    {
+        { "Орфография", await _context.SpellingTests.CountAsync() },
+        { "Классические", await _context.RegularTests.CountAsync() },
+        { "Пунктуация", await _context.PunctuationTests.CountAsync() },
+        { "Орфоэпия", await _context.OrthoeopyTests.CountAsync() }
+    };
+
+            // Результаты тестов за последние 30 дней
+            var spellingResults = await _context.SpellingTestResults
+                .Where(r => r.StartedAt >= thirtyDaysAgo && r.IsCompleted)
+                .GroupBy(r => r.StartedAt.Date)
+                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var regularResults = await _context.RegularTestResults
+                .Where(r => r.StartedAt >= thirtyDaysAgo && r.IsCompleted)
+                .GroupBy(r => r.StartedAt.Date)
+                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var punctuationResults = await _context.PunctuationTestResults
+                .Where(r => r.StartedAt >= thirtyDaysAgo && r.IsCompleted)
+                .GroupBy(r => r.StartedAt.Date)
+                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var orthoeopyResults = await _context.OrthoeopyTestResults
+                .Where(r => r.StartedAt >= thirtyDaysAgo && r.IsCompleted)
+                .GroupBy(r => r.StartedAt.Date)
+                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var allResults = spellingResults
+                .Concat(regularResults)
+                .Concat(punctuationResults)
+                .Concat(orthoeopyResults)
+                .GroupBy(x => x.Date)
+                .Select(g => new { Date = g.Key, Count = g.Sum(x => x.Count) })
+                .OrderBy(x => x.Date)
+                .ToDictionary(x => x.Date, x => x.Count);
+
+            for (var date = thirtyDaysAgo.Date; date <= now.Date; date = date.AddDays(1))
+            {
+                if (!allResults.ContainsKey(date))
+                {
+                    allResults[date] = 0;
+                }
+            }
+            stats.TestResultsByDate = allResults.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
+
+            // Средний балл по типам тестов
+            var spellingAvg = await _context.SpellingTestResults
+                .Where(r => r.IsCompleted)
+                .AverageAsync(r => (double?)r.Percentage) ?? 0;
+
+            var regularAvg = await _context.RegularTestResults
+                .Where(r => r.IsCompleted)
+                .AverageAsync(r => (double?)r.Percentage) ?? 0;
+
+            var punctuationAvg = await _context.PunctuationTestResults
+                .Where(r => r.IsCompleted)
+                .AverageAsync(r => (double?)r.Percentage) ?? 0;
+
+            var orthoeopyAvg = await _context.OrthoeopyTestResults
+                .Where(r => r.IsCompleted)
+                .AverageAsync(r => (double?)r.Percentage) ?? 0;
+
+            stats.AverageScoresByType = new Dictionary<string, double>
+    {
+        { "Орфография", Math.Round(spellingAvg, 1) },
+        { "Классические", Math.Round(regularAvg, 1) },
+        { "Пунктуация", Math.Round(punctuationAvg, 1) },
+        { "Орфоэпия", Math.Round(orthoeopyAvg, 1) }
+    };
+
+            // Действия администраторов
+            var adminActions = await _context.AuditLogs
+                .Where(al => al.CreatedAt >= thirtyDaysAgo)
+                .GroupBy(al => al.Action)
+                .Select(g => new { Action = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(10)
+                .ToListAsync();
+
+            stats.AdminActionsByType = adminActions.ToDictionary(x => x.Action, x => x.Count);
+
+            // Активность по дням недели
+            var activityByDay = await _context.AuditLogs
+                .Where(al => al.CreatedAt >= thirtyDaysAgo)
+                .GroupBy(al => al.CreatedAt.DayOfWeek)
+                .Select(g => new { DayOfWeek = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var dayNames = new[] { "Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота" };
+            stats.ActivityByDayOfWeek = dayNames.ToDictionary(
+                day => day,
+                day => activityByDay.FirstOrDefault(x => dayNames[(int)x.DayOfWeek] == day)?.Count ?? 0
+            );
+
+            // Активные/неактивные пользователи
+            stats.ActiveUsers = await _context.Users.CountAsync(u => u.IsActive);
+            stats.InactiveUsers = await _context.Users.CountAsync(u => !u.IsActive);
+
+            // Топ учителей
+            var topTeachers = await _context.Teachers
+                .Include(t => t.User)
+                .Select(t => new
+                {
+                    Name = t.User.FullName,
+                    TestsCount = t.User.CreatedTests.Count
+                })
+                .OrderByDescending(t => t.TestsCount)
+                .Take(5)
+                .ToListAsync();
+
+            stats.TopTeachersByTests = topTeachers.ToDictionary(x => x.Name, x => x.TestsCount);
+
+            // Топ студентов
+            var topStudents = await _context.Students
+                .Include(s => s.User)
+                .Select(s => new
+                {
+                    Name = s.User.FullName,
+                    ResultsCount = s.RegularTestResults.Count(r => r.IsCompleted) +
+                                  s.SpellingTestResults.Count(r => r.IsCompleted) +
+                                  s.PunctuationTestResults.Count(r => r.IsCompleted) +
+                                  s.OrthoeopyTestResults.Count(r => r.IsCompleted)
+                })
+                .OrderByDescending(s => s.ResultsCount)
+                .Take(5)
+                .ToListAsync();
+
+            stats.TopStudentsByResults = topStudents.ToDictionary(x => x.Name, x => x.ResultsCount);
+
+            return View(stats);
+        }
+
+        #endregion
+
     }
 }
