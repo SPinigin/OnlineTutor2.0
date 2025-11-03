@@ -1,0 +1,195 @@
+﻿@model List<OnlineTutor2.Models.RegularTest>
+@{
+    ViewData["Title"] = "Классические тесты";
+    var activeTests = Model.Count(t => t.IsActive);
+    var inactiveTests = Model.Count(t => !t.IsActive);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="fas fa-list-ul text-success"></i> Классические тесты</h2>
+        <p class="text-muted">Тесты с вариантами ответов: одиночный выбор, множественный выбор, верно/неверно</p>
+    </div>
+    <div>
+        <a asp-action="Create" class="btn btn-success">
+            <i class="fas fa-plus"></i> Создать тест
+        </a>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="text-center py-5">
+        <i class="fas fa-list-ul text-muted" style="font-size: 4rem;"></i>
+        <h4 class="mt-3 text-muted">У вас пока нет классических тестов</h4>
+        <p class="text-muted">Создайте тест с вариантами ответов</p>
+        <a asp-action="Create" class="btn btn-success">
+            <i class="fas fa-plus"></i> Создать первый тест
+        </a>
+    </div>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="mb-0">
+            <i class="fas fa-tasks"></i> Всего тестов: @Model.Count
+        </h6>
+        <div class="btn-group btn-group-sm" role="group">
+            <button type="button" class="btn btn-outline-secondary active" onclick="filterTestsByStatus('all')">
+                Все (@Model.Count)
+            </button>
+            <button type="button" class="btn btn-outline-success" onclick="filterTestsByStatus('active')">
+                Активные (@activeTests)
+            </button>
+            <button type="button" class="btn btn-outline-secondary" onclick="filterTestsByStatus('inactive')">
+                Неактивные (@inactiveTests)
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        @foreach (var test in Model)
+        {
+            <div class="col-md-6 col-lg-4 mb-4 test-card" data-status="@(test.IsActive ? "active" : "inactive")">
+                <div class="card h-100 @(test.IsActive ? "" : "opacity-75")">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-list-ul text-success"></i> @test.Title
+                        </h6>
+                        <div>
+                            <span class="badge bg-@(test.IsActive ? "success" : "secondary")">
+                                @(test.IsActive ? "Активный" : "Неактивный")
+                            </span>
+                            @if (test.Class != null)
+                            {
+                                <span class="badge bg-info">@test.Class.Name</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        @if (!string.IsNullOrEmpty(test.Description))
+                        {
+                            <p class="card-text text-muted small">@test.Description</p>
+                        }
+
+                        <div class="mb-3">
+                            <span class="badge bg-primary">
+                                @switch (test.Type)
+                                {
+                                    case TestType.Practice:
+                                        <i class="fas fa-dumbbell"></i> <span>Практика</span>
+                                        break;
+                                    case TestType.Quiz:
+                                        <i class="fas fa-question-circle"></i> <span>Викторина</span>
+                                        break;
+                                    case TestType.Exam:
+                                        <i class="fas fa-graduation-cap"></i> <span>Экзамен</span>
+                                        break;
+                                    case TestType.Homework:
+                                        <i class="fas fa-home"></i> <span>Домашнее задание</span>
+                                        break;
+                                }
+                            </span>
+                        </div>
+
+                        <div class="row text-center mb-3">
+                            <div class="col-4">
+                                <div class="d-flex flex-column">
+                                    <span class="h6 text-success mb-0">@test.RegularQuestions.Count</span>
+                                    <small class="text-muted">вопросов</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="d-flex flex-column">
+                                    <span class="h6 text-info mb-0">@test.TimeLimit</span>
+                                    <small class="text-muted">минут</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="d-flex flex-column">
+                                    <span class="h6 text-warning mb-0">@test.RegularTestResults.Count</span>
+                                    <small class="text-muted">прохождений</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-auto">
+                            <small class="text-muted d-block">
+                                <i class="fas fa-calendar"></i> Создан: @test.CreatedAt.ToString("dd.MM.yyyy")
+                            </small>
+                            @if (test.StartDate.HasValue)
+                            {
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-play"></i> Начало: @test.StartDate.Value.ToString("dd.MM.yyyy HH:mm")
+                                </small>
+                            }
+                            @if (test.EndDate.HasValue)
+                            {
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-stop"></i> Окончание: @test.EndDate.Value.ToString("dd.MM.yyyy HH:mm")
+                                </small>
+                            }
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="btn-group w-100" role="group">
+                            <a asp-action="Details" asp-route-id="@test.Id" class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-eye"></i> Детали
+                            </a>
+                            <a asp-action="Edit" asp-route-id="@test.Id" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-edit"></i> Изменить
+                            </a>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle"
+                                        data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    @if (test.RegularQuestions.Any())
+                                    {
+                                        <li>
+                                            <a class="dropdown-item" href="#">
+                                                <i class="fas fa-play"></i> Предварительный просмотр
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="#">
+                                                <i class="fas fa-copy"></i> Дублировать
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                    }
+                                    <li>
+                                        <a asp-action="Delete" asp-route-id="@test.Id" class="dropdown-item text-danger">
+                                            <i class="fas fa-trash"></i> Удалить
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script>
+        function filterTestsByStatus(status) {
+            const cards = document.querySelectorAll('.test-card');
+            const buttons = document.querySelectorAll('.btn-group .btn');
+
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            cards.forEach(card => {
+                if (status === 'all' || card.dataset.status === status) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+}
