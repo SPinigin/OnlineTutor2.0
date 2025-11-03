@@ -80,6 +80,7 @@ try
     builder.Services.AddScoped<ISpellingQuestionImportService, SpellingQuestionImportService>();
     builder.Services.AddScoped<IPunctuationQuestionImportService, PunctuationQuestionImportService>();
     builder.Services.AddScoped<IOrthoeopyQuestionImportService, OrthoeopyQuestionImportService>();
+    builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 
     builder.Services.AddSession(options =>
     {
