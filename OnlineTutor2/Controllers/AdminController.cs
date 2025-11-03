@@ -18,6 +18,7 @@ namespace OnlineTutor2.Controllers
         private readonly ILogger<AdminController> _logger;
         private readonly IAuditLogService _auditLogService;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IExportService _exportService;
 
         public AdminController(
             ApplicationDbContext context,
@@ -25,7 +26,8 @@ namespace OnlineTutor2.Controllers
             RoleManager<IdentityRole> roleManager,
             ILogger<AdminController> logger,
             IAuditLogService auditLogService,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            IExportService exportService)
         {
             _context = context;
             _userManager = userManager;
@@ -33,6 +35,7 @@ namespace OnlineTutor2.Controllers
             _logger = logger;
             _auditLogService = auditLogService;
             _httpContextAccessor = httpContextAccessor;
+            _exportService = exportService;
         }
 
         private string GetIpAddress()
@@ -991,6 +994,366 @@ namespace OnlineTutor2.Controllers
         }
 
         #endregion
+
+        #region Export Actions
+
+        // Export Users
+        [HttpGet]
+        public async Task<IActionResult> ExportUsers(string format = "excel")
+        {
+            try
+            {
+                var adminId = _userManager.GetUserId(User);
+                var adminName = User.Identity?.Name ?? "Unknown";
+
+                byte[] fileData;
+                string fileName;
+                string contentType;
+
+                if (format == "csv")
+                {
+                    fileData = await _exportService.ExportUsersToCSVAsync();
+                    fileName = $"Users_{DateTime.Now:yyyy-MM-dd}.csv";
+                    contentType = "text/csv";
+                }
+                else
+                {
+                    fileData = await _exportService.ExportUsersToExcelAsync();
+                    fileName = $"Users_{DateTime.Now:yyyy-MM-dd}.xlsx";
+                    contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                }
+
+                await _auditLogService.LogActionAsync(
+                    adminId!,
+                    adminName,
+                    "Export Users",
+                    AuditEntityTypes.System,
+                    null,
+                    $"Exported users to {format.ToUpper()}",
+                    GetIpAddress()
+                );
+
+                return File(fileData, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error exporting users");
+                TempData["ErrorMessage"] = "Ошибка при экспорте пользователей.";
+                return RedirectToAction(nameof(Users));
+            }
+        }
+
+        // Export Teachers
+        [HttpGet]
+        public async Task<IActionResult> ExportTeachers(string format = "excel")
+        {
+            try
+            {
+                var adminId = _userManager.GetUserId(User);
+                var adminName = User.Identity?.Name ?? "Unknown";
+
+                byte[] fileData;
+                string fileName;
+                string contentType;
+
+                if (format == "csv")
+                {
+                    fileData = await _exportService.ExportTeachersToCSVAsync();
+                    fileName = $"Teachers_{DateTime.Now:yyyy-MM-dd}.csv";
+                    contentType = "text/csv";
+                }
+                else
+                {
+                    fileData = await _exportService.ExportTeachersToExcelAsync();
+                    fileName = $"Teachers_{DateTime.Now:yyyy-MM-dd}.xlsx";
+                    contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                }
+
+                await _auditLogService.LogActionAsync(
+                    adminId!,
+                    adminName,
+                    "Export Teachers",
+                    AuditEntityTypes.System,
+                    null,
+                    $"Exported teachers to {format.ToUpper()}",
+                    GetIpAddress()
+                );
+
+                return File(fileData, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error exporting teachers");
+                TempData["ErrorMessage"] = "Ошибка при экспорте учителей.";
+                return RedirectToAction(nameof(Teachers));
+            }
+        }
+
+        // Export Students
+        [HttpGet]
+        public async Task<IActionResult> ExportStudents(string format = "excel")
+        {
+            try
+            {
+                var adminId = _userManager.GetUserId(User);
+                var adminName = User.Identity?.Name ?? "Unknown";
+
+                byte[] fileData;
+                string fileName;
+                string contentType;
+
+                if (format == "csv")
+                {
+                    fileData = await _exportService.ExportStudentsToCSVAsync();
+                    fileName = $"Students_{DateTime.Now:yyyy-MM-dd}.csv";
+                    contentType = "text/csv";
+                }
+                else
+                {
+                    fileData = await _exportService.ExportStudentsToExcelAsync();
+                    fileName = $"Students_{DateTime.Now:yyyy-MM-dd}.xlsx";
+                    contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                }
+
+                await _auditLogService.LogActionAsync(
+                    adminId!,
+                    adminName,
+                    "Export Students",
+                    AuditEntityTypes.System,
+                    null,
+                    $"Exported students to {format.ToUpper()}",
+                    GetIpAddress()
+                );
+
+                return File(fileData, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error exporting students");
+                TempData["ErrorMessage"] = "Ошибка при экспорте студентов.";
+                return RedirectToAction(nameof(Users));
+            }
+        }
+
+        // Export Classes
+        [HttpGet]
+        public async Task<IActionResult> ExportClasses(string format = "excel")
+        {
+            try
+            {
+                var adminId = _userManager.GetUserId(User);
+                var adminName = User.Identity?.Name ?? "Unknown";
+
+                byte[] fileData;
+                string fileName;
+                string contentType;
+
+                if (format == "csv")
+                {
+                    fileData = await _exportService.ExportClassesToCSVAsync();
+                    fileName = $"Classes_{DateTime.Now:yyyy-MM-dd}.csv";
+                    contentType = "text/csv";
+                }
+                else
+                {
+                    fileData = await _exportService.ExportClassesToExcelAsync();
+                    fileName = $"Classes_{DateTime.Now:yyyy-MM-dd}.xlsx";
+                    contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                }
+
+                await _auditLogService.LogActionAsync(
+                    adminId!,
+                    adminName,
+                    "Export Classes",
+                    AuditEntityTypes.System,
+                    null,
+                    $"Exported classes to {format.ToUpper()}",
+                    GetIpAddress()
+                );
+
+                return File(fileData, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error exporting classes");
+                TempData["ErrorMessage"] = "Ошибка при экспорте классов.";
+                return RedirectToAction(nameof(Classes));
+            }
+        }
+
+        // Export Tests
+        [HttpGet]
+        public async Task<IActionResult> ExportTests(string format = "excel")
+        {
+            try
+            {
+                var adminId = _userManager.GetUserId(User);
+                var adminName = User.Identity?.Name ?? "Unknown";
+
+                byte[] fileData;
+                string fileName;
+                string contentType;
+
+                if (format == "csv")
+                {
+                    fileData = await _exportService.ExportTestsToCSVAsync();
+                    fileName = $"Tests_{DateTime.Now:yyyy-MM-dd}.csv";
+                    contentType = "text/csv";
+                }
+                else
+                {
+                    fileData = await _exportService.ExportTestsToExcelAsync();
+                    fileName = $"Tests_{DateTime.Now:yyyy-MM-dd}.xlsx";
+                    contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                }
+
+                await _auditLogService.LogActionAsync(
+                    adminId!,
+                    adminName,
+                    "Export Tests",
+                    AuditEntityTypes.System,
+                    null,
+                    $"Exported tests to {format.ToUpper()}",
+                    GetIpAddress()
+                );
+
+                return File(fileData, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error exporting tests");
+                TempData["ErrorMessage"] = "Ошибка при экспорте тестов.";
+                return RedirectToAction(nameof(Tests));
+            }
+        }
+
+        // Export Test Results
+        [HttpGet]
+        public async Task<IActionResult> ExportTestResults(string format = "excel")
+        {
+            try
+            {
+                var adminId = _userManager.GetUserId(User);
+                var adminName = User.Identity?.Name ?? "Unknown";
+
+                byte[] fileData;
+                string fileName;
+                string contentType;
+
+                if (format == "csv")
+                {
+                    fileData = await _exportService.ExportTestResultsToCSVAsync();
+                    fileName = $"TestResults_{DateTime.Now:yyyy-MM-dd}.csv";
+                    contentType = "text/csv";
+                }
+                else
+                {
+                    fileData = await _exportService.ExportTestResultsToExcelAsync();
+                    fileName = $"TestResults_{DateTime.Now:yyyy-MM-dd}.xlsx";
+                    contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                }
+
+                await _auditLogService.LogActionAsync(
+                    adminId!,
+                    adminName,
+                    "Export Test Results",
+                    AuditEntityTypes.System,
+                    null,
+                    $"Exported test results to {format.ToUpper()}",
+                    GetIpAddress()
+                );
+
+                return File(fileData, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error exporting test results");
+                TempData["ErrorMessage"] = "Ошибка при экспорте результатов.";
+                return RedirectToAction(nameof(TestResults));
+            }
+        }
+
+        // Export Audit Logs
+        [HttpGet]
+        public async Task<IActionResult> ExportAuditLogs(string format = "excel")
+        {
+            try
+            {
+                var adminId = _userManager.GetUserId(User);
+                var adminName = User.Identity?.Name ?? "Unknown";
+
+                byte[] fileData;
+                string fileName;
+                string contentType;
+
+                if (format == "csv")
+                {
+                    fileData = await _exportService.ExportAuditLogsToCSVAsync();
+                    fileName = $"AuditLogs_{DateTime.Now:yyyy-MM-dd}.csv";
+                    contentType = "text/csv";
+                }
+                else
+                {
+                    fileData = await _exportService.ExportAuditLogsToExcelAsync();
+                    fileName = $"AuditLogs_{DateTime.Now:yyyy-MM-dd}.xlsx";
+                    contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                }
+
+                await _auditLogService.LogActionAsync(
+                    adminId!,
+                    adminName,
+                    "Export Audit Logs",
+                    AuditEntityTypes.System,
+                    null,
+                    $"Exported audit logs to {format.ToUpper()}",
+                    GetIpAddress()
+                );
+
+                return File(fileData, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error exporting audit logs");
+                TempData["ErrorMessage"] = "Ошибка при экспорте журнала.";
+                return RedirectToAction(nameof(AuditLogs));
+            }
+        }
+
+        // Export Full System
+        [HttpGet]
+        public async Task<IActionResult> ExportFullSystem()
+        {
+            try
+            {
+                var adminId = _userManager.GetUserId(User);
+                var adminName = User.Identity?.Name ?? "Unknown";
+
+                var fileData = await _exportService.ExportFullSystemToExcelAsync();
+                var fileName = $"FullSystem_Export_{DateTime.Now:yyyy-MM-dd}.xlsx";
+                var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+                await _auditLogService.LogActionAsync(
+                    adminId!,
+                    adminName,
+                    "Export Full System",
+                    AuditEntityTypes.System,
+                    null,
+                    "Exported full system data to Excel",
+                    GetIpAddress()
+                );
+
+                return File(fileData, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error exporting full system");
+                TempData["ErrorMessage"] = "Ошибка при экспорте всех данных.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        #endregion
+
 
     }
 }
