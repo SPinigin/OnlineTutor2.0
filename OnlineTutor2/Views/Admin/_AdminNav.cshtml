@@ -13,10 +13,6 @@
                asp-action="Teachers">
                 <i class="fas fa-chalkboard-teacher"></i> Учителя
             </a>
-            <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Students" ? "active" : "")"
-               asp-action="Students">
-                <i class="fas fa-user-graduate"></i> Ученики
-            </a>
             <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Classes" ? "active" : "")"
                asp-action="Classes">
                 <i class="fas fa-graduation-cap"></i> Классы
