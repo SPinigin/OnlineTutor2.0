@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OnlineTutor2.Data;
 using OnlineTutor2.Models;
+using OnlineTutor2.Services;
 using OnlineTutor2.ViewModels;
 
 namespace OnlineTutor2.Controllers
@@ -15,17 +16,28 @@ namespace OnlineTutor2.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ILogger<AdminController> _logger;
+        private readonly IAuditLogService _auditLogService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public AdminController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
-            ILogger<AdminController> logger)
+            ILogger<AdminController> logger,
+            IAuditLogService auditLogService,
+            IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
             _logger = logger;
+            _auditLogService = auditLogService;
+            _httpContextAccessor = httpContextAccessor;
+        }
+
+        private string GetIpAddress()
+        {
+            return _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString() ?? "Unknown";
         }
 
         // GET: Admin
