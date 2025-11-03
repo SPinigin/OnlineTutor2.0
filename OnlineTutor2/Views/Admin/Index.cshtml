@@ -212,47 +212,98 @@
         </div>
     </div>
 
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-plus"></i> Последние тесты
-                </h5>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-plus"></i> Последние пользователи
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.RecentUsers.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var user in Model.RecentUsers)
+                            {
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>@user.FullName</strong>
+                                        <br>
+                                        <small class="text-muted">@user.Email</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="text-muted d-block">@user.CreatedAt.ToString("dd.MM.yyyy")</small>
+                                        <span class="badge bg-@(user.IsActive ? "success" : "secondary")">
+                                            @(user.IsActive ? "Активен" : "Заблокирован")
+                                        </span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <div class="card-footer text-center">
+                            <a asp-action="Users" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-list"></i> Все пользователи
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center">Нет новых пользователей</p>
+                    }
+                </div>
             </div>
-            <div class="card-body">
-                @if (Model.RecentTests.Any())
-                {
-                    <div class="list-group list-group-flush">
-                        @foreach (var test in Model.RecentTests)
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history"></i> Последние действия
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @{
+                        var recentLogs = ViewBag.RecentLogs as List<OnlineTutor2.Models.AuditLog>;
+
+                        if (recentLogs != null && recentLogs.Any())
                         {
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>@test.Title</strong>
-                                    <br>
-                                    <small class="text-muted">
-                                        <i class="fas fa-spell-check"></i> Орфография
-                                        | @test.Teacher.FullName
-                                    </small>
-                                </div>
-                                <div class="text-end">
-                                    <small class="text-muted d-block">@test.CreatedAt.ToString("dd.MM.yyyy")</small>
-                                    <span class="badge bg-@(test.IsActive ? "success" : "secondary")">
-                                        @(test.IsActive ? "Активен" : "Неактивен")
-                                    </span>
-                                </div>
+                            <div class="list-group list-group-flush">
+                                @foreach (var log in recentLogs)
+                                {
+                                    var actionBadge = log.Action.Contains("Deleted") || log.Action.Contains("Cleared") ? "danger" :
+                                    log.Action.Contains("Created") || log.Action.Contains("Approved") ? "success" :
+                                    log.Action.Contains("Updated") ? "primary" : "secondary";
+
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <span class="badge bg-@actionBadge">@log.Action</span>
+                                                <br>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-user-shield"></i> @log.UserName
+                                                    | <i class="fas fa-cube"></i> @log.EntityType
+                                                </small>
+                                            </div>
+                                            <small class="text-muted">
+                                                @log.CreatedAt.ToString("HH:mm")
+                                            </small>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            <div class="card-footer text-center">
+                                <a asp-action="AuditLogs" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-history"></i> Весь журнал
+                                </a>
                             </div>
                         }
-                    </div>
-                    <div class="card-footer text-center">
-                        <a asp-action="Tests" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-list"></i> Все тесты
-                        </a>
-                    </div>
-                }
-                else
-                {
-                    <p class="text-muted text-center">Нет новых тестов</p>
-                }
+                        else
+                        {
+                            <p class="text-muted text-center">Нет записей в журнале</p>
+                        }
+                    }
+                </div>
             </div>
         </div>
     </div>
