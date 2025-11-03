@@ -72,6 +72,8 @@ namespace OnlineTutor2.Controllers
                     .ToListAsync()
             };
 
+            ViewBag.RecentLogs = await _auditLogService.GetLogsAsync(page: 1, pageSize: 5);
+
             return View(stats);
         }
 
