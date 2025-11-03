@@ -29,5 +29,6 @@ namespace OnlineTutor2.Models
         public virtual ICollection<SpellingTest> SpellingTests { get; set; } = new List<SpellingTest>();
         public virtual ICollection<PunctuationTest> PunctuationTests { get; set; } = new List<PunctuationTest>();
         public virtual ICollection<OrthoeopyTest> OrthoeopyTests { get; set; } = new List<OrthoeopyTest>();
+        public virtual ICollection<RegularTest> RegularTests { get; set; } = new List<RegularTest>();
     }
 }
