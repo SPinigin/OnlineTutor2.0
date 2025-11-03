@@ -91,6 +91,21 @@ namespace OnlineTutor2.Controllers
                     .ToListAsync();
             }
 
+            // Получаем тесты классические
+            if (category == null || category == "regular")
+            {
+                viewModel.RegularTests = await _context.RegularTests
+                    .Include(rt => rt.Class)
+                    .Include(rt => rt.RegularQuestions)
+                    .Include(rt => rt.RegularTestResults.Where(tr => tr.StudentId == student.Id))
+                    .Where(rt => rt.IsActive &&
+                               (rt.ClassId == null || rt.ClassId == student.ClassId) &&
+                               (rt.StartDate == null || rt.StartDate <= DateTime.Now) &&
+                               (rt.EndDate == null || rt.EndDate >= DateTime.Now))
+                    .OrderBy(rt => rt.Title)
+                    .ToListAsync();
+            }
+
             ViewBag.CurrentCategory = category;
             return View(viewModel);
         }
@@ -881,6 +896,285 @@ namespace OnlineTutor2.Controllers
 
         #endregion
 
+        #region Regular Tests
+
+        // GET: StudentTest/StartRegular/5
+        public async Task<IActionResult> StartRegular(int id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+
+            if (student == null) return NotFound();
+
+            var test = await _context.RegularTests
+                .Include(rt => rt.RegularQuestions.OrderBy(q => q.OrderIndex))
+                    .ThenInclude(q => q.Options.OrderBy(o => o.OrderIndex))
+                .Include(rt => rt.RegularTestResults.Where(tr => tr.StudentId == student.Id))
+                .FirstOrDefaultAsync(rt => rt.Id == id && rt.IsActive);
+
+            if (test == null) return NotFound();
+
+            if (!IsRegularTestAvailable(test, student))
+            {
+                TempData["ErrorMessage"] = "Тест недоступен для прохождения.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var attemptCount = test.RegularTestResults.Count(tr => tr.StudentId == student.Id);
+            if (attemptCount >= test.MaxAttempts)
+            {
+                _logger.LogWarning("Студент {StudentId} превысил лимит попыток ({MaxAttempts}) для классического теста {TestId}",
+                    student.Id, test.MaxAttempts, id);
+                TempData["ErrorMessage"] = $"Превышено количество попыток ({test.MaxAttempts}).";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var ongoingResult = test.RegularTestResults
+                .FirstOrDefault(tr => tr.StudentId == student.Id && !tr.IsCompleted);
+
+            if (ongoingResult != null)
+            {
+                _logger.LogInformation("Студент {StudentId} продолжает незавершенный классический тест {TestId}, ResultId: {ResultId}",
+                    student.Id, id, ongoingResult.Id);
+                return RedirectToAction(nameof(TakeRegular), new { id = ongoingResult.Id });
+            }
+
+            var testResult = new RegularTestResult
+            {
+                RegularTestId = test.Id,
+                StudentId = student.Id,
+                StartedAt = DateTime.Now,
+                AttemptNumber = attemptCount + 1,
+                MaxScore = test.RegularQuestions.Sum(q => q.Points),
+                IsCompleted = false
+            };
+
+            _context.RegularTestResults.Add(testResult);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Студент {StudentId} начал классический тест {TestId}, ResultId: {ResultId}, Попытка: {AttemptNumber}",
+                student.Id, id, testResult.Id, testResult.AttemptNumber);
+
+            return RedirectToAction(nameof(TakeRegular), new { id = testResult.Id });
+        }
+
+        // GET: StudentTest/TakeRegular/5
+        public async Task<IActionResult> TakeRegular(int id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+
+            if (student == null) return NotFound();
+
+            var testResult = await _context.RegularTestResults
+                .Include(tr => tr.RegularTest)
+                    .ThenInclude(rt => rt.RegularQuestions.OrderBy(q => q.OrderIndex))
+                        .ThenInclude(q => q.Options.OrderBy(o => o.OrderIndex))
+                .Include(tr => tr.RegularAnswers)
+                .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
+
+            if (testResult == null) return NotFound();
+
+            if (testResult.IsCompleted)
+            {
+                return RedirectToAction(nameof(RegularResult), new { id = testResult.Id });
+            }
+
+            var timeElapsed = DateTime.Now - testResult.StartedAt;
+            var timeLimit = TimeSpan.FromMinutes(testResult.RegularTest.TimeLimit);
+
+            if (timeElapsed >= timeLimit)
+            {
+                _logger.LogInformation("Время классического теста {ResultId} истекло для студента {StudentId}",
+                    id, student.Id);
+                await CompleteRegularTest(testResult);
+                return RedirectToAction(nameof(RegularResult), new { id = testResult.Id });
+            }
+
+            var viewModel = new TakeRegularTestViewModel
+            {
+                TestResult = testResult,
+                TimeRemaining = timeLimit - timeElapsed,
+                CurrentQuestionIndex = 0
+            };
+
+            return View(viewModel);
+        }
+
+        // POST: StudentTest/SubmitRegularAnswer
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitRegularAnswer(SubmitRegularAnswerViewModel model)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+
+            if (student == null)
+                return Json(new { success = false, message = "Студент не найден" });
+
+            var testResult = await _context.RegularTestResults
+                .Include(tr => tr.RegularTest)
+                .Include(tr => tr.RegularAnswers)
+                .FirstOrDefaultAsync(tr => tr.Id == model.TestResultId && tr.StudentId == student.Id);
+
+            if (testResult == null || testResult.IsCompleted)
+                return Json(new { success = false, message = "Тест не найден или уже завершен" });
+
+            var question = await _context.RegularQuestions
+                .Include(q => q.Options)
+                .FirstOrDefaultAsync(q => q.Id == model.QuestionId && q.TestId == testResult.RegularTestId);
+
+            if (question == null)
+                return Json(new { success = false, message = "Вопрос не найден" });
+
+            var existingAnswer = testResult.RegularAnswers
+                .FirstOrDefault(a => a.QuestionId == model.QuestionId);
+
+            bool isCorrect = false;
+            int points = 0;
+            string selectedOptionIdsStr = "";
+
+            // Проверка ответа в зависимости от типа вопроса
+            switch (question.Type)
+            {
+                case QuestionType.SingleChoice:
+                    if (model.SelectedOptionId.HasValue)
+                    {
+                        selectedOptionIdsStr = model.SelectedOptionId.Value.ToString();
+                        var selectedOption = question.Options.FirstOrDefault(o => o.Id == model.SelectedOptionId.Value);
+                        isCorrect = selectedOption?.IsCorrect ?? false;
+                    }
+                    break;
+
+                case QuestionType.MultipleChoice:
+                    if (model.SelectedOptionIds != null && model.SelectedOptionIds.Any())
+                    {
+                        selectedOptionIdsStr = string.Join(",", model.SelectedOptionIds.OrderBy(id => id));
+                        var correctOptionIds = question.Options.Where(o => o.IsCorrect).Select(o => o.Id).OrderBy(id => id);
+                        var selectedIds = model.SelectedOptionIds.OrderBy(id => id);
+                        isCorrect = correctOptionIds.SequenceEqual(selectedIds);
+                    }
+                    break;
+
+                case QuestionType.TrueFalse:
+                    if (model.SelectedOptionId.HasValue)
+                    {
+                        selectedOptionIdsStr = model.SelectedOptionId.Value.ToString();
+                        var selectedOption = question.Options.FirstOrDefault(o => o.Id == model.SelectedOptionId.Value);
+                        isCorrect = selectedOption?.IsCorrect ?? false;
+                    }
+                    break;
+            }
+
+            points = isCorrect ? question.Points : 0;
+
+            if (existingAnswer != null)
+            {
+                existingAnswer.SelectedOptionIds = selectedOptionIdsStr;
+                existingAnswer.IsCorrect = isCorrect;
+                existingAnswer.Points = points;
+                existingAnswer.AnsweredAt = DateTime.Now;
+            }
+            else
+            {
+                var answer = new RegularAnswer
+                {
+                    TestResultId = testResult.Id,
+                    QuestionId = question.Id,
+                    SelectedOptionIds = selectedOptionIdsStr,
+                    IsCorrect = isCorrect,
+                    Points = points,
+                    AnsweredAt = DateTime.Now
+                };
+
+                _context.RegularAnswers.Add(answer);
+            }
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Студент {StudentId} ответил на вопрос {QuestionId} классического теста {ResultId}. Правильно: {IsCorrect}, Баллы: {Points}",
+                student.Id, model.QuestionId, model.TestResultId, isCorrect, points);
+
+            // Возвращаем правильные ответы для проверки
+            var correctAnswers = question.Options.Where(o => o.IsCorrect).Select(o => o.Id).ToList();
+
+            return Json(new
+            {
+                success = true,
+                isCorrect = isCorrect,
+                points = points,
+                correctAnswers = correctAnswers,
+                questionType = question.Type.ToString()
+            });
+        }
+
+        // POST: StudentTest/CompleteRegular
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CompleteRegular(int testResultId)
+        {
+            try
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+                var student = await _context.Students
+                    .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+
+                if (student == null) return NotFound();
+
+                var testResult = await _context.RegularTestResults
+                    .Include(tr => tr.RegularAnswers)
+                    .FirstOrDefaultAsync(tr => tr.Id == testResultId && tr.StudentId == student.Id);
+
+                if (testResult == null) return NotFound();
+
+                if (testResult.IsCompleted)
+                {
+                    return RedirectToAction(nameof(RegularResult), new { id = testResult.Id });
+                }
+
+                await CompleteRegularTest(testResult);
+
+                _logger.LogInformation("Студент {StudentId} завершил классический тест {ResultId}. Баллы: {Score}/{MaxScore}, Процент: {Percentage}",
+                    student.Id, testResultId, testResult.Score, testResult.MaxScore, testResult.Percentage);
+
+                TempData["SuccessMessage"] = "Тест успешно завершен!";
+                return RedirectToAction(nameof(Result), new { id = testResult.Id });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка завершения классического теста {ResultId}", testResultId);
+                TempData["ErrorMessage"] = "Произошла ошибка при завершении теста.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        // GET: StudentTest/RegularResult/5
+        public async Task<IActionResult> RegularResult(int id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.UserId == currentUser.Id);
+
+            if (student == null) return NotFound();
+
+            var testResult = await _context.RegularTestResults
+                .Include(tr => tr.RegularTest)
+                    .ThenInclude(rt => rt.RegularQuestions.OrderBy(q => q.OrderIndex))
+                        .ThenInclude(q => q.Options.OrderBy(o => o.OrderIndex))
+                .Include(tr => tr.RegularAnswers)
+                .Include(tr => tr.Student)
+                    .ThenInclude(s => s.User)
+                .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
+
+            if (testResult == null) return NotFound();
+
+            return View("Result", testResult);
+        }
+
+        #endregion
 
         #region History and Common Actions
 
@@ -962,6 +1256,20 @@ namespace OnlineTutor2.Controllers
         }
 
         private bool IsOrthoeopyTestAvailable(OrthoeopyTest test, Student student)
+        {
+            if (test.ClassId.HasValue && test.ClassId != student.ClassId)
+                return false;
+
+            if (test.StartDate.HasValue && test.StartDate > DateTime.Now)
+                return false;
+
+            if (test.EndDate.HasValue && test.EndDate < DateTime.Now)
+                return false;
+
+            return true;
+        }
+
+        private bool IsRegularTestAvailable(RegularTest test, Student student)
         {
             if (test.ClassId.HasValue && test.ClassId != student.ClassId)
                 return false;
