@@ -997,6 +997,12 @@ namespace OnlineTutor2.Controllers
 
         #region Export Actions
 
+        // GET: Admin/Export
+        public IActionResult Export()
+        {
+            return View();
+        }
+
         // Export Users
         [HttpGet]
         public async Task<IActionResult> ExportUsers(string format = "excel")
