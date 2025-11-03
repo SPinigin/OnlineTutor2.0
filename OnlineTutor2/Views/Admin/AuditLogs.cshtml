@@ -1,0 +1,370 @@
+﻿@model List<OnlineTutor2.Models.AuditLog>
+@{
+    ViewData["Title"] = "Журнал действий";
+    var currentPage = (int)ViewBag.CurrentPage;
+    var totalPages = (int)ViewBag.TotalPages;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="fas fa-history text-info"></i> Журнал действий администраторов</h2>
+        <p class="text-muted">
+            Всего записей: <strong>@Model.Count</strong>
+            @if (totalPages > 1)
+            {
+                <span> | Страница <strong>@currentPage</strong> из <strong>@totalPages</strong></span>
+            }
+        </p>
+    </div>
+    <div>
+        <button type="button" class="btn btn-warning" onclick="showClearOldLogsModal()">
+            <i class="fas fa-broom"></i> Очистить старые логи
+        </button>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> К дашборду
+        </a>
+    </div>
+</div>
+
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-filter"></i> Фильтры</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">
+                    <i class="fas fa-calendar"></i> Дата от
+                </label>
+                <input type="date" name="fromDate" class="form-control"
+                       value="@ViewBag.FromDate?.ToString("yyyy-MM-dd")">
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">
+                    <i class="fas fa-calendar"></i> Дата до
+                </label>
+                <input type="date" name="toDate" class="form-control"
+                       value="@ViewBag.ToDate?.ToString("yyyy-MM-dd")">
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">
+                    <i class="fas fa-bolt"></i> Действие
+                </label>
+                <select name="action" class="form-select">
+                    <option value="">Все действия</option>
+                    @foreach (var action in ViewBag.Actions as List<string>)
+                    {
+                        @if (action == ViewBag.Action)
+                        {
+                            <option value="@action" selected>@action</option>
+                        }
+                        else
+                        {
+                            <option value="@action">@action</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">
+                    <i class="fas fa-cube"></i> Тип сущности
+                </label>
+                <select name="entityType" class="form-select">
+                    <option value="">Все типы</option>
+                    @foreach (var entityType in ViewBag.EntityTypes as List<string>)
+                    {
+                        @if (entityType == ViewBag.EntityType)
+                        {
+                            <option value="@entityType" selected>@entityType</option>
+                        }
+                        else
+                        {
+                            <option value="@entityType">@entityType</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Применить фильтры
+                </button>
+                <a asp-action="AuditLogs" class="btn btn-outline-secondary">
+                    <i class="fas fa-undo"></i> Сбросить
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div class="card">
+    <div class="card-body">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width: 180px;">Дата и время</th>
+                            <th>Администратор</th>
+                            <th>Действие</th>
+                            <th>Тип сущности</th>
+                            <th>Детали</th>
+                            <th style="width: 150px;">IP адрес</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in Model)
+                        {
+                            var actionBadge = GetActionBadgeClass(log.Action);
+                            var entityBadge = GetEntityBadgeClass(log.EntityType);
+
+                            <tr>
+                                <td>
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock"></i>
+                                        @log.CreatedAt.ToString("dd.MM.yyyy HH:mm:ss")
+                                    </small>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-user-shield text-danger me-2"></i>
+                                        <div>
+                                            <strong>@log.UserName</strong>
+                                            @if (log.User != null)
+                                            {
+                                                <br>
+                                                <small class="text-muted">@log.User.Email</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-@actionBadge">
+                                        <i class="fas fa-bolt"></i> @log.Action
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-@entityBadge">
+                                        @GetEntityIcon(log.EntityType) @log.EntityType
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(log.Details))
+                                    {
+                                        <small>@log.Details</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(log.EntityId))
+                                    {
+                                        <br>
+                                        <small class="text-muted">ID: <code>@log.EntityId</code></small>
+                                    }
+                                </td>
+                                <td>
+                                    <small class="text-monospace">
+                                        <i class="fas fa-network-wired text-muted"></i>
+                                        @(log.IpAddress ?? "Unknown")
+                                    </small>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+
+            @if (totalPages > 1)
+            {
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" asp-action="AuditLogs"
+                               asp-route-page="@(currentPage - 1)"
+                               asp-route-fromDate="@ViewBag.FromDate"
+                               asp-route-toDate="@ViewBag.ToDate"
+                               asp-route-action="@ViewBag.Action"
+                               asp-route-entityType="@ViewBag.EntityType">
+                                <i class="fas fa-chevron-left"></i> Назад
+                            </a>
+                        </li>
+
+                        @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                        {
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                <a class="page-link" asp-action="AuditLogs"
+                                   asp-route-page="@i"
+                                   asp-route-fromDate="@ViewBag.FromDate"
+                                   asp-route-toDate="@ViewBag.ToDate"
+                                   asp-route-action="@ViewBag.Action"
+                                   asp-route-entityType="@ViewBag.EntityType">
+                                    @i
+                                </a>
+                            </li>
+                        }
+
+                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                            <a class="page-link" asp-action="AuditLogs"
+                               asp-route-page="@(currentPage + 1)"
+                               asp-route-fromDate="@ViewBag.FromDate"
+                               asp-route-toDate="@ViewBag.ToDate"
+                               asp-route-action="@ViewBag.Action"
+                               asp-route-entityType="@ViewBag.EntityType">
+                                Вперед <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        }
+        else
+        {
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle fa-2x mb-3"></i>
+                <h5>Записи журнала не найдены</h5>
+                <p class="text-muted">Попробуйте изменить параметры фильтрации</p>
+            </div>
+        }
+    </div>
+</div>
+
+
+<div class="modal fade" id="clearOldLogsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">
+                    <i class="fas fa-broom"></i> Очистка старых логов
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="ClearOldLogs" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Внимание!</strong> Это действие удалит старые записи журнала.
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <strong>Удалить записи старше чем:</strong>
+                        </label>
+                        <select name="daysToKeep" class="form-select">
+                            <option value="30">30 дней</option>
+                            <option value="60">60 дней</option>
+                            <option value="90" selected>90 дней (рекомендуется)</option>
+                            <option value="180">180 дней</option>
+                            <option value="365">365 дней (1 год)</option>
+                        </select>
+                    </div>
+
+                    <p class="text-muted small">
+                        <i class="fas fa-info-circle"></i>
+                        Записи новее указанного периода будут сохранены
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Отмена
+                    </button>
+                    <button type="submit" class="btn btn-warning"
+                            onclick="return confirm('Вы уверены, что хотите удалить старые логи?')">
+                        <i class="fas fa-broom"></i> Очистить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetActionBadgeClass(string action)
+    {
+        if (action.Contains("Deleted") || action.Contains("Cleared"))
+            return "danger";
+        if (action.Contains("Created") || action.Contains("Approved"))
+            return "success";
+        if (action.Contains("Updated") || action.Contains("Activated"))
+            return "primary";
+        if (action.Contains("Deactivated") || action.Contains("Rejected"))
+            return "warning";
+        return "secondary";
+    }
+
+    string GetEntityBadgeClass(string entityType)
+    {
+        return entityType switch
+        {
+            "User" => "primary",
+            "Student" => "info",
+            "Teacher" => "success",
+            "Class" => "warning",
+            "SpellingTest" => "primary",
+            "RegularTest" => "success",
+            "PunctuationTest" => "danger",
+            "OrthoeopyTest" => "warning",
+            "TestResult" => "info",
+            "System" => "dark",
+            _ => "secondary"
+        };
+    }
+
+    string GetEntityIcon(string entityType)
+    {
+        return entityType switch
+        {
+            "User" => "<i class='fas fa-user'></i>",
+            "Student" => "<i class='fas fa-user-graduate'></i>",
+            "Teacher" => "<i class='fas fa-chalkboard-teacher'></i>",
+            "Class" => "<i class='fas fa-graduation-cap'></i>",
+            "SpellingTest" => "<i class='fas fa-spell-check'></i>",
+            "RegularTest" => "<i class='fas fa-list-ul'></i>",
+            "PunctuationTest" => "<i class='fas fa-quote-right'></i>",
+            "OrthoeopyTest" => "<i class='fas fa-volume-up'></i>",
+            "TestResult" => "<i class='fas fa-chart-line'></i>",
+            "System" => "<i class='fas fa-server'></i>",
+            _ => "<i class='fas fa-cube'></i>"
+        };
+    }
+}
+
+@section Scripts {
+    <script>
+        function showClearOldLogsModal() {
+            const modal = new bootstrap.Modal(document.getElementById('clearOldLogsModal'));
+            modal.show();
+        }
+    </script>
+}
+
+@section Styles {
+    <style>
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .text-monospace {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+
+        .badge {
+            font-weight: 500;
+        }
+    </style>
+}
