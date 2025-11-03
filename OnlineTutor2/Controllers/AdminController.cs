@@ -179,12 +179,18 @@ namespace OnlineTutor2.Controllers
         public async Task<IActionResult> DeleteUser(string id)
         {
             var adminId = _userManager.GetUserId(User);
+            var adminName = User.Identity?.Name ?? "Unknown";
             var user = await _userManager.FindByIdAsync(id);
+
             if (user == null)
             {
                 _logger.LogWarning("Администратор {AdminId} попытался удалить несуществующего пользователя {UserId}", adminId, id);
                 return NotFound();
             }
+
+            var userName = user.FullName;
+            var userEmail = user.Email;
+
             // Удаляем связанные данные
             var student = await _context.Students.FirstOrDefaultAsync(s => s.UserId == id);
             if (student != null)
@@ -215,6 +221,15 @@ namespace OnlineTutor2.Controllers
             var result = await _userManager.DeleteAsync(user);
             if (result.Succeeded)
             {
+                await _auditLogService.LogActionAsync(
+                    adminId!,
+                    adminName,
+                    AuditActions.UserDeleted,
+                    AuditEntityTypes.User,
+                    id,
+                    $"Deleted user: {userName} ({userEmail})",
+                    GetIpAddress()
+                );
                 _logger.LogInformation("Администратор {AdminId} успешно удалил пользователя {UserId}, Email: {Email}", adminId, id, user.Email);
                 TempData["SuccessMessage"] = $"Пользователь {user.FullName} успешно удален!";
             }
@@ -246,6 +261,15 @@ namespace OnlineTutor2.Controllers
 
             if (result.Succeeded)
             {
+                await _auditLogService.LogActionAsync(
+                    adminId!,
+                    User.Identity?.Name ?? "Unknown",
+                    user.IsActive ? AuditActions.UserActivated : AuditActions.UserDeactivated,
+                    AuditEntityTypes.User,
+                    id,
+                    $"{(user.IsActive ? "Activated" : "Deactivated")} user: {user.FullName}",
+                    GetIpAddress()
+);
                 var status = user.IsActive ? "активирован" : "заблокирован";
                 _logger.LogInformation("Администратор {AdminId} изменил статус пользователя {UserId} с {OldStatus} на {NewStatus}", adminId, id, oldStatus, user.IsActive);
                 TempData["InfoMessage"] = $"Пользователь {user.FullName} {status}.";
@@ -291,11 +315,21 @@ namespace OnlineTutor2.Controllers
             }
 
             teacher.IsApproved = true;
-            await _context.SaveChangesAsync();
+            var result = await _context.SaveChangesAsync();
+
+            await _auditLogService.LogActionAsync(
+                adminId!,
+                User.Identity?.Name ?? "Unknown",
+                AuditActions.TeacherApproved,
+                AuditEntityTypes.Teacher,
+                id.ToString(),
+                $"Approved teacher: {teacher.User.FullName}",
+                GetIpAddress()
+            );
 
             _logger.LogInformation("Администратор {AdminId} одобрил учителя {TeacherId}, UserId: {UserId}, Email: {Email}", adminId, id, teacher.UserId, teacher.User.Email);
-
             TempData["SuccessMessage"] = $"Учитель {teacher.User.FullName} одобрен!";
+
             return RedirectToAction(nameof(Teachers));
         }
 
@@ -374,6 +408,16 @@ namespace OnlineTutor2.Controllers
 
             _context.Classes.Remove(@class);
             await _context.SaveChangesAsync();
+
+            await _auditLogService.LogActionAsync(
+                adminId!,
+                User.Identity?.Name ?? "Unknown",
+                AuditActions.ClassDeleted,
+                AuditEntityTypes.Class,
+                id.ToString(),
+                $"Deleted class: {className} (Students: {studentsCount}, Tests: {testsCount})",
+                GetIpAddress()
+            );
 
             _logger.LogInformation("Администратор {AdminId} удалил класс {ClassId}, Название: {ClassName}, Студентов: {StudentsCount}, Тестов: {TestsCount}", adminId, id, className, studentsCount, testsCount);
 
@@ -623,6 +667,7 @@ namespace OnlineTutor2.Controllers
         public async Task<IActionResult> ClearAllResults()
         {
             var adminId = _userManager.GetUserId(User);
+            var adminName = User.Identity?.Name ?? "Unknown";
             _logger.LogWarning("Администратор {AdminId} начал очистку всех результатов тестов", adminId);
 
             var spellingResults = await _context.SpellingTestResults.ToListAsync();
@@ -637,13 +682,23 @@ namespace OnlineTutor2.Controllers
             _context.PunctuationTestResults.RemoveRange(punctuationResults);
             _context.OrthoeopyTestResults.RemoveRange(orthoeopyResults);
 
-            await _context.SaveChangesAsync();
+            var result = await _context.SaveChangesAsync();
+
+            await _auditLogService.LogActionAsync(
+                adminId!,
+                User.Identity?.Name ?? "Unknown",
+                AuditActions.AllResultsCleared,
+                AuditEntityTypes.System,
+                null,
+                $"Cleared all test results (Total: {totalCount})",
+                GetIpAddress()
+            );
 
             _logger.LogWarning("Администратор {AdminId} удалил все результаты тестов. Всего удалено: {TotalCount} (Орфография: {SpellingCount}, " +
-                "Обычные: {RegularCount}, Пунктуация: {PunctuationCount}, Орфоэпия: {OrthoeopyCount})", adminId, totalCount, spellingResults.Count, 
-                regularResults.Count, punctuationResults.Count, orthoeopyResults.Count);
-
+            "Классические: {RegularCount}, Пунктуация: {PunctuationCount}, Орфоэпия: {OrthoeopyCount})", adminId, totalCount, spellingResults.Count,
+            regularResults.Count, punctuationResults.Count, orthoeopyResults.Count);
             TempData["SuccessMessage"] = $"Удалено {totalCount} результатов тестов!";
+
             return RedirectToAction(nameof(TestResults));
         }
 
