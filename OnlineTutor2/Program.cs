@@ -81,6 +81,7 @@ try
     builder.Services.AddScoped<IPunctuationQuestionImportService, PunctuationQuestionImportService>();
     builder.Services.AddScoped<IOrthoeopyQuestionImportService, OrthoeopyQuestionImportService>();
     builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+    builder.Services.AddHttpContextAccessor();
 
     builder.Services.AddSession(options =>
     {
