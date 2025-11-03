@@ -731,5 +731,94 @@ namespace OnlineTutor2.Controllers
         }
 
         #endregion
+
+        #region Audit Logs Management
+
+        // GET: Admin/AuditLogs
+        public async Task<IActionResult> AuditLogs(
+            DateTime? fromDate,
+            DateTime? toDate,
+            string? action,
+            string? entityType,
+            int page = 1)
+        {
+            const int pageSize = 50;
+
+            var logs = await _auditLogService.GetLogsAsync(
+                fromDate,
+                toDate,
+                null,
+                action,
+                entityType,
+                page,
+                pageSize
+            );
+
+            var totalCount = await _auditLogService.GetLogsCountAsync(
+                fromDate,
+                toDate,
+                null,
+                action,
+                entityType
+            );
+
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            ViewBag.FromDate = fromDate;
+            ViewBag.ToDate = toDate;
+            ViewBag.Action = action;
+            ViewBag.EntityType = entityType;
+
+            // Получаем уникальные действия и типы сущностей для фильтров
+            ViewBag.Actions = await _context.AuditLogs
+                .Select(al => al.Action)
+                .Distinct()
+                .OrderBy(a => a)
+                .ToListAsync();
+
+            ViewBag.EntityTypes = await _context.AuditLogs
+                .Select(al => al.EntityType)
+                .Distinct()
+                .OrderBy(e => e)
+                .ToListAsync();
+
+            return View(logs);
+        }
+
+        // POST: Admin/ClearOldLogs
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ClearOldLogs(int daysToKeep = 90)
+        {
+            var adminId = _userManager.GetUserId(User);
+            var adminName = User.Identity?.Name ?? "Unknown";
+
+            try
+            {
+                await _auditLogService.ClearOldLogsAsync(daysToKeep);
+
+                await _auditLogService.LogActionAsync(
+                    adminId!,
+                    adminName,
+                    "Audit Logs Cleared",
+                    AuditEntityTypes.System,
+                    null,
+                    $"Cleared audit logs older than {daysToKeep} days",
+                    GetIpAddress()
+                );
+
+                TempData["SuccessMessage"] = $"Старые логи (старше {daysToKeep} дней) успешно удалены!";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error clearing old audit logs");
+                TempData["ErrorMessage"] = "Ошибка при очистке старых логов.";
+            }
+
+            return RedirectToAction(nameof(AuditLogs));
+        }
+
+        #endregion
+
     }
 }
