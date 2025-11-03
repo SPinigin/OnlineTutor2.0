@@ -21,6 +21,7 @@ namespace OnlineTutor2.Data
         public DbSet<Assignment> Assignments { get; set; }
         public DbSet<Grade> Grades { get; set; }
         public DbSet<Material> Materials { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<CalendarEvent> CalendarEvents { get; set; }
 
         // Test Categories
@@ -411,6 +412,22 @@ namespace OnlineTutor2.Data
                 .HasForeignKey(oa => oa.OrthoeopyQuestionId)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // AuditLog
+            modelBuilder.Entity<AuditLog>()
+                .HasOne(al => al.User)
+                .WithMany()
+                .HasForeignKey(al => al.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<AuditLog>()
+                .HasIndex(al => al.Action);
+
+            modelBuilder.Entity<AuditLog>()
+                .HasIndex(al => al.EntityType);
+
+            modelBuilder.Entity<AuditLog>()
+                .HasIndex(al => al.CreatedAt);
         }
     }
 }
