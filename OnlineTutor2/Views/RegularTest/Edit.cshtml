@@ -1,0 +1,129 @@
+﻿@model OnlineTutor2.ViewModels.CreateRegularTestViewModel
+@{
+    ViewData["Title"] = "Редактировать тест";
+    var testId = (int)ViewBag.TestId;
+}
+
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="Index"><i class="fas fa-list-ul"></i> Классические тесты</a>
+            </li>
+            <li class="breadcrumb-item active">Редактировать</li>
+        </ol>
+    </nav>
+    <h2><i class="fas fa-edit text-primary"></i> Редактировать тест</h2>
+</div>
+
+<form asp-action="Edit" asp-route-id="@testId" method="post">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Основная информация</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    <label asp-for="Title" class="form-label"></label>
+                    <input asp-for="Title" class="form-control" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label asp-for="TestType" class="form-label"></label>
+                    <select asp-for="TestType" class="form-select" asp-items="ViewBag.TestTypes">
+                    </select>
+                    <span asp-validation-for="TestType" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <label asp-for="Description" class="form-label"></label>
+                    <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="ClassId" class="form-label"></label>
+                    <select asp-for="ClassId" class="form-select" asp-items="ViewBag.Classes">
+                        <option value="">Все ученики</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-cog"></i> Настройки</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label asp-for="TimeLimit" class="form-label"></label>
+                    <div class="input-group">
+                        <input asp-for="TimeLimit" type="number" class="form-control" min="5" max="300" />
+                        <span class="input-group-text">минут</span>
+                    </div>
+                    <span asp-validation-for="TimeLimit" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label asp-for="MaxAttempts" class="form-label"></label>
+                    <input asp-for="MaxAttempts" type="number" class="form-control" min="1" max="100" />
+                    <span asp-validation-for="MaxAttempts" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Статус</label>
+                    <div class="form-check form-switch">
+                        <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                        <label asp-for="IsActive" class="form-check-label"></label>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="StartDate" class="form-label"></label>
+                    <input asp-for="StartDate" type="datetime-local" class="form-control" />
+                    <span asp-validation-for="StartDate" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="EndDate" class="form-label"></label>
+                    <input asp-for="EndDate" type="datetime-local" class="form-control" />
+                    <span asp-validation-for="EndDate" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="form-check">
+                        <input asp-for="ShowHints" class="form-check-input" type="checkbox" />
+                        <label asp-for="ShowHints" class="form-check-label"></label>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="form-check">
+                        <input asp-for="ShowCorrectAnswers" class="form-check-input" type="checkbox" />
+                        <label asp-for="ShowCorrectAnswers" class="form-check-label"></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between">
+        <a asp-action="Details" asp-route-id="@testId" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Отмена
+        </a>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Сохранить изменения
+        </button>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
