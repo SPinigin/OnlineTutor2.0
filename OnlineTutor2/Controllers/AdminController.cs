@@ -856,12 +856,12 @@ namespace OnlineTutor2.Controllers
 
             // Тесты по типам
             stats.TestsByType = new Dictionary<string, int>
-    {
-        { "Орфография", await _context.SpellingTests.CountAsync() },
-        { "Классические", await _context.RegularTests.CountAsync() },
-        { "Пунктуация", await _context.PunctuationTests.CountAsync() },
-        { "Орфоэпия", await _context.OrthoeopyTests.CountAsync() }
-    };
+            {
+                { "Орфография", await _context.SpellingTests.CountAsync() },
+                { "Классические", await _context.RegularTests.CountAsync() },
+                { "Пунктуация", await _context.PunctuationTests.CountAsync() },
+                { "Орфоэпия", await _context.OrthoeopyTests.CountAsync() }
+            };
 
             // Результаты тестов за последние 30 дней
             var spellingResults = await _context.SpellingTestResults
