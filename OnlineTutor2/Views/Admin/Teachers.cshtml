@@ -1,0 +1,224 @@
+﻿@model List<OnlineTutor2.Models.Teacher>
+@{
+    ViewData["Title"] = "Управление учителями";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="fas fa-chalkboard-teacher text-success"></i> Управление учителями</h2>
+        <p class="text-muted">
+            Всего учителей: <strong>@Model.Count</strong>
+            @{
+                var pendingCount = Model.Count(t => !t.IsApproved);
+                if (pendingCount > 0)
+                {
+                    <span class="badge bg-warning ms-2">
+                        <i class="fas fa-clock"></i> @pendingCount на модерации
+                    </span>
+                }
+            }
+        </p>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> К дашборду
+        </a>
+    </div>
+</div>
+
+
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="btn-group w-100" role="group">
+            <input type="radio" class="btn-check" name="statusFilter" id="filterAll" checked>
+            <label class="btn btn-outline-primary" for="filterAll" onclick="filterTeachers('all')">
+                <i class="fas fa-list"></i> Все (@Model.Count)
+            </label>
+
+            <input type="radio" class="btn-check" name="statusFilter" id="filterApproved">
+            <label class="btn btn-outline-success" for="filterApproved" onclick="filterTeachers('approved')">
+                <i class="fas fa-check-circle"></i> Одобренные (@Model.Count(t => t.IsApproved))
+            </label>
+
+            <input type="radio" class="btn-check" name="statusFilter" id="filterPending">
+            <label class="btn btn-outline-warning" for="filterPending" onclick="filterTeachers('pending')">
+                <i class="fas fa-clock"></i> На модерации (@pendingCount)
+            </label>
+        </div>
+    </div>
+</div>
+
+
+<div class="row" id="teachersContainer">
+    @foreach (var teacher in Model.OrderBy(t => t.IsApproved).ThenBy(t => t.User.LastName))
+    {
+        <div class="col-md-6 col-lg-4 mb-4 teacher-card"
+             data-status="@(teacher.IsApproved ? "approved" : "pending")">
+            <div class="card h-100 @(!teacher.IsApproved ? "border-warning" : "")">
+                <div class="card-header bg-@(teacher.IsApproved ? "success" : "warning") text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user-tie"></i> @teacher.User.FullName
+                        </h5>
+                        @if (!teacher.IsApproved)
+                        {
+                            <span class="badge bg-light text-dark">
+                                <i class="fas fa-clock"></i> Модерация
+                            </span>
+                        }
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="text-muted small">Email</label>
+                        <div>
+                            <i class="fas fa-envelope text-muted"></i>
+                            <strong>@teacher.User.Email</strong>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="text-muted small">Предмет</label>
+                        <div>
+                            <i class="fas fa-book text-muted"></i>
+                            <strong>@(teacher.Subject ?? "Не указан")</strong>
+                        </div>
+                    </div>
+
+                    @if (teacher.Experience.HasValue)
+                    {
+                        <div class="mb-3">
+                            <label class="text-muted small">Опыт работы</label>
+                            <div>
+                                <i class="fas fa-briefcase text-muted"></i>
+                                <strong>@teacher.Experience лет</strong>
+                            </div>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(teacher.Education))
+                    {
+                        <div class="mb-3">
+                            <label class="text-muted small">Образование</label>
+                            <div class="small">@teacher.Education</div>
+                        </div>
+                    }
+
+
+                    <div class="row g-2 mt-3">
+                        <div class="col-4 text-center">
+                            <div class="card bg-light">
+                                <div class="card-body p-2">
+                                    <h5 class="mb-0 text-primary">@teacher.User.TeacherClasses.Count</h5>
+                                    <small class="text-muted">Классы</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4 text-center">
+                            <div class="card bg-light">
+                                <div class="card-body p-2">
+                                    <h5 class="mb-0 text-success">@teacher.User.CreatedTests.Count</h5>
+                                    <small class="text-muted">Тесты</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4 text-center">
+                            <div class="card bg-light">
+                                <div class="card-body p-2">
+                                    <h5 class="mb-0 text-info">@teacher.User.TeacherClasses.Sum(c => c.Students.Count)</h5>
+                                    <small class="text-muted">Ученики</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-grid gap-2">
+                        <a asp-action="UserDetails" asp-route-id="@teacher.UserId"
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye"></i> Подробнее
+                        </a>
+
+                        @if (!teacher.IsApproved)
+                        {
+                            <form asp-action="ApproveTeacher" asp-route-id="@teacher.Id"
+                                  method="post"
+                                  onsubmit="return confirm('Одобрить учителя @teacher.User.FullName?')">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-success btn-sm w-100">
+                                    <i class="fas fa-check-circle"></i> Одобрить учителя
+                                </button>
+                            </form>
+                        }
+
+                        <div class="btn-group btn-group-sm">
+                            <form asp-action="ToggleUserStatus" asp-route-id="@teacher.UserId"
+                                  method="post" class="flex-fill"
+                                  onsubmit="return confirm('@(teacher.User.IsActive ? "Заблокировать" : "Активировать") учителя?')">
+                                @Html.AntiForgeryToken()
+                                <button type="submit"
+                                        class="btn btn-outline-@(teacher.User.IsActive ? "warning" : "success") w-100">
+                                    <i class="fas fa-@(teacher.User.IsActive ? "ban" : "check")"></i>
+                                </button>
+                            </form>
+
+                            <form asp-action="DeleteUser" asp-route-id="@teacher.UserId"
+                                  method="post" class="flex-fill"
+                                  onsubmit="return confirm('ВНИМАНИЕ! Удалить учителя @teacher.User.FullName?')">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-outline-danger w-100">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info text-center">
+        <i class="fas fa-info-circle fa-2x mb-3"></i>
+        <h5>Учителя не найдены</h5>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        function filterTeachers(status) {
+            const cards = document.querySelectorAll('.teacher-card');
+
+            cards.forEach(card => {
+                if (status === 'all') {
+                    card.style.display = 'block';
+                } else {
+                    if (card.dataset.status === status) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                }
+            });
+        }
+    </script>
+}
+
+@section Styles {
+    <style>
+        .card {
+            transition: transform 0.2s;
+        }
+
+            .card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            }
+
+        .border-warning {
+            border-width: 2px !important;
+        }
+    </style>
+}
