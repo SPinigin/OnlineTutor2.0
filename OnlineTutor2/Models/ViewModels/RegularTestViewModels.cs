@@ -3,59 +3,109 @@ using System.ComponentModel.DataAnnotations;
 
 namespace OnlineTutor2.ViewModels
 {
+    // Создание/редактирование теста
     public class CreateRegularTestViewModel
     {
         [Required(ErrorMessage = "Название теста обязательно")]
         [StringLength(200)]
         [Display(Name = "Название теста")]
-        public string Title { get; set; }
+        public string Title { get; set; } = "";
 
         [StringLength(1000)]
         [Display(Name = "Описание")]
         public string? Description { get; set; }
 
-        [Display(Name = "Назначить онлайн-классу")]
+        [Display(Name = "Класс")]
         public int? ClassId { get; set; }
 
-        [Range(5, 180, ErrorMessage = "Время должно быть от 5 до 180 минут")]
+        [Range(5, 300)]
         [Display(Name = "Время на выполнение (минут)")]
         public int TimeLimit { get; set; } = 30;
 
-        [Range(1, 10, ErrorMessage = "Количество попыток должно быть от 1 до 10")]
+        [Range(1, 100)]
         [Display(Name = "Количество попыток")]
-        public int MaxAttempts { get; set; } = 1;
+        public int MaxAttempts { get; set; } = 3;
 
         [Display(Name = "Дата начала")]
-        [DataType(DataType.DateTime)]
         public DateTime? StartDate { get; set; }
 
         [Display(Name = "Дата окончания")]
-        [DataType(DataType.DateTime)]
         public DateTime? EndDate { get; set; }
 
         [Display(Name = "Показывать подсказки")]
         public bool ShowHints { get; set; } = true;
 
-        [Display(Name = "Показывать правильные ответы после теста")]
+        [Display(Name = "Показывать правильные ответы после завершения")]
         public bool ShowCorrectAnswers { get; set; } = true;
 
-        [Display(Name = "Активный")]
+        [Display(Name = "Тест активен")]
         public bool IsActive { get; set; } = true;
+
+        [Required]
+        [Display(Name = "Тип теста")]
+        public TestType TestType { get; set; } = TestType.Practice;
     }
 
-    public class StudentRegularTestIndexViewModel
+    // Создание/редактирование вопроса
+    public class CreateRegularQuestionViewModel
     {
-        public Student Student { get; set; }
-        public List<RegularTest> AvailableTests { get; set; } = new List<RegularTest>();
+        public int? Id { get; set; }
+        public int TestId { get; set; }
+
+        [Required(ErrorMessage = "Текст вопроса обязателен")]
+        [StringLength(1000)]
+        [Display(Name = "Текст вопроса")]
+        public string Text { get; set; } = "";
+
+        [Required]
+        [Display(Name = "Тип вопроса")]
+        public QuestionType Type { get; set; } = QuestionType.SingleChoice;
+
+        [Range(1, 100)]
+        [Display(Name = "Баллы")]
+        public int Points { get; set; } = 1;
+
+        [StringLength(500)]
+        [Display(Name = "Подсказка")]
+        public string? Hint { get; set; }
+
+        [StringLength(1000)]
+        [Display(Name = "Объяснение")]
+        public string? Explanation { get; set; }
+
+        [Display(Name = "Порядковый номер")]
+        public int OrderIndex { get; set; }
+
+        // Варианты ответов
+        public List<RegularQuestionOptionViewModel> Options { get; set; } = new();
     }
 
+    // Вариант ответа
+    public class RegularQuestionOptionViewModel
+    {
+        public int? Id { get; set; }
+
+        [Required]
+        [StringLength(500)]
+        public string Text { get; set; } = "";
+
+        public bool IsCorrect { get; set; }
+
+        public int OrderIndex { get; set; }
+
+        [StringLength(500)]
+        public string? Explanation { get; set; }
+    }
+
+    // Прохождение теста студентом
     public class TakeRegularTestViewModel
     {
-        public RegularTestResult RegularTestResult { get; set; }
+        public RegularTestResult TestResult { get; set; } = null!;
         public TimeSpan TimeRemaining { get; set; }
         public int CurrentQuestionIndex { get; set; }
     }
 
+    // Отправка ответа
     public class SubmitRegularAnswerViewModel
     {
         [Required]
@@ -64,45 +114,13 @@ namespace OnlineTutor2.ViewModels
         [Required]
         public int QuestionId { get; set; }
 
-        [StringLength(10)]
-        public string? StudentAnswer { get; set; }
-    }
+        // Для Single Choice - один ID
+        public int? SelectedOptionId { get; set; }
 
-    public class RegularTestResultViewModel
-    {
-        public RegularTestResult RegularTestResult { get; set; }
-        public List<RegularQuestionResultViewModel> RegularQuestionResults { get; set; } = new List<RegularQuestionResultViewModel>();
-    }
+        // Для Multiple Choice - несколько ID
+        public List<int>? SelectedOptionIds { get; set; }
 
-    public class RegularQuestionResultViewModel
-    {
-        public RegularQuestion RegularQuestion { get; set; }
-        public RegularAnswer? Answer { get; set; }
-        public bool IsCorrect { get; set; }
-        public int PointsEarned { get; set; }
-    }
-
-    public class RegularQuestionImportViewModel
-    {
-        public int SpellingTestId { get; set; }
-
-        [Required(ErrorMessage = "Выберите файл для импорта")]
-        [Display(Name = "Excel файл с вопросами")]
-        public IFormFile ExcelFile { get; set; }
-
-        [Display(Name = "Баллы за каждый правильный ответ")]
-        [Range(1, 10, ErrorMessage = "Баллы должны быть от 1 до 10")]
-        public int PointsPerQuestion { get; set; } = 1;
-    }
-
-    public class ImportRegularQuestionRow
-    {
-        public int RowNumber { get; set; }
-        public string? WordWithGap { get; set; }
-        public string? CorrectLetter { get; set; }
-        public string? FullWord { get; set; }
-        public string? Hint { get; set; }
-        public List<string> Errors { get; set; } = new List<string>();
-        public bool IsValid => !Errors.Any();
+        // Для True/False
+        public bool? TrueFalseAnswer { get; set; }
     }
 }
