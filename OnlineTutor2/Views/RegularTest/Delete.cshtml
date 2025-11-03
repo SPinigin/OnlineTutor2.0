@@ -1,0 +1,108 @@
+﻿@model OnlineTutor2.Models.RegularTest
+@{
+    ViewData["Title"] = "Удалить тест";
+}
+
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="Index"><i class="fas fa-list-ul"></i> Классические тесты</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a asp-action="Details" asp-route-id="@Model.Id">@Model.Title</a>
+            </li>
+            <li class="breadcrumb-item active">Удалить</li>
+        </ol>
+    </nav>
+    <h2 class="text-danger"><i class="fas fa-exclamation-triangle"></i> Удалить тест</h2>
+</div>
+
+<div class="alert alert-danger">
+    <h5 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Внимание!</h5>
+    <p class="mb-0">Вы действительно хотите удалить этот тест? Это действие нельзя отменить.</p>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-danger text-white">
+        <h5 class="mb-0">Информация о тесте</h5>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Название:</dt>
+            <dd class="col-sm-9">@Model.Title</dd>
+
+            <dt class="col-sm-3">Тип:</dt>
+            <dd class="col-sm-9">
+                <span class="badge bg-primary">
+                    @switch (Model.Type)
+                    {
+                        case TestType.Practice:
+                            <text>Практика</text>
+                            break;
+                        case TestType.Quiz:
+                            <text>Викторина</text>
+                            break;
+                        case TestType.Exam:
+                            <text>Экзамен</text>
+                            break;
+                        case TestType.Homework:
+                            <text>Домашнее задание</text>
+                            break;
+                    }
+                </span>
+            </dd>
+
+            <dt class="col-sm-3">Вопросов:</dt>
+            <dd class="col-sm-9">@Model.RegularQuestions.Count</dd>
+
+            <dt class="col-sm-3">Прохождений:</dt>
+            <dd class="col-sm-9">
+                <strong class="text-@(Model.RegularTestResults.Any() ? "danger" : "success")">
+                    @Model.RegularTestResults.Count
+                </strong>
+            </dd>
+
+            <dt class="col-sm-3">Создан:</dt>
+            <dd class="col-sm-9">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</dd>
+        </dl>
+
+        @if (Model.RegularTestResults.Any())
+        {
+            <div class="alert alert-warning mt-3">
+                <i class="fas fa-exclamation-circle"></i>
+                <strong>Невозможно удалить!</strong>
+                <p class="mb-0">
+                    Этот тест уже проходили @Model.RegularTestResults.Count ученик(а/ов).
+                    Тест нельзя удалить, но вы можете его деактивировать.
+                </p>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="d-flex justify-content-between">
+    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Отмена
+    </a>
+
+    @if (!Model.RegularTestResults.Any())
+    {
+        <form asp-action="Delete" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-danger"
+                    onclick="return confirm('Вы уверены, что хотите удалить тест «@Model.Title»?')">
+                <i class="fas fa-trash"></i> Удалить тест
+            </button>
+        </form>
+    }
+    else
+    {
+        <form asp-action="ToggleStatus" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-warning">
+                <i class="fas fa-pause"></i> Деактивировать тест
+            </button>
+        </form>
+    }
+</div>
