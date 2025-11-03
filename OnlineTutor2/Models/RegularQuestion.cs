@@ -25,8 +25,44 @@ namespace OnlineTutor2.Models
 
     public enum QuestionType
     {
-        MultipleChoice = 1,
-        SingleChoice = 2,
-        TrueFalse = 3
+        SingleChoice = 1,      // Одиночный выбор (один правильный ответ)
+        MultipleChoice = 2,    // Множественный выбор (несколько правильных ответов)
+        TrueFalse = 3          // Верно/Неверно
+    }
+
+    public static class QuestionTypeExtensions
+    {
+        public static string GetDisplayName(this QuestionType type)
+        {
+            return type switch
+            {
+                QuestionType.SingleChoice => "Одиночный выбор",
+                QuestionType.MultipleChoice => "Множественный выбор",
+                QuestionType.TrueFalse => "Верно/Неверно",
+                _ => "Неизвестный тип"
+            };
+        }
+
+        public static string GetIcon(this QuestionType type)
+        {
+            return type switch
+            {
+                QuestionType.SingleChoice => "fa-dot-circle",
+                QuestionType.MultipleChoice => "fa-check-square",
+                QuestionType.TrueFalse => "fa-question-circle",
+                _ => "fa-question"
+            };
+        }
+
+        public static string GetDescription(this QuestionType type)
+        {
+            return type switch
+            {
+                QuestionType.SingleChoice => "Выберите один правильный вариант ответа",
+                QuestionType.MultipleChoice => "Выберите все правильные варианты ответов",
+                QuestionType.TrueFalse => "Определите, верно или неверно утверждение",
+                _ => ""
+            };
+        }
     }
 }
