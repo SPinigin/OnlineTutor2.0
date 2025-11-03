@@ -22,6 +22,23 @@
         <button type="button" class="btn btn-warning" onclick="showClearOldLogsModal()">
             <i class="fas fa-broom"></i> Очистить старые логи
         </button>
+        <div class="btn-group">
+            <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="fas fa-file-export"></i> Экспорт
+            </button>
+            <ul class="dropdown-menu">
+                <li>
+                    <a class="dropdown-item" asp-action="ExportAuditLogs" asp-route-format="excel">
+                        <i class="fas fa-file-excel text-success"></i> Excel
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" asp-action="ExportAuditLogs" asp-route-format="csv">
+                        <i class="fas fa-file-csv text-success"></i> CSV
+                    </a>
+                </li>
+            </ul>
+        </div>
         <a asp-action="Index" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left"></i> К дашборду
         </a>
