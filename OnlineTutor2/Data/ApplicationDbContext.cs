@@ -32,6 +32,7 @@ namespace OnlineTutor2.Data
         public DbSet<RegularQuestion> RegularQuestions { get; set; }
         public DbSet<RegularTestResult> RegularTestResults { get; set; }
         public DbSet<RegularAnswer> RegularAnswers { get; set; }
+        public DbSet<RegularQuestionOption> RegularQuestionOptions { get; set; }
 
         // Spelling Tests
         public DbSet<SpellingTest> SpellingTests { get; set; }
@@ -232,6 +233,16 @@ namespace OnlineTutor2.Data
                 .HasForeignKey(a => a.QuestionId)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // RegularQuestionOption
+            modelBuilder.Entity<RegularQuestionOption>()
+                .HasOne(rqo => rqo.Question)
+                .WithMany(rq => rq.Options)
+                .HasForeignKey(rqo => rqo.QuestionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RegularQuestionOption>()
+                .HasIndex(rqo => new { rqo.QuestionId, rqo.OrderIndex });
 
             // SpellingTest
             modelBuilder.Entity<SpellingTest>()

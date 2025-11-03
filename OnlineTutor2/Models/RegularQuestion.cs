@@ -31,6 +31,7 @@ namespace OnlineTutor2.Models
 
         // Навигационные свойства
         public virtual RegularTest RegularTest { get; set; }
+        public virtual ICollection<RegularQuestionOption> Options { get; set; } = new List<RegularQuestionOption>();
         public virtual ICollection<RegularAnswer> RegularAnswers { get; set; } = new List<RegularAnswer>();
     }
 
