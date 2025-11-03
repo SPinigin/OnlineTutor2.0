@@ -1,0 +1,38 @@
+﻿<div class="card mb-4">
+    <div class="card-body">
+        <nav class="nav nav-pills nav-fill">
+            <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")"
+               asp-action="Index">
+                <i class="fas fa-home"></i> Дашборд
+            </a>
+            <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Users" ? "active" : "")"
+               asp-action="Users">
+                <i class="fas fa-users"></i> Пользователи
+            </a>
+            <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Teachers" ? "active" : "")"
+               asp-action="Teachers">
+                <i class="fas fa-chalkboard-teacher"></i> Учителя
+            </a>
+            <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Classes" ? "active" : "")"
+               asp-action="Classes">
+                <i class="fas fa-graduation-cap"></i> Классы
+            </a>
+            <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Tests" ? "active" : "")"
+               asp-action="Tests">
+                <i class="fas fa-tasks"></i> Тесты
+            </a>
+            <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "TestResults" ? "active" : "")"
+               asp-action="TestResults">
+                <i class="fas fa-chart-line"></i> Результаты
+            </a>
+            <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "AuditLogs" ? "active" : "")"
+               asp-action="AuditLogs">
+                <i class="fas fa-history"></i> Журнал
+            </a>
+            <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "SystemInfo" ? "active" : "")"
+               asp-action="SystemInfo">
+                <i class="fas fa-server"></i> Система
+            </a>
+        </nav>
+    </div>
+</div>
