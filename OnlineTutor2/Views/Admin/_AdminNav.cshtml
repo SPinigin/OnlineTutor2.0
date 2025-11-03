@@ -25,6 +25,10 @@
                asp-action="TestResults">
                 <i class="fas fa-chart-line"></i> Результаты
             </a>
+            <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Statistics" ? "active" : "")"
+               asp-action="Statistics">
+                <i class="fas fa-chart-bar"></i> Статистика
+            </a>
             <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "AuditLogs" ? "active" : "")"
                asp-action="AuditLogs">
                 <i class="fas fa-history"></i> Журнал
