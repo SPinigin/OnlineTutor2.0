@@ -1,0 +1,367 @@
+﻿@model OnlineTutor2.Models.RegularTest
+@{
+    ViewData["Title"] = Model.Title;
+    var completedResults = Model.RegularTestResults.Count(r => r.IsCompleted);
+    var inProgressResults = Model.RegularTestResults.Count(r => !r.IsCompleted);
+}
+
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="Index"><i class="fas fa-list-ul"></i> Классические тесты</a>
+            </li>
+            <li class="breadcrumb-item active">@Model.Title</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h2>
+            <i class="fas fa-list-ul text-success"></i> @Model.Title
+            <span class="badge bg-@(Model.IsActive ? "success" : "secondary") ms-2">
+                @(Model.IsActive ? "Активный" : "Неактивный")
+            </span>
+        </h2>
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <p class="text-muted">@Model.Description</p>
+        }
+    </div>
+    <div>
+        <form asp-action="ToggleStatus" asp-route-id="@Model.Id" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-@(Model.IsActive ? "warning" : "success")">
+                <i class="fas fa-@(Model.IsActive ? "pause" : "play")"></i>
+                @(Model.IsActive ? "Деактивировать" : "Активировать")
+            </button>
+        </form>
+    </div>
+</div>
+
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center border-primary">
+            <div class="card-body">
+                <i class="fas fa-question-circle text-primary" style="font-size: 2rem;"></i>
+                <h4 class="mt-2 text-primary">@Model.RegularQuestions.Count</h4>
+                <small class="text-muted">Вопросов</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-success">
+            <div class="card-body">
+                <i class="fas fa-check-circle text-success" style="font-size: 2rem;"></i>
+                <h4 class="mt-2 text-success">@completedResults</h4>
+                <small class="text-muted">Завершено</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-warning">
+            <div class="card-body">
+                <i class="fas fa-clock text-warning" style="font-size: 2rem;"></i>
+                <h4 class="mt-2 text-warning">@inProgressResults</h4>
+                <small class="text-muted">В процессе</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-info">
+            <div class="card-body">
+                <i class="fas fa-percentage text-info" style="font-size: 2rem;"></i>
+                <h4 class="mt-2 text-info">
+                    @if (completedResults > 0)
+                    {
+                        @Model.RegularTestResults.Where(r => r.IsCompleted).Average(r => r.Percentage).ToString("F1")
+                    }
+                    else
+                    {
+                        @("0")
+                    }%
+                </h4>
+                <small class="text-muted">Средний балл</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-info-circle"></i> Информация о тесте</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <label class="text-muted small">Тип теста</label>
+                <div>
+                    <span class="badge bg-primary">
+                        @switch (Model.Type)
+                        {
+                            case TestType.Practice:
+                                <i class="fas fa-dumbbell"></i> <span>Практика</span>
+                                break;
+                            case TestType.Quiz:
+                                <i class="fas fa-question-circle"></i> <span>Викторина</span>
+                                break;
+                            case TestType.Exam:
+                                <i class="fas fa-graduation-cap"></i> <span>Экзамен</span>
+                                break;
+                            case TestType.Homework:
+                                <i class="fas fa-home"></i> <span>Домашнее задание</span>
+                                break;
+                        }
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="text-muted small">Класс</label>
+                <div>
+                    @if (Model.Class != null)
+                    {
+                        <span class="badge bg-info">@Model.Class.Name</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Все ученики</span>
+                    }
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="text-muted small">Время на выполнение</label>
+                <div>
+                    <i class="fas fa-clock text-warning"></i>
+                    <strong>@Model.TimeLimit минут</strong>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="text-muted small">Попыток</label>
+                <div>
+                    <i class="fas fa-redo text-secondary"></i>
+                    <strong>@Model.MaxAttempts</strong>
+                </div>
+            </div>
+        </div>
+
+        @if (Model.StartDate.HasValue || Model.EndDate.HasValue)
+        {
+            <div class="row">
+                @if (Model.StartDate.HasValue)
+                {
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Дата начала</label>
+                        <div>
+                            <i class="fas fa-play text-success"></i>
+                            <strong>@Model.StartDate.Value.ToString("dd.MM.yyyy HH:mm")</strong>
+                        </div>
+                    </div>
+                }
+                @if (Model.EndDate.HasValue)
+                {
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Дата окончания</label>
+                        <div>
+                            <i class="fas fa-stop text-danger"></i>
+                            <strong>@Model.EndDate.Value.ToString("dd.MM.yyyy HH:mm")</strong>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <div class="row">
+            <div class="col-md-6">
+                @if (Model.ShowHints)
+                {
+                    <span class="badge bg-success"><i class="fas fa-lightbulb"></i> Подсказки включены</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary"><i class="fas fa-lightbulb"></i> Подсказки выключены</span>
+                }
+            </div>
+            <div class="col-md-6">
+                @if (Model.ShowCorrectAnswers)
+                {
+                    <span class="badge bg-success"><i class="fas fa-check"></i> Показ ответов включен</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary"><i class="fas fa-check"></i> Показ ответов выключен</span>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="card mb-4">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-question-circle"></i> Вопросы теста</h5>
+            <a asp-action="AddQuestion" asp-route-id="@Model.Id" class="btn btn-success btn-sm">
+                <i class="fas fa-plus"></i> Добавить вопрос
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        @if (Model.RegularQuestions.Any())
+        {
+            <div class="list-group" id="questionsList">
+                @foreach (var question in Model.RegularQuestions.OrderBy(q => q.OrderIndex))
+                {
+                    var questionTypeBadge = question.Type switch
+                    {
+                        QuestionType.SingleChoice => "primary",
+                        QuestionType.MultipleChoice => "success",
+                        QuestionType.TrueFalse => "warning",
+                        _ => "secondary"
+                    };
+
+                    var questionTypeIcon = question.Type switch
+                    {
+                        QuestionType.SingleChoice => "fa-dot-circle",
+                        QuestionType.MultipleChoice => "fa-check-square",
+                        QuestionType.TrueFalse => "fa-question-circle",
+                        _ => "fa-question"
+                    };
+
+                    <div class="list-group-item" data-question-id="@question.Id">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-secondary me-2">№@question.OrderIndex</span>
+                                    <span class="badge bg-@questionTypeBadge me-2">
+                                        <i class="fas @questionTypeIcon"></i> @question.Type.GetDisplayName()
+                                    </span>
+                                    <span class="badge bg-info">@question.Points б.</span>
+                                </div>
+                                <h6 class="mb-2">@question.Text</h6>
+
+                                
+                                @if (question.Options.Any())
+                                {
+                                    <div class="ms-3">
+                                        @foreach (var option in question.Options.OrderBy(o => o.OrderIndex))
+                                        {
+                                            <div class="mb-1">
+                                                @if (option.IsCorrect)
+                                                {
+                                                    <i class="fas fa-check text-success"></i>
+                                                    <strong class="text-success">@option.Text</strong>
+                                                }
+                                                else
+                                                {
+                                                    <i class="fas fa-times text-muted"></i>
+                                                    <span>@option.Text</span>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrEmpty(question.Hint))
+                                {
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="fas fa-lightbulb"></i> @question.Hint
+                                    </small>
+                                }
+                            </div>
+
+                            <div class="btn-group btn-group-sm">
+                                <a asp-action="EditQuestion" asp-route-id="@question.Id" class="btn btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-danger" 
+                                        onclick="deleteQuestion(@question.Id, '@question.Text.Replace("'", "\\')")">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-4">
+                <i class="fas fa-question-circle text-muted" style="font-size: 3rem;"></i>
+                <h5 class="mt-3 text-muted">Вопросы еще не добавлены</h5>
+                <p class="text-muted">Добавьте вопросы для начала тестирования</p>
+                <a asp-action="AddQuestion" asp-route-id="@Model.Id" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Добавить первый вопрос
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+
+<div class="card">
+    <div class="card-footer">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="btn-group w-100" role="group">
+                    <a asp-action="AddQuestion" asp-route-id="@Model.Id" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Добавить вопрос
+                    </a>
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">
+                        <i class="fas fa-edit"></i> Редактировать
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="btn-group w-100" role="group">
+                    <a asp-controller="TestAnalytics" asp-action="Regular" asp-route-id="@Model.Id" class="btn btn-info">
+                        <i class="fas fa-chart-bar"></i> Аналитика
+                    </a>
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-copy"></i> Дублировать</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-play"></i> Предварительный просмотр</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a asp-action="Delete" asp-route-id="@Model.Id" class="dropdown-item text-danger"><i class="fas fa-trash"></i> Удалить</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function deleteQuestion(questionId, questionText) {
+            if (!confirm(`Удалить вопрос "${questionText}"?`)) {
+                return;
+            }
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            fetch('/RegularTest/DeleteQuestion/' + questionId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Ошибка при удалении вопроса');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Произошла ошибка при удалении вопроса');
+            });
+        }
+    </script>
+}
