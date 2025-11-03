@@ -1,0 +1,318 @@
+﻿@model OnlineTutor2.ViewModels.AdminSystemInfoViewModel
+@{
+    ViewData["Title"] = "Системная информация";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="fas fa-server text-info"></i> Системная информация</h2>
+        <p class="text-muted">Детальная информация о состоянии системы</p>
+    </div>
+    <div>
+        <button class="btn btn-outline-primary" onclick="location.reload()">
+            <i class="fas fa-sync-alt"></i> Обновить
+        </button>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> К дашборду
+        </a>
+    </div>
+</div>
+
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-database"></i> База данных
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+
+            <div class="col-md-6 mb-4">
+                <h6 class="text-primary mb-3">
+                    <i class="fas fa-users"></i> Пользователи
+                </h6>
+                <table class="table table-sm">
+                    <tr>
+                        <td>Всего пользователей</td>
+                        <td class="text-end"><strong>@Model.DatabaseInfo.TotalUsers</strong></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-user-graduate text-info"></i> Студенты</td>
+                        <td class="text-end"><strong>@Model.DatabaseInfo.TotalStudents</strong></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-chalkboard-teacher text-success"></i> Учителя</td>
+                        <td class="text-end"><strong>@Model.DatabaseInfo.TotalTeachers</strong></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-graduation-cap text-warning"></i> Классы</td>
+                        <td class="text-end"><strong>@Model.DatabaseInfo.TotalClasses</strong></td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <div class="col-md-6 mb-4">
+                <h6 class="text-success mb-3">
+                    <i class="fas fa-tasks"></i> Тесты
+                </h6>
+                <table class="table table-sm">
+                    <tr>
+                        <td>Всего тестов</td>
+                        <td class="text-end"><strong>@Model.DatabaseInfo.TotalTests</strong></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-spell-check text-primary"></i> Орфография</td>
+                        <td class="text-end"><strong>@Model.DatabaseInfo.TotalSpellingTests</strong></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-list-ul text-success"></i> Классические</td>
+                        <td class="text-end"><strong>@Model.DatabaseInfo.TotalRegularTests</strong></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-volume-up text-warning"></i> Орфоэпия</td>
+                        <td class="text-end"><strong>@Model.DatabaseInfo.TotalOrthoeopyTests</strong></td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <div class="col-md-6 mb-4">
+                <h6 class="text-warning mb-3">
+                    <i class="fas fa-question-circle"></i> Вопросы
+                </h6>
+                <table class="table table-sm">
+                    <tr>
+                        <td>Всего вопросов</td>
+                        <td class="text-end"><strong>@Model.DatabaseInfo.TotalQuestions</strong></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-spell-check text-primary"></i> Орфография</td>
+                        <td class="text-end"><strong>@Model.DatabaseInfo.TotalSpellingQuestions</strong></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-list-ul text-success"></i> Классические</td>
+                        <td class="text-end"><strong>@Model.DatabaseInfo.TotalRegularQuestions</strong></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-volume-up text-warning"></i> Орфоэпия</td>
+                        <td class="text-end"><strong>@Model.DatabaseInfo.TotalOrthoeopyQuestions</strong></td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <div class="col-md-6 mb-4">
+                <h6 class="text-info mb-3">
+                    <i class="fas fa-chart-line"></i> Результаты тестов
+                </h6>
+                <table class="table table-sm">
+                    <tr>
+                        <td>Всего результатов</td>
+                        <td class="text-end"><strong>@Model.DatabaseInfo.TotalResults</strong></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-spell-check text-primary"></i> Орфография</td>
+                        <td class="text-end"><strong>@Model.DatabaseInfo.TotalSpellingResults</strong></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-list-ul text-success"></i> Классические</td>
+                        <td class="text-end"><strong>@Model.DatabaseInfo.TotalRegularResults</strong></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-volume-up text-warning"></i> Орфоэпия</td>
+                        <td class="text-end"><strong>@Model.DatabaseInfo.TotalOrthoeopyResults</strong></td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <div class="col-md-12">
+                <h6 class="text-secondary mb-3">
+                    <i class="fas fa-file-alt"></i> Прочее
+                </h6>
+                <table class="table table-sm">
+                    <tr>
+                        <td><i class="fas fa-file-alt text-secondary"></i> Учебные материалы</td>
+                        <td class="text-end"><strong>@Model.DatabaseInfo.TotalMaterials</strong></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="card mb-4">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-server"></i> Информация о сервере
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="text-muted small">Окружение</label>
+                <div>
+                    <span class="badge bg-info fs-6">
+                        @(string.IsNullOrEmpty(Model.ServerInfo.Environment) ? "Production" : Model.ServerInfo.Environment)
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="text-muted small">Версия .NET</label>
+                <div>
+                    <strong>@(string.IsNullOrEmpty(Model.ServerInfo.RuntimeVersion) ? System.Environment.Version.ToString() : Model.ServerInfo.RuntimeVersion)</strong>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="text-muted small">Время сервера</label>
+                <div>
+                    <i class="fas fa-clock text-muted"></i>
+                    <strong>@DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss")</strong>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="text-muted small">Платформа</label>
+                <div>
+                    <i class="fas fa-desktop text-muted"></i>
+                    <strong>@System.Runtime.InteropServices.RuntimeInformation.OSDescription</strong>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="text-muted small">Архитектура</label>
+                <div>
+                    <strong>@System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture</strong>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="text-muted small">Framework</label>
+                <div>
+                    <strong>@System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie"></i> Распределение пользователей
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="usersChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar"></i> Распределение тестов
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="testsChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // График пользователей
+        const usersCtx = document.getElementById('usersChart').getContext('2d');
+        new Chart(usersCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Студенты', 'Учителя'],
+                datasets: [{
+                    data: [@Model.DatabaseInfo.TotalStudents, @Model.DatabaseInfo.TotalTeachers],
+                    backgroundColor: [
+                        'rgba(23, 162, 184, 0.8)',
+                        'rgba(40, 167, 69, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(23, 162, 184, 1)',
+                        'rgba(40, 167, 69, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // График тестов
+        const testsCtx = document.getElementById('testsChart').getContext('2d');
+        new Chart(testsCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Орфография', 'Классические', 'Орфоэпия'],
+                datasets: [{
+                    label: 'Количество тестов',
+                    data: [
+                        @Model.DatabaseInfo.TotalSpellingTests,
+                        @Model.DatabaseInfo.TotalRegularTests,
+                        @Model.DatabaseInfo.TotalOrthoeopyTests
+                    ],
+                    backgroundColor: [
+                        'rgba(0, 123, 255, 0.8)',
+                        'rgba(40, 167, 69, 0.8)',
+                        'rgba(255, 193, 7, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(0, 123, 255, 1)',
+                        'rgba(40, 167, 69, 1)',
+                        'rgba(255, 193, 7, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .table-sm td {
+            padding: 0.5rem;
+        }
+
+        .table-sm tr:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
+}
