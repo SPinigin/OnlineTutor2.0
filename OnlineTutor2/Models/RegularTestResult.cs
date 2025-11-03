@@ -8,7 +8,7 @@
 
         public int StudentId { get; set; }
 
-        public DateTime StartedAt { get; set; }
+        public DateTime StartedAt { get; set; } = DateTime.Now;
 
         public DateTime? CompletedAt { get; set; }
 
