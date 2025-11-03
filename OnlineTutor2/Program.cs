@@ -82,6 +82,7 @@ try
     builder.Services.AddScoped<IOrthoeopyQuestionImportService, OrthoeopyQuestionImportService>();
     builder.Services.AddScoped<IAuditLogService, AuditLogService>();
     builder.Services.AddHttpContextAccessor();
+    builder.Services.AddScoped<IExportService, ExportService>();
 
     builder.Services.AddSession(options =>
     {
