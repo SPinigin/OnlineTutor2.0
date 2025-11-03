@@ -5,6 +5,8 @@
     var totalPages = (int)ViewBag.TotalPages;
 }
 
+@await Html.PartialAsync("_AdminNav")
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2><i class="fas fa-history text-info"></i> Журнал действий администраторов</h2>
