@@ -348,4 +348,90 @@ else
             </div>
         </div>
     }
+
+    @if (ViewBag.TestType == null || ViewBag.TestType == "regular")
+    {
+        @if (Model.RegularResults.Any())
+        {
+            <div class="mb-5">
+                <h4 class="mb-3">
+                    <i class="fas fa-list-ul text-success"></i> Классические тесты
+                </h4>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Тест</th>
+                                <th>Тип</th>
+                                <th>Попытка</th>
+                                <th>Результат</th>
+                                <th>Баллы</th>
+                                <th>Дата</th>
+                                <th>Время</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var result in Model.RegularResults)
+                            {
+                                var duration = result.CompletedAt.HasValue 
+                                    ? result.CompletedAt.Value - result.StartedAt 
+                                    : TimeSpan.Zero;
+
+                                <tr>
+                                    <td>
+                                        <strong>@result.RegularTest.Title</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">
+                                            @switch (result.RegularTest.Type)
+                                            {
+                                                case TestType.Practice:
+                                                    <i class="fas fa-dumbbell"></i> <text>Практика</text>
+                                                    break;
+                                                case TestType.Quiz:
+                                                    <i class="fas fa-question-circle"></i> <text>Викторина</text>
+                                                    break;
+                                                case TestType.Exam:
+                                                    <i class="fas fa-graduation-cap"></i> <text>Экзамен</text>
+                                                    break;
+                                                case TestType.Homework:
+                                                    <i class="fas fa-home"></i> <text>ДЗ</text>
+                                                    break;
+                                            }
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            Попытка @result.AttemptNumber
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-@(result.Percentage >= 80 ? "success" : result.Percentage >= 60 ? "warning" : "danger") fs-6">
+                                            @result.Percentage.ToString("F1")%
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong>@result.Score/@result.MaxScore</strong>
+                                    </td>
+                                    <td>
+                                        <small>@result.CompletedAt?.ToString("dd.MM.yyyy HH:mm")</small>
+                                    </td>
+                                    <td>
+                                        <small>@($"{duration.Minutes:D2}:{duration.Seconds:D2}")</small>
+                                    </td>
+                                    <td>
+                                        <a asp-action="Result" asp-route-id="@result.Id" 
+                                           class="btn btn-outline-info btn-sm">
+                                            <i class="fas fa-eye"></i> Просмотр
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    }
 }
