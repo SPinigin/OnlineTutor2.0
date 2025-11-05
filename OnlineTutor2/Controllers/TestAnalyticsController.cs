@@ -621,22 +621,45 @@ namespace OnlineTutor2.Controllers
                 {
                     analytics.SuccessRate = Math.Round((double)analytics.CorrectAnswers / analytics.TotalAnswers * 100, 1);
 
-                    // Анализ частых неправильных вариантов ответов
-                    var incorrectAnswers = answers
-                        .Where(a => !a.IsCorrect && a.StudentAnswer != null)
-                        .GroupBy(a => a.StudentAnswer)
-                        .Select(g => new CommonMistakeViewModel
+                    // Анализ по вариантам ответов
+                    var optionStats = new Dictionary<int, int>();
+
+                    foreach (var answer in answers)
+                    {
+                        if (!string.IsNullOrEmpty(answer.SelectedOptionIds))
                         {
-                            //IncorrectAnswer = g.Key,
-                            Count = g.Count(),
-                            Percentage = Math.Round((double)g.Count() / analytics.IncorrectAnswers * 100, 1),
-                            StudentNames = g.Select(a => a.RegularTestResult.Student.User.FullName).ToList()
+                            var selectedIds = answer.SelectedOptionIds.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                .Select(id => int.Parse(id.Trim()));
+
+                            foreach (var optionId in selectedIds)
+                            {
+                                if (!optionStats.ContainsKey(optionId))
+                                {
+                                    optionStats[optionId] = 0;
+                                }
+                                optionStats[optionId]++;
+                            }
+                        }
+                    }
+
+                    // Находим самые популярные неправильные ответы
+                    var incorrectOptions = question.Options
+                        .Where(o => !o.IsCorrect && optionStats.ContainsKey(o.Id))
+                        .Select(o => new CommonMistakeViewModel
+                        {
+                            IncorrectAnswer = o.Text,
+                            Count = optionStats[o.Id],
+                            Percentage = Math.Round((double)optionStats[o.Id] / analytics.TotalAnswers * 100, 1),
+                            StudentNames = answers
+                                .Where(a => a.SelectedOptionIds != null && a.SelectedOptionIds.Contains(o.Id.ToString()))
+                                .Select(a => a.RegularTestResult.Student.User.FullName)
+                                .ToList()
                         })
                         .OrderByDescending(m => m.Count)
                         .Take(5)
                         .ToList();
 
-                    analytics.CommonMistakes = incorrectAnswers;
+                    analytics.CommonMistakes = incorrectOptions;
                 }
 
                 questionAnalytics.Add(analytics);
@@ -660,6 +683,7 @@ namespace OnlineTutor2.Controllers
 
             return questionAnalytics;
         }
+
 
         // Метод для получения детальной информации о студенте (пунктуация)
         [HttpGet]
