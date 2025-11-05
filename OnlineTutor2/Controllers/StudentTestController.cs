@@ -1220,6 +1220,15 @@ namespace OnlineTutor2.Controllers
                     .ToListAsync();
             }
 
+            if (testType == null || testType == "regular")
+            {
+                viewModel.RegularResults = await _context.RegularTestResults
+                    .Include(tr => tr.RegularTest)
+                    .Where(tr => tr.StudentId == student.Id && tr.IsCompleted)
+                    .OrderByDescending(tr => tr.CompletedAt)
+                    .ToListAsync();
+            }
+
             ViewBag.TestType = testType;
             return View(viewModel);
         }
