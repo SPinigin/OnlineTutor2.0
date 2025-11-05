@@ -55,7 +55,7 @@
                     <option value="">Все роли</option>
                     @if (ViewBag.Roles != null)
                     {
-                        @foreach (var role in (List<string>)ViewBag.Roles)
+                        @foreach (var role in (IEnumerable<string>)ViewBag.Roles)
                         {
                             @if (role == ViewBag.RoleFilter as string)
                             {
