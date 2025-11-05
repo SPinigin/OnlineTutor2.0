@@ -54,13 +54,13 @@ namespace OnlineTutor2.Services
         }
 
         public async Task<List<AuditLog>> GetLogsAsync(
-    DateTime? fromDate = null,
-    DateTime? toDate = null,
-    string? userId = null,
-    string? action = null,
-    string? entityType = null,
-    int page = 1,
-    int pageSize = 50)
+            DateTime? fromDate = null,
+            DateTime? toDate = null,
+            string? userId = null,
+            string? action = null,
+            string? entityType = null,
+            int page = 1,
+            int pageSize = 50)
         {
             var query = _context.AuditLogs
                 .Include(al => al.User)
@@ -114,19 +114,30 @@ namespace OnlineTutor2.Services
             var query = _context.AuditLogs.AsQueryable();
 
             if (fromDate.HasValue)
+            {
                 query = query.Where(al => al.CreatedAt >= fromDate.Value);
+            }
 
             if (toDate.HasValue)
-                query = query.Where(al => al.CreatedAt <= toDate.Value);
+            {
+                var endOfDay = toDate.Value.Date.AddDays(1).AddTicks(-1);
+                query = query.Where(al => al.CreatedAt <= endOfDay);
+            }
 
             if (!string.IsNullOrEmpty(userId))
+            {
                 query = query.Where(al => al.UserId == userId);
+            }
 
             if (!string.IsNullOrEmpty(action))
+            {
                 query = query.Where(al => al.Action == action);
+            }
 
             if (!string.IsNullOrEmpty(entityType))
+            {
                 query = query.Where(al => al.EntityType == entityType);
+            }
 
             return await query.CountAsync();
         }
