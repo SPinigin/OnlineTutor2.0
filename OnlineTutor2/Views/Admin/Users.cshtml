@@ -42,50 +42,63 @@
                 <label class="form-label">
                     <i class="fas fa-search"></i> Поиск
                 </label>
-                <input type="text" name="searchString" class="form-control"
-                       value="@ViewBag.CurrentFilter"
+                <input type="text" name="searchString" class="form-control" 
+                       value="@ViewBag.CurrentFilter" 
                        placeholder="Имя, фамилия или email...">
             </div>
-
+            
             <div class="col-md-3">
                 <label class="form-label">
                     <i class="fas fa-user-tag"></i> Роль
                 </label>
                 <select name="roleFilter" class="form-select">
                     <option value="">Все роли</option>
-                    @foreach (var role in ViewBag.Roles as List<string>)
+                    @if (ViewBag.Roles != null)
                     {
-                        <option value="@role" selected="@(role == ViewBag.RoleFilter)">
-                            @role
-                        </option>
+                        @foreach (var role in (List<string>)ViewBag.Roles)
+                        {
+                            @if (role == ViewBag.RoleFilter as string)
+                            {
+                                <option value="@role" selected>@role</option>
+                            }
+                            else
+                            {
+                                <option value="@role">@role</option>
+                            }
+                        }
                     }
                 </select>
             </div>
-
+            
             <div class="col-md-3">
                 <label class="form-label">
                     <i class="fas fa-sort"></i> Сортировка
                 </label>
                 <select name="sortOrder" class="form-select">
-                    <option value="">По фамилии (А-Я)</option>
-                    <option value="name_desc" selected="@(ViewBag.CurrentSort == "name_desc")">
+                    @{
+                        var currentSort = ViewBag.CurrentSort as string;
+                    }
+                    <option value="" @@(string.IsNullOrEmpty(currentSort) ? "selected" : "")>
+                        По фамилии (А-Я)
+                    </option>
+                    <option value="name_desc" @@(currentSort == "name_desc" ? "selected" : "")>
                         По фамилии (Я-А)
                     </option>
-                    <option value="Email" selected="@(ViewBag.CurrentSort == "Email")">
+                    <option value="Email" @@(currentSort == "Email" ? "selected" : "")>
                         По email (А-Я)
                     </option>
-                    <option value="email_desc" selected="@(ViewBag.CurrentSort == "email_desc")">
+                    <option value="email_desc" @@(currentSort == "email_desc" ? "selected" : "")>
                         По email (Я-А)
                     </option>
-                    <option value="Date" selected="@(ViewBag.CurrentSort == "Date")">
+                    <option value="Date" @@(currentSort == "Date" ? "selected" : "")>
                         По дате (старые)
                     </option>
-                    <option value="date_desc" selected="@(ViewBag.CurrentSort == "date_desc")">
+                    <option value="date_desc" @@(currentSort == "date_desc" ? "selected" : "")>
                         По дате (новые)
                     </option>
                 </select>
             </div>
-
+            
             <div class="col-md-2 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary w-100">
                     <i class="fas fa-filter"></i> Применить
@@ -166,26 +179,26 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm">
-                                        <a asp-action="UserDetails" asp-route-id="@user.Id"
+                                        <a asp-action="UserDetails" asp-route-id="@user.Id" 
                                            class="btn btn-outline-primary"
                                            title="Подробнее">
                                             <i class="fas fa-eye"></i>
                                         </a>
-
-                                        <form asp-action="ToggleUserStatus" asp-route-id="@user.Id"
+                                        
+                                        <form asp-action="ToggleUserStatus" asp-route-id="@user.Id" 
                                               method="post" class="d-inline"
                                               onsubmit="return confirm('@(user.IsActive ? "Заблокировать" : "Активировать") пользователя @user.FullName?')">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit"
+                                            <button type="submit" 
                                                     class="btn btn-outline-@(user.IsActive ? "warning" : "success")"
                                                     title="@(user.IsActive ? "Заблокировать" : "Активировать")">
                                                 <i class="fas fa-@(user.IsActive ? "ban" : "check")"></i>
                                             </button>
                                         </form>
-
+                                        
                                         @if (!userVm.IsAdmin)
                                         {
-                                            <form asp-action="DeleteUser" asp-route-id="@user.Id"
+                                            <form asp-action="DeleteUser" asp-route-id="@user.Id" 
                                                   method="post" class="d-inline"
                                                   onsubmit="return confirm('ВНИМАНИЕ! Удалить пользователя @user.FullName и все его данные?')">
                                                 @Html.AntiForgeryToken()
