@@ -94,27 +94,7 @@ namespace OnlineTutor2.Controllers
                         .ToListAsync();
                     return View("SpellingTests", spellingTests);
 
-                case 3: // Тесты классические
-                    var regularTests = await _context.RegularTests
-                        .Where(rt => rt.TeacherId == currentUser.Id && rt.TestCategoryId == id)
-                        .Include(rt => rt.Class)
-                        .Include(rt => rt.RegularQuestions)
-                        .Include(rt => rt.RegularTestResults)
-                        .OrderByDescending(rt => rt.CreatedAt)
-                        .ToListAsync();
-                    return View("RegularTests", regularTests);
-
-                //case 4: // Тесты со свободными ответами
-                //    var regularTests = await _context.RegularTests
-                //        .Where(rt => rt.TeacherId == currentUser.Id && rt.TestCategoryId == id)
-                //        .Include(rt => rt.Class)
-                //        .Include(rt => rt.RegularQuestions)
-                //        .Include(rt => rt.RegularTestResults)
-                //        .OrderByDescending(rt => rt.CreatedAt)
-                //        .ToListAsync();
-                //    return View("RegularTests", regularTests);
-
-                case 5: // Тесты по пунктуации
+                case 2: // Тесты по пунктуации
                     var punctuationTests = await _context.PunctuationTests
                         .Where(pt => pt.TeacherId == currentUser.Id && pt.TestCategoryId == id)
                         .Include(pt => pt.Class)
@@ -124,7 +104,7 @@ namespace OnlineTutor2.Controllers
                         .ToListAsync();
                     return View("PunctuationTests", punctuationTests);
 
-                case 6: // Тесты по орфоэпии
+                case 3: // Тесты по орфоэпии
                     var orthoeopyTests = await _context.OrthoeopyTests
                         .Where(ot => ot.TeacherId == currentUser.Id && ot.TestCategoryId == id)
                         .Include(ot => ot.Class)
@@ -134,7 +114,27 @@ namespace OnlineTutor2.Controllers
                         .ToListAsync();
                     return View("OrthoeopyTests", orthoeopyTests);
 
-                //case 7: // Тесты по средствам выразительности
+                case 4: // Тесты классические
+                    var regularTests = await _context.RegularTests
+                        .Where(rt => rt.TeacherId == currentUser.Id && rt.TestCategoryId == id)
+                        .Include(rt => rt.Class)
+                        .Include(rt => rt.RegularQuestions)
+                        .Include(rt => rt.RegularTestResults)
+                        .OrderByDescending(rt => rt.CreatedAt)
+                        .ToListAsync();
+                    return View("RegularTests", regularTests);
+
+                //case 5: // Тесты со свободными ответами
+                //    var regularTests = await _context.RegularTests
+                //        .Where(rt => rt.TeacherId == currentUser.Id && rt.TestCategoryId == id)
+                //        .Include(rt => rt.Class)
+                //        .Include(rt => rt.RegularQuestions)
+                //        .Include(rt => rt.RegularTestResults)
+                //        .OrderByDescending(rt => rt.CreatedAt)
+                //        .ToListAsync();
+                //    return View("RegularTests", regularTests);
+
+                //case 6: // Тесты по средствам выразительности
                 //    var orthoeopyTests = await _context.OrthoeopyTests
                 //        .Where(ot => ot.TeacherId == currentUser.Id && ot.TestCategoryId == id)
                 //        .Include(ot => ot.Class)
