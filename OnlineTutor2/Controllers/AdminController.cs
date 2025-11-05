@@ -924,12 +924,12 @@ namespace OnlineTutor2.Controllers
                 .AverageAsync(r => (double?)r.Percentage) ?? 0;
 
             stats.AverageScoresByType = new Dictionary<string, double>
-    {
-        { "Орфография", Math.Round(spellingAvg, 1) },
-        { "Классические", Math.Round(regularAvg, 1) },
-        { "Пунктуация", Math.Round(punctuationAvg, 1) },
-        { "Орфоэпия", Math.Round(orthoeopyAvg, 1) }
-    };
+            {
+                { "Орфография", Math.Round(spellingAvg, 1) },
+                { "Классические", Math.Round(regularAvg, 1) },
+                { "Пунктуация", Math.Round(punctuationAvg, 1) },
+                { "Орфоэпия", Math.Round(orthoeopyAvg, 1) }
+            };
 
             // Действия администраторов
             var adminActions = await _context.AuditLogs
@@ -942,12 +942,16 @@ namespace OnlineTutor2.Controllers
 
             stats.AdminActionsByType = adminActions.ToDictionary(x => x.Action, x => x.Count);
 
-            // Активность по дням недели
-            var activityByDay = await _context.AuditLogs
+            // Активность по дням недели - ИСПРАВЛЕНИЕ
+            var auditLogsForActivity = await _context.AuditLogs
                 .Where(al => al.CreatedAt >= thirtyDaysAgo)
-                .GroupBy(al => al.CreatedAt.DayOfWeek)
-                .Select(g => new { DayOfWeek = g.Key, Count = g.Count() })
+                .Select(al => al.CreatedAt)
                 .ToListAsync();
+
+            var activityByDay = auditLogsForActivity
+                .GroupBy(date => date.DayOfWeek)
+                .Select(g => new { DayOfWeek = g.Key, Count = g.Count() })
+                .ToList();
 
             var dayNames = new[] { "Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота" };
             stats.ActivityByDayOfWeek = dayNames.ToDictionary(
