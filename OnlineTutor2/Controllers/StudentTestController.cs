@@ -637,19 +637,20 @@ namespace OnlineTutor2.Controllers
                 return View(orthoeopyResult);
             }
 
-            // Пробуем найти orthoepy тест
+            // Пробуем найти regular тест
             var regularResult = await _context.RegularTestResults
                 .Include(tr => tr.RegularTest)
-                    .ThenInclude(ot => ot.RegularQuestions.OrderBy(q => q.OrderIndex))
+                    .ThenInclude(rt => rt.RegularQuestions.OrderBy(q => q.OrderIndex))
+                        .ThenInclude(q => q.Options.OrderBy(o => o.OrderIndex))
                 .Include(tr => tr.RegularAnswers)
                     .ThenInclude(a => a.RegularQuestion)
                 .Include(tr => tr.Student)
                     .ThenInclude(s => s.User)
                 .FirstOrDefaultAsync(tr => tr.Id == id && tr.StudentId == student.Id);
 
-            if (orthoeopyResult != null)
+            if (regularResult != null)
             {
-                return View(orthoeopyResult);
+                return View(regularResult);
             }
 
             return NotFound();
