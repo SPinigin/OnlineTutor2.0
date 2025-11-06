@@ -17,11 +17,11 @@ namespace OnlineTutor2.ViewModels
         [Display(Name = "Назначить онлайн-классу")]
         public int? ClassId { get; set; }
 
-        [Range(5, 180, ErrorMessage = "Время должно быть от 5 до 180 минут")]
+        [Range(5, 300, ErrorMessage = "Время должно быть от 5 до 300 минут")]
         [Display(Name = "Время на выполнение (минут)")]
         public int TimeLimit { get; set; } = 30;
 
-        [Range(1, 10, ErrorMessage = "Количество попыток должно быть от 1 до 10")]
+        [Range(1, 100, ErrorMessage = "Количество попыток должно быть от 1 до 100")]
         [Display(Name = "Количество попыток")]
         public int MaxAttempts { get; set; } = 1;
 
