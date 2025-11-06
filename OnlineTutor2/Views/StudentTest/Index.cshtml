@@ -25,17 +25,17 @@
             <a asp-action="Index" class="btn btn-@(string.IsNullOrEmpty(currentCategory) ? "primary" : "outline-primary")">
                 <i class="fas fa-list"></i> Все тесты
             </a>
-            <a asp-action="Index" asp-route-category="spelling" class="btn btn-@(currentCategory == "spelling" ? "primary" : "outline-primary")">
+            <a asp-action="Index" asp-route-category="spelling" class="btn btn-@(currentCategory == "spelling" ? "primary" : "outline-success")">
                 <i class="fas fa-spell-check"></i> Орфография
             </a>
-            <a asp-action="Index" asp-route-category="punctuation" class="btn btn-@(currentCategory == "punctuation" ? "warning" : "outline-warning")">
-                <i class="fas fa-exclamation"></i> Пунктуация
+            <a asp-action="Index" asp-route-category="punctuation" class="btn btn-@(currentCategory == "punctuation" ? "warning" : "outline-success")">
+                <i class="fas fa-quote-right"></i> Пунктуация
             </a>
             <a asp-action="Index" asp-route-category="orthoepy" class="btn btn-@(currentCategory == "orthoepy" ? "success" : "outline-success")">
                 <i class="fas fa-volume-up"></i> Орфоэпия
             </a>
             <a asp-action="Index" asp-route-category="regular" class="btn btn-@(currentCategory == "regular" ? "success" : "outline-success")">
-                <i class="fas fa-volume-up"></i> Классические
+                <i class="fas fa-list-ul"></i> Классические
             </a>
         </div>
     </div>

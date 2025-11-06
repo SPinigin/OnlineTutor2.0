@@ -1,5 +1,5 @@
 ﻿@using OnlineTutor2.ViewModels
-@model List<OnlineTutor2.ViewModels.ImportSpellingQuestionRow> // ИСПРАВИТЬ!!!!
+@model List<OnlineTutor2.ViewModels.ImportPunctuationQuestionRow>
 @{
     ViewData["Title"] = "Предварительный просмотр вопросов";
     var test = ViewBag.Test as OnlineTutor2.Models.PunctuationTest;
@@ -22,8 +22,8 @@
 </div>
 
 @{
-    var validQuestions = Model?.Where(q => q.IsValid).ToList() ?? new List<ImportSpellingQuestionRow>();
-    var invalidQuestions = Model?.Where(q => !q.IsValid).ToList() ?? new List<ImportSpellingQuestionRow>();
+    var validQuestions = Model?.Where(q => q.IsValid).ToList() ?? new List<ImportPunctuationQuestionRow>();
+    var invalidQuestions = Model?.Where(q => !q.IsValid).ToList() ?? new List<ImportPunctuationQuestionRow>();
 }
 
 <div class="row mb-4">

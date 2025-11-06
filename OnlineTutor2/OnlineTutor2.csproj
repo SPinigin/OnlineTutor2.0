@@ -20,6 +20,7 @@
   <ItemGroup>
     <Content Remove="appsettings.json" />
     <Content Remove="Views\PunctuationTest\Index.cshtml" />
+    <Content Remove="Views\PunctuationTest\PreviewQuestions.cshtml" />
     <Content Remove="Views\SpellingTest\Analytics.cshtml" />
   </ItemGroup>
 

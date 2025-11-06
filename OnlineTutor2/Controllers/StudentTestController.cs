@@ -311,7 +311,6 @@ namespace OnlineTutor2.Controllers
                 _logger.LogInformation("Студент {StudentId} завершил тест орфографии {ResultId}. Баллы: {Score}/{MaxScore}, Процент: {Percentage}", 
                     student.Id, testResultId, testResult.Score, testResult.MaxScore, testResult.Percentage);
 
-                TempData["SuccessMessage"] = "Тест успешно завершен!";
                 return RedirectToAction("Result", new { id = testResult.Id });
             }
             catch (Exception ex)
@@ -550,7 +549,6 @@ namespace OnlineTutor2.Controllers
                 _logger.LogInformation("Студент {StudentId} завершил тест пунктуации {ResultId}. Баллы: {Score}/{MaxScore}, Процент: {Percentage}",
                     student.Id, testResultId, testResult.Score, testResult.MaxScore, testResult.Percentage);
 
-                TempData["SuccessMessage"] = "Тест успешно завершен!";
                 return RedirectToAction("Result", new { id = testResult.Id });
             }
             catch (Exception ex)
@@ -860,7 +858,6 @@ namespace OnlineTutor2.Controllers
                 _logger.LogInformation("Студент {StudentId} завершил тест орфоэпии {ResultId}. Баллы: {Score}/{MaxScore}, Процент: {Percentage}",
                     student.Id, testResultId, testResult.Score, testResult.MaxScore, testResult.Percentage);
 
-                TempData["SuccessMessage"] = "Тест успешно завершен!";
                 return RedirectToAction("Result", new { id = testResult.Id });
             }
             catch (Exception ex)
@@ -1141,7 +1138,6 @@ namespace OnlineTutor2.Controllers
                 _logger.LogInformation("Студент {StudentId} завершил классический тест {ResultId}. Баллы: {Score}/{MaxScore}, Процент: {Percentage}",
                     student.Id, testResultId, testResult.Score, testResult.MaxScore, testResult.Percentage);
 
-                TempData["SuccessMessage"] = "Тест успешно завершен!";
                 return RedirectToAction(nameof(Result), new { id = testResult.Id });
             }
             catch (Exception ex)
