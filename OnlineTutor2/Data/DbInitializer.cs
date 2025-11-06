@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using NLog;
 using OnlineTutor2.Models;
 
@@ -15,13 +14,13 @@ namespace OnlineTutor2.Data
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
             // Применяем миграции
-            await context.Database.MigrateAsync();
+            //await context.Database.MigrateAsync();
 
             // Заполняем роли
-            await SeedRoles(roleManager);
+            //await SeedRoles(roleManager);
 
             // Заполняем категории
-            await SeedTestCategories(context);
+            //await SeedTestCategories(context);
         }
 
         private static async Task SeedRoles(RoleManager<IdentityRole> roleManager)

@@ -8,12 +8,17 @@
 
   <ItemGroup>
     <Compile Remove="Views\StudentPunctuationTest\**" />
+    <Compile Remove="wwwroot\uploads\**" />
     <Content Remove="Views\StudentPunctuationTest\**" />
+    <Content Remove="wwwroot\uploads\**" />
     <EmbeddedResource Remove="Views\StudentPunctuationTest\**" />
+    <EmbeddedResource Remove="wwwroot\uploads\**" />
     <None Remove="Views\StudentPunctuationTest\**" />
+    <None Remove="wwwroot\uploads\**" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Remove="appsettings.json" />
     <Content Remove="Views\PunctuationTest\Index.cshtml" />
     <Content Remove="Views\SpellingTest\Analytics.cshtml" />
   </ItemGroup>
@@ -27,10 +32,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="NLog.Web.AspNetCore" Version="6.0.5" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="wwwroot\uploads\materials\" />
   </ItemGroup>
 
 </Project>

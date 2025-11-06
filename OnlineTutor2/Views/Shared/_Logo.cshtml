@@ -11,7 +11,7 @@
 </head>
 <body class="d-flex flex-column min-vh-100 @(User.Identity.IsAuthenticated ? "authorized" : "")">
     <div class="hero-section">
-        <h1 class="hero-title">Образовательный портал по русскому языку</h1>
+        <h1 class="hero-title">Образовательная платформа</h1>
     </div>
     <header class="sticky-top">
         <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
@@ -102,7 +102,7 @@
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link" asp-controller="Home" asp-action="Privacy">
-                                        <i class="fas fa-info-circle me-2"></i>О портале
+                                        <i class="fas fa-info-circle me-2"></i>О платформе
                                     </a>
                                 </li>
                                 <li class="nav-item">
@@ -131,7 +131,7 @@
         <div class="container">
             <div class="row g-4">
                 <div class="col-md-4">
-                    <h5 class="mb-3">Образовательный портал</h5>
+                    <h5 class="mb-3">Образовательная платформа</h5>
                     <p class="text-muted">Эффективная подготовка к ЕГЭ по русскому языку с использованием современных образовательных технологий.</p>
                 </div>
                 <div class="col-md-4">
@@ -155,7 +155,7 @@
             </div>
             <hr class="my-4">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <p class="mb-2 mb-md-0">&copy; @DateTime.Now.Year - Образовательный портал по русскому языку</p>
+                <p class="mb-2 mb-md-0">&copy; @DateTime.Now.Year - Образовательная платформа</p>
                 <div>
                     <a href="#" class="text-muted me-3">Политика конфиденциальности</a>
                     <a href="#" class="text-muted">Условия использования</a>
