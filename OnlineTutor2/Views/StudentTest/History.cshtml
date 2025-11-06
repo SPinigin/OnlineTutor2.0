@@ -17,17 +17,17 @@
             <a asp-action="History" class="btn btn-@(string.IsNullOrEmpty(testType) ? "primary" : "outline-primary")">
                 <i class="fas fa-list"></i> Все тесты
             </a>
-            <a asp-action="History" asp-route-testType="spelling" class="btn btn-@(testType == "spelling" ? "primary" : "outline-primary")">
+            <a asp-action="History" asp-route-testType="spelling" class="btn btn-@(testType == "spelling" ? "primary" : "outline-success")">
                 <i class="fas fa-spell-check"></i> Орфография
             </a>
-            <a asp-action="History" asp-route-testType="punctuation" class="btn btn-@(testType == "punctuation" ? "warning" : "outline-warning")">
-                <i class="fas fa-exclamation"></i> Пунктуация
+            <a asp-action="History" asp-route-testType="punctuation" class="btn btn-@(testType == "punctuation" ? "warning" : "outline-success")">
+                <i class="fas fa-quote-right"></i> Пунктуация
             </a>
             <a asp-action="History" asp-route-testType="orthoepy" class="btn btn-@(testType == "orthoepy" ? "success" : "outline-success")">
                 <i class="fas fa-volume-up"></i> Орфоэпия
             </a>
             <a asp-action="History" asp-route-testType="regular" class="btn btn-@(testType == "regular" ? "success" : "outline-success")">
-                <i class="fas fa-volume-up"></i> Классические
+                <i class="fas fa-list-ul"></i> Классические
             </a>
         </div>
     </div>
