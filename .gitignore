@@ -465,3 +465,4 @@ _ReSharper*/
 # Node modules (если используете npm/node)
 node_modules/
 package-lock.json
+/OnlineTutor2/appsettings.json
