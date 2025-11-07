@@ -82,13 +82,10 @@ else
                 <div class="card-body">
                     @{
                         var maxPercentage = 0.0;
-                        if (Model.SpellingResults.Any() || Model.PunctuationResults.Any() || Model.OrthoeopyResults.Any() || Model.RegularResults.Any())
+                    
+                        if (allPercentages?.Any() == true)
                         {
-                            var spellingMax = Model.SpellingResults.Any() ? Model.SpellingResults.Max(r => r.Percentage) : 0;
-                            var punctuationMax = Model.PunctuationResults.Any() ? Model.PunctuationResults.Max(r => r.Percentage) : 0;
-                            var orthoeopyMax = Model.OrthoeopyResults.Any() ? Model.OrthoeopyResults.Max(r => r.Percentage) : 0;
-                            var regularMax = Model.RegularResults.Any() ? Model.RegularResults.Max(r => r.Percentage) : 0;
-                            maxPercentage = Math.Max(Math.Max(spellingMax, punctuationMax), orthoeopyMax);
+                            maxPercentage = allPercentages.Max();
                         }
                     }
                     <h4 class="text-info">@maxPercentage.ToString("F1")%</h4>
