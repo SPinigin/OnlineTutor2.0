@@ -194,6 +194,63 @@ namespace OnlineTutor2.Controllers
             return View();
         }
 
+        // GET: Account/ChangePassword
+        [HttpGet]
+        public IActionResult ChangePassword()
+        {
+            return View();
+        }
+
+        // POST: Account/ChangePassword
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound($"Невозможно загрузить пользователя с ID '{_userManager.GetUserId(User)}'.");
+            }
+
+            var changePasswordResult = await _userManager.ChangePasswordAsync(
+                user,
+                model.CurrentPassword,
+                model.NewPassword);
+
+            if (!changePasswordResult.Succeeded)
+            {
+                foreach (var error in changePasswordResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return View(model);
+            }
+
+            await _signInManager.RefreshSignInAsync(user);
+            _logger.LogInformation("Пользователь успешно изменил пароль.");
+
+            TempData["SuccessMessage"] = "Пароль успешно изменен!";
+            return RedirectToAction(nameof(ChangePassword));
+        }
+
+        // GET: Account/Profile (опционально - страница профиля)
+        [HttpGet]
+        public async Task<IActionResult> Profile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return View(user);
+        }
+
         private IActionResult RedirectToLocal(string? returnUrl)
         {
             if (Url.IsLocalUrl(returnUrl))
