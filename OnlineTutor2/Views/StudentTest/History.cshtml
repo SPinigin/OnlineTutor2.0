@@ -60,19 +60,16 @@ else
                 <div class="card-body">
                     @{
                         var avgPercentage = 0.0;
-                        var totalCount = Model.SpellingResults.Count() + Model.PunctuationResults.Count() + Model.OrthoeopyResults.Count() + Model.RegularResults.Count();
-
-                        if (totalCount > 0)
+    
+                        var allPercentages = new List<double>();
+                        allPercentages.AddRange(Model.SpellingResults.Select(r => r.Percentage));
+                        allPercentages.AddRange(Model.PunctuationResults.Select(r => r.Percentage));
+                        allPercentages.AddRange(Model.OrthoeopyResults.Select(r => r.Percentage));
+                        allPercentages.AddRange(Model.RegularResults.Select(r => r.Percentage));
+    
+                        if (allPercentages.Any())
                         {
-                            var spellingAvg = Model.SpellingResults.Any() ? Model.SpellingResults.Average(r => r.Percentage) : 0;
-                            var punctuationAvg = Model.PunctuationResults.Any() ? Model.PunctuationResults.Average(r => r.Percentage) : 0;
-                            var orthoeopyAvg = Model.OrthoeopyResults.Any() ? Model.OrthoeopyResults.Average(r => r.Percentage) : 0;
-                            var regularAvg = Model.RegularResults.Any() ? Model.RegularResults.Average(r => r.Percentage) : 0;
-
-                            avgPercentage = ((spellingAvg * Model.SpellingResults.Count()) +
-                            (punctuationAvg * Model.PunctuationResults.Count()) +
-                            (orthoeopyAvg * Model.OrthoeopyResults.Count())) + 
-                            (regularAvg * Model.RegularResults.Count()) / totalCount;
+                            avgPercentage = allPercentages.Average();
                         }
                     }
                     <h4 class="text-success">@avgPercentage.ToString("F1")%</h4>
