@@ -1193,6 +1193,7 @@ namespace OnlineTutor2.Controllers
             {
                 viewModel.SpellingResults = await _context.SpellingTestResults
                     .Include(tr => tr.SpellingTest)
+                    .ThenInclude(t => t.SpellingQuestions)
                     .Where(tr => tr.StudentId == student.Id && tr.IsCompleted)
                     .OrderByDescending(tr => tr.CompletedAt)
                     .ToListAsync();
@@ -1202,6 +1203,7 @@ namespace OnlineTutor2.Controllers
             {
                 viewModel.PunctuationResults = await _context.PunctuationTestResults
                     .Include(tr => tr.PunctuationTest)
+                    .ThenInclude(t => t.PunctuationQuestions)
                     .Where(tr => tr.StudentId == student.Id && tr.IsCompleted)
                     .OrderByDescending(tr => tr.CompletedAt)
                     .ToListAsync();
@@ -1211,6 +1213,7 @@ namespace OnlineTutor2.Controllers
             {
                 viewModel.OrthoeopyResults = await _context.OrthoeopyTestResults
                     .Include(tr => tr.OrthoeopyTest)
+                    .ThenInclude(t => t.OrthoeopyQuestions)
                     .Where(tr => tr.StudentId == student.Id && tr.IsCompleted)
                     .OrderByDescending(tr => tr.CompletedAt)
                     .ToListAsync();
@@ -1220,6 +1223,7 @@ namespace OnlineTutor2.Controllers
             {
                 viewModel.RegularResults = await _context.RegularTestResults
                     .Include(tr => tr.RegularTest)
+                    .ThenInclude(t => t.RegularQuestions)
                     .Where(tr => tr.StudentId == student.Id && tr.IsCompleted)
                     .OrderByDescending(tr => tr.CompletedAt)
                     .ToListAsync();
