@@ -19,7 +19,7 @@ namespace OnlineTutor2.Models
 
         public int? Grade { get; set; }
 
-        public DateTime EnrollmentDate { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         // Навигационные свойства
         public virtual ApplicationUser User { get; set; }
