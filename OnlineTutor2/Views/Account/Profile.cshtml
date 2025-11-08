@@ -1,23 +1,24 @@
-﻿@model OnlineTutor2.Models.ApplicationUser
+﻿@model OnlineTutor2.ViewModels.ProfileViewModel
 @{
     ViewData["Title"] = "Профиль";
+    var user = Model.User;
 }
 
 <div class="container py-5">
     <div class="row">
 
         <div class="col-lg-4 mb-4">
-            <div class="card shadow">
+            <div class="card shadow mb-4">
                 <div class="card-body text-center">
                     <div class="mb-4">
                         <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center text-white"
                              style="width: 150px; height: 150px; font-size: 3rem;">
-                            @Model.FirstName.Substring(0, 1)@Model.LastName.Substring(0, 1)
+                            @user.FirstName.Substring(0, 1)@user.LastName.Substring(0, 1)
                         </div>
                     </div>
 
-                    <h4 class="mb-1">@Model.FullName</h4>
-                    <p class="text-muted mb-1">@Model.Age лет</p>
+                    <h4 class="mb-1">@user.FullName</h4>
+                    <p class="text-muted mb-1">@user.Age лет</p>
                     <p class="text-muted mb-3">
                         @if (User.IsInRole("Admin"))
                         {
@@ -53,7 +54,7 @@
             </div>
 
 
-            <div class="card shadow mt-4">
+            <div class="card shadow">
                 <div class="card-body">
                     <h6 class="text-muted mb-3">
                         <i class="fas fa-info-circle"></i> Дополнительно
@@ -61,22 +62,22 @@
                     <div class="mb-2">
                         <small class="text-muted">
                             <i class="fas fa-calendar"></i>
-                            На сайте с @Model.CreatedAt.ToString("dd MMMM yyyy")
+                            На сайте с @user.CreatedAt.ToString("dd MMMM yyyy")
                         </small>
                     </div>
-                    @if (Model.LastLoginAt.HasValue)
+                    @if (user.LastLoginAt.HasValue)
                     {
                         <div class="mb-2">
                             <small class="text-muted">
                                 <i class="fas fa-sign-in-alt"></i>
-                                Последний вход: @Model.LastLoginAt.Value.ToString("dd.MM.yyyy HH:mm")
+                                Последний вход: @user.LastLoginAt.Value.ToString("dd.MM.yyyy HH:mm")
                             </small>
                         </div>
                     }
                     <div>
                         <small class="text-muted">
-                            <i class="fas fa-circle @(Model.IsActive ? "text-success" : "text-danger")"></i>
-                            @(Model.IsActive ? "Аккаунт активен" : "Аккаунт заблокирован")
+                            <i class="fas fa-circle @(user.IsActive ? "text-success" : "text-danger")"></i>
+                            @(user.IsActive ? "Аккаунт активен" : "Аккаунт заблокирован")
                         </small>
                     </div>
                 </div>
@@ -85,7 +86,8 @@
 
 
         <div class="col-lg-8">
-            <div class="card shadow">
+
+            <div class="card shadow mb-4">
                 <div class="card-header bg-white">
                     <h5 class="mb-0">
                         <i class="fas fa-user"></i> Личная информация
@@ -96,14 +98,14 @@
                         <div class="col-sm-4 fw-bold text-muted">
                             <i class="fas fa-signature"></i> Имя:
                         </div>
-                        <div class="col-sm-8">@Model.FirstName</div>
+                        <div class="col-sm-8">@user.FirstName</div>
                     </div>
 
                     <div class="row mb-3">
                         <div class="col-sm-4 fw-bold text-muted">
                             <i class="fas fa-signature"></i> Фамилия:
                         </div>
-                        <div class="col-sm-8">@Model.LastName</div>
+                        <div class="col-sm-8">@user.LastName</div>
                     </div>
 
                     <div class="row mb-3">
@@ -111,8 +113,8 @@
                             <i class="fas fa-envelope"></i> Email:
                         </div>
                         <div class="col-sm-8">
-                            @Model.Email
-                            @if (Model.EmailConfirmed)
+                            @user.Email
+                            @if (user.EmailConfirmed)
                             {
                                 <span class="badge bg-success ms-2">
                                     <i class="fas fa-check"></i> Подтвержден
@@ -132,7 +134,7 @@
                             <i class="fas fa-phone"></i> Телефон:
                         </div>
                         <div class="col-sm-8">
-                            @(Model.PhoneNumber ?? "Не указан")
+                            @(user.PhoneNumber ?? "Не указан")
                         </div>
                     </div>
 
@@ -141,9 +143,9 @@
                             <i class="fas fa-birthday-cake"></i> Дата рождения:
                         </div>
                         <div class="col-sm-8">
-                            @Model.DateOfBirth.ToString("dd MMMM yyyy")
+                            @user.DateOfBirth.ToString("dd MMMM yyyy")
                             <small class="text-muted">
-                                (@Model.Age лет)
+                                (@user.Age лет)
                             </small>
                         </div>
                     </div>
@@ -153,7 +155,7 @@
                             <i class="fas fa-calendar-plus"></i> Дата регистрации:
                         </div>
                         <div class="col-sm-8">
-                            @Model.CreatedAt.ToString("dd MMMM yyyy")
+                            @user.CreatedAt.ToString("dd MMMM yyyy")
                         </div>
                     </div>
                 </div>
@@ -161,7 +163,8 @@
 
             @if (User.IsInRole("Student"))
             {
-                <div class="card shadow mt-4">
+
+                <div class="card shadow">
                     <div class="card-header bg-white">
                         <h5 class="mb-0">
                             <i class="fas fa-chart-line"></i> Моя успеваемость
@@ -171,19 +174,19 @@
                         <div class="row text-center">
                             <div class="col-md-4 mb-3">
                                 <div class="p-3 border rounded">
-                                    <h3 class="text-primary mb-0">0</h3>
+                                    <h3 class="text-primary mb-0">@Model.TotalTestsCompleted</h3>
                                     <small class="text-muted">Тестов пройдено</small>
                                 </div>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <div class="p-3 border rounded">
-                                    <h3 class="text-success mb-0">0%</h3>
+                                    <h3 class="text-success mb-0">@Model.AverageScore.ToString("F1")%</h3>
                                     <small class="text-muted">Средний балл</small>
                                 </div>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <div class="p-3 border rounded">
-                                    <h3 class="text-warning mb-0">0</h3>
+                                    <h3 class="text-warning mb-0">@Model.TotalPointsEarned</h3>
                                     <small class="text-muted">Баллов набрано</small>
                                 </div>
                             </div>
@@ -199,7 +202,8 @@
 
             @if (User.IsInRole("Teacher"))
             {
-                <div class="card shadow mt-4">
+
+                <div class="card shadow">
                     <div class="card-header bg-white">
                         <h5 class="mb-0">
                             <i class="fas fa-chalkboard-teacher"></i> Моя статистика
@@ -209,19 +213,19 @@
                         <div class="row text-center">
                             <div class="col-md-4 mb-3">
                                 <div class="p-3 border rounded">
-                                    <h3 class="text-primary mb-0">@Model.CreatedTests.Count()</h3>
+                                    <h3 class="text-primary mb-0">@Model.TotalTests</h3>
                                     <small class="text-muted">Создано тестов</small>
                                 </div>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <div class="p-3 border rounded">
-                                    <h3 class="text-success mb-0">@Model.TeacherClasses.Count()</h3>
+                                    <h3 class="text-success mb-0">@Model.TotalClasses</h3>
                                     <small class="text-muted">Активных классов</small>
                                 </div>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <div class="p-3 border rounded">
-                                    <h3 class="text-warning mb-0">0</h3>
+                                    <h3 class="text-warning mb-0">@Model.TotalStudents</h3>
                                     <small class="text-muted">Учеников</small>
                                 </div>
                             </div>
@@ -232,7 +236,6 @@
         </div>
     </div>
 </div>
-
 @section Scripts {
     <script src="~/js/layout.js" asp-append-version="true"></script>
 }

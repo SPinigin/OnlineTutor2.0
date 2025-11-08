@@ -238,6 +238,7 @@ namespace OnlineTutor2.Controllers
             return RedirectToAction(nameof(ChangePassword));
         }
 
+        // GET: Account/Profile
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
@@ -247,8 +248,108 @@ namespace OnlineTutor2.Controllers
                 return NotFound($"Невозможно загрузить пользователя с ID '{_userManager.GetUserId(User)}'.");
             }
 
-            return View(user);
+            var viewModel = new ProfileViewModel
+            {
+                User = user
+            };
+
+            // Статистика для студентов
+            if (User.IsInRole("Student"))
+            {
+                var student = await _context.Students
+                    .FirstOrDefaultAsync(s => s.UserId == user.Id);
+
+                if (student != null)
+                {
+                    // Подсчитываем все пройденные тесты
+                    var spellingTests = await _context.SpellingTestResults
+                        .Where(r => r.StudentId == student.Id && r.CompletedAt.HasValue)
+                        .ToListAsync();
+
+                    var punctuationTests = await _context.PunctuationTestResults
+                        .Where(r => r.StudentId == student.Id && r.CompletedAt.HasValue)
+                        .ToListAsync();
+
+                    var orthoeopyTests = await _context.OrthoeopyTestResults
+                        .Where(r => r.StudentId == student.Id && r.CompletedAt.HasValue)
+                        .ToListAsync();
+
+                    var regularTests = await _context.RegularTestResults
+                        .Where(r => r.StudentId == student.Id && r.CompletedAt.HasValue)
+                        .ToListAsync();
+
+                    // Общее количество тестов
+                    viewModel.TotalTestsCompleted = spellingTests.Count +
+                                                   punctuationTests.Count +
+                                                   orthoeopyTests.Count +
+                                                   regularTests.Count;
+
+                    // Общая сумма баллов
+                    viewModel.TotalPointsEarned = spellingTests.Sum(r => r.Score) +
+                                                 punctuationTests.Sum(r => r.Score) +
+                                                 orthoeopyTests.Sum(r => r.Score) +
+                                                 regularTests.Sum(r => r.Score);
+
+                    // Средний балл
+                    if (viewModel.TotalTestsCompleted > 0)
+                    {
+                        var allPercentages = new List<double>();
+                        allPercentages.AddRange(spellingTests.Select(r => r.Percentage));
+                        allPercentages.AddRange(punctuationTests.Select(r => r.Percentage));
+                        allPercentages.AddRange(orthoeopyTests.Select(r => r.Percentage));
+                        allPercentages.AddRange(regularTests.Select(r => r.Percentage));
+
+                        viewModel.AverageScore = allPercentages.Average();
+                    }
+                }
+            }
+
+            // Статистика для учителей
+            if (User.IsInRole("Teacher"))
+            {
+                var regularTestsCount = await _context.RegularTests
+                    .Where(t => t.TeacherId == user.Id)
+                    .CountAsync();
+
+                var spellingTestsCount = await _context.SpellingTests
+                    .Where(t => t.TeacherId == user.Id)
+                    .CountAsync();
+
+                var punctuationTestsCount = await _context.PunctuationTests
+                    .Where(t => t.TeacherId == user.Id)
+                    .CountAsync();
+
+                var orthoeopyTestsCount = await _context.OrthoeopyTests
+                    .Where(t => t.TeacherId == user.Id)
+                    .CountAsync();
+
+                // Сумма всех тестов
+                viewModel.TotalTests = regularTestsCount +
+                                      spellingTestsCount +
+                                      punctuationTestsCount +
+                                      orthoeopyTestsCount;
+
+                // Загружаем классы учителя со студентами
+                var teacherClasses = await _context.Classes
+                    .Include(c => c.Students)
+                    .Where(c => c.TeacherId == user.Id)
+                    .ToListAsync();
+
+                viewModel.TotalClasses = teacherClasses.Count;
+
+                // Уникальные ученики во всех классах учителя
+                var uniqueStudentIds = teacherClasses
+                    .SelectMany(c => c.Students)
+                    .Select(s => s.Id)
+                    .Distinct()
+                    .Count();
+
+                viewModel.TotalStudents = uniqueStudentIds;
+            }
+
+            return View(viewModel);
         }
+
 
         // GET: Account/EditProfile
         [HttpGet]
