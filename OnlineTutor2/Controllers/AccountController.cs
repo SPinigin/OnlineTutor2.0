@@ -312,8 +312,9 @@ namespace OnlineTutor2.Controllers
             user.PhoneNumber = model.PhoneNumber;
             user.DateOfBirth = model.DateOfBirth;
 
-            // Проверяем, изменился ли email
-            if (model.Email != user.Email)
+            var currentEmail = user.Email;
+
+            if (model.Email != currentEmail)
             {
                 var setEmailResult = await _userManager.SetEmailAsync(user, model.Email);
                 if (!setEmailResult.Succeeded)
@@ -322,10 +323,10 @@ namespace OnlineTutor2.Controllers
                     {
                         ModelState.AddModelError(string.Empty, error.Description);
                     }
+                    model.CurrentEmail = currentEmail;
                     return View(model);
                 }
 
-                // Устанавливаем новый username (если используется email как username)
                 var setUserNameResult = await _userManager.SetUserNameAsync(user, model.Email);
                 if (!setUserNameResult.Succeeded)
                 {
@@ -333,10 +334,10 @@ namespace OnlineTutor2.Controllers
                     {
                         ModelState.AddModelError(string.Empty, error.Description);
                     }
+                    model.CurrentEmail = currentEmail;
                     return View(model);
                 }
 
-                // Помечаем email как неподтвержденный
                 user.EmailConfirmed = false;
             }
 
@@ -347,6 +348,7 @@ namespace OnlineTutor2.Controllers
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
+                model.CurrentEmail = currentEmail;
                 return View(model);
             }
 
