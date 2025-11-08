@@ -154,7 +154,7 @@
         </nav>
     </header>
 
-    @if (TempData["SuccessMessage"] != null)
+    @* @if (TempData["SuccessMessage"] != null)
     {
             <div class="container">
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -182,12 +182,13 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             </div>
-    }
+    } *@
 
-    <div class="container main-content">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+    <div class="container-fluid main-content px-2 px-md-3 px-lg-4">
+    <main role="main" class="pb-3" style="max-width: 1600px; margin: 0 auto;">
+        <partial name="_Notifications" />
+        @RenderBody()
+    </main>
     </div>
 
     <footer class="footer-fixed footer-compact bg-light border-top">
