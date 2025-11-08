@@ -5,45 +5,119 @@
 
 <div class="container py-5">
     <div class="row">
-        <div class="col-md-4">
+
+        <div class="col-lg-4 mb-4">
             <div class="card shadow">
                 <div class="card-body text-center">
-                    <div class="mb-3">
-                        <i class="fas fa-user-circle text-primary" style="font-size: 5rem;"></i>
+                    <div class="mb-4">
+                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center text-white"
+                             style="width: 150px; height: 150px; font-size: 3rem;">
+                            @Model.FirstName.Substring(0, 1)@Model.LastName.Substring(0, 1)
+                        </div>
                     </div>
-                    <h4>@Model.FirstName @Model.LastName</h4>
-                    <p class="text-muted">@Model.Email</p>
+
+                    <h4 class="mb-1">@Model.FullName</h4>
+                    <p class="text-muted mb-1">@Model.Age лет</p>
+                    <p class="text-muted mb-3">
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <span class="badge bg-danger">
+                                <i class="fas fa-shield-alt"></i> Администратор
+                            </span>
+                        }
+                        else if (User.IsInRole("Teacher"))
+                        {
+                            <span class="badge bg-primary">
+                                <i class="fas fa-chalkboard-teacher"></i> Преподаватель
+                            </span>
+                        }
+                        else if (User.IsInRole("Student"))
+                        {
+                            <span class="badge bg-success">
+                                <i class="fas fa-user-graduate"></i> Ученик
+                            </span>
+                        }
+                    </p>
+
                     <hr>
+
                     <div class="d-grid gap-2">
-                        <a asp-action="ChangePassword" class="btn btn-primary">
-                            <i class="fas fa-key"></i> Сменить пароль
-                        </a>
-                        <a asp-action="EditProfile" class="btn btn-outline-primary">
+                        <a asp-action="EditProfile" class="btn btn-primary">
                             <i class="fas fa-edit"></i> Редактировать профиль
                         </a>
+                        <a asp-action="ChangePassword" class="btn btn-outline-secondary">
+                            <i class="fas fa-key"></i> Сменить пароль
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="card shadow mt-4">
+                <div class="card-body">
+                    <h6 class="text-muted mb-3">
+                        <i class="fas fa-info-circle"></i> Дополнительно
+                    </h6>
+                    <div class="mb-2">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar"></i>
+                            На сайте с @Model.CreatedAt.ToString("dd MMMM yyyy")
+                        </small>
+                    </div>
+                    @if (Model.LastLoginAt.HasValue)
+                    {
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i class="fas fa-sign-in-alt"></i>
+                                Последний вход: @Model.LastLoginAt.Value.ToString("dd.MM.yyyy HH:mm")
+                            </small>
+                        </div>
+                    }
+                    <div>
+                        <small class="text-muted">
+                            <i class="fas fa-circle @(Model.IsActive ? "text-success" : "text-danger")"></i>
+                            @(Model.IsActive ? "Аккаунт активен" : "Аккаунт заблокирован")
+                        </small>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-8">
+
+        <div class="col-lg-8">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
             <div class="card shadow">
-                <div class="card-header">
+                <div class="card-header bg-white">
                     <h5 class="mb-0">
-                        <i class="fas fa-info-circle"></i> Информация о профиле
+                        <i class="fas fa-user"></i> Личная информация
                     </h5>
                 </div>
                 <div class="card-body">
                     <div class="row mb-3">
-                        <div class="col-sm-4 fw-bold">Имя:</div>
+                        <div class="col-sm-4 fw-bold text-muted">
+                            <i class="fas fa-signature"></i> Имя:
+                        </div>
                         <div class="col-sm-8">@Model.FirstName</div>
                     </div>
+
                     <div class="row mb-3">
-                        <div class="col-sm-4 fw-bold">Фамилия:</div>
+                        <div class="col-sm-4 fw-bold text-muted">
+                            <i class="fas fa-signature"></i> Фамилия:
+                        </div>
                         <div class="col-sm-8">@Model.LastName</div>
                     </div>
+
                     <div class="row mb-3">
-                        <div class="col-sm-4 fw-bold">Email:</div>
+                        <div class="col-sm-4 fw-bold text-muted">
+                            <i class="fas fa-envelope"></i> Email:
+                        </div>
                         <div class="col-sm-8">
                             @Model.Email
                             @if (Model.EmailConfirmed)
@@ -60,16 +134,109 @@
                             }
                         </div>
                     </div>
+
                     <div class="row mb-3">
-                        <div class="col-sm-4 fw-bold">Телефон:</div>
-                        <div class="col-sm-8">@(Model.PhoneNumber ?? "Не указан")</div>
+                        <div class="col-sm-4 fw-bold text-muted">
+                            <i class="fas fa-phone"></i> Телефон:
+                        </div>
+                        <div class="col-sm-8">
+                            @(Model.PhoneNumber ?? "Не указан")
+                        </div>
                     </div>
-                    <div class="row">
-                        <div class="col-sm-4 fw-bold">Дата регистрации:</div>
-                        <div class="col-sm-8">@Model.CreatedAt.ToString("dd MMMM yyyy")</div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold text-muted">
+                            <i class="fas fa-birthday-cake"></i> Дата рождения:
+                        </div>
+                        <div class="col-sm-8">
+                            @Model.DateOfBirth.ToString("dd MMMM yyyy")
+                            <small class="text-muted">
+                                (@Model.Age лет)
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold text-muted">
+                            <i class="fas fa-calendar-plus"></i> Дата регистрации:
+                        </div>
+                        <div class="col-sm-8">
+                            @Model.CreatedAt.ToString("dd MMMM yyyy")
+                        </div>
                     </div>
                 </div>
             </div>
+
+            @if (User.IsInRole("Student"))
+            {
+                <div class="card shadow mt-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-line"></i> Моя успеваемость
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4 mb-3">
+                                <div class="p-3 border rounded">
+                                    <h3 class="text-primary mb-0">0</h3>
+                                    <small class="text-muted">Тестов пройдено</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="p-3 border rounded">
+                                    <h3 class="text-success mb-0">0%</h3>
+                                    <small class="text-muted">Средний балл</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="p-3 border rounded">
+                                    <h3 class="text-warning mb-0">0</h3>
+                                    <small class="text-muted">Баллов набрано</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a asp-controller="StudentTest" asp-action="History" class="btn btn-outline-primary">
+                                <i class="fas fa-history"></i> Посмотреть историю
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (User.IsInRole("Teacher"))
+            {
+                <div class="card shadow mt-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chalkboard-teacher"></i> Моя статистика
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4 mb-3">
+                                <div class="p-3 border rounded">
+                                    <h3 class="text-primary mb-0">@Model.CreatedTests.Count()</h3>
+                                    <small class="text-muted">Создано тестов</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="p-3 border rounded">
+                                    <h3 class="text-success mb-0">@Model.TeacherClasses.Count()</h3>
+                                    <small class="text-muted">Активных классов</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="p-3 border rounded">
+                                    <h3 class="text-warning mb-0">0</h3>
+                                    <small class="text-muted">Учеников</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 </div>
