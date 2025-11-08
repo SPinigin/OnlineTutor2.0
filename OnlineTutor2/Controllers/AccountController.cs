@@ -238,7 +238,6 @@ namespace OnlineTutor2.Controllers
             return RedirectToAction(nameof(ChangePassword));
         }
 
-        // GET: Account/Profile (опционально - страница профиля)
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
