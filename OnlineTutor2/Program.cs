@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using NLog;
 using NLog.Web;
@@ -47,17 +48,34 @@ try
     logger.Info("Configuring Identity");
     builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
+        // Настройки пароля
         options.Password.RequireDigit = true;
         options.Password.RequireLowercase = true;
         options.Password.RequireUppercase = true;
         options.Password.RequireNonAlphanumeric = false;
         options.Password.RequiredLength = 6;
+
+        // Настройки пользователя
         options.User.RequireUniqueEmail = true;
-        options.SignIn.RequireConfirmedEmail = false;
+
+        // Настройки подтверждения email
+        options.SignIn.RequireConfirmedEmail = true;
+
+        // Настройки подтверждения phoneNumber
         options.SignIn.RequireConfirmedPhoneNumber = false;
+
+        // Настройки блокировки
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
+        options.Lockout.MaxFailedAccessAttempts = 10;
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
+
+    // Настройка времени жизни токенов
+    builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+    {
+        options.TokenLifespan = TimeSpan.FromHours(24);
+    });
 
     builder.Services.AddLogging(logging =>
     {
@@ -83,6 +101,7 @@ try
     builder.Services.AddScoped<IAuditLogService, AuditLogService>();
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<IExportService, ExportService>();
+    builder.Services.AddTransient<IEmailSender, EmailSender>();
 
     builder.Services.AddSession(options =>
     {
