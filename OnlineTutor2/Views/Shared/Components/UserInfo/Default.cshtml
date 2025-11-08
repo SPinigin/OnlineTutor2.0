@@ -17,37 +17,59 @@
                 </h6>
             </li>
             <li><hr class="dropdown-divider"></li>
+
+
             <li>
-                <a class="dropdown-item" href="#">
+                <a class="dropdown-item" asp-controller="Account" asp-action="Profile">
                     <i class="fas fa-user-edit"></i> Мой профиль
                 </a>
             </li>
-            <li>
-                <a class="dropdown-item" href="#">
-                    <i class="fas fa-cog"></i> Настройки
-                </a>
-            </li>
+
             @if (User.IsInRole("Student"))
             {
+                <li><hr class="dropdown-divider"></li>
                 <li>
-                    <a class="dropdown-item" href="#">
-                        <i class="fas fa-book-reader"></i> Мои курсы
+                    <a class="dropdown-item" asp-controller="StudentTest" asp-action="Index">
+                        <i class="fas fa-book-reader"></i> Мои тесты
                     </a>
                 </li>
                 <li>
-                    <a class="dropdown-item" href="#">
-                        <i class="fas fa-star"></i> Мои оценки
+                    <a class="dropdown-item" asp-controller="StudentTest" asp-action="History">
+                        <i class="fas fa-history"></i> История тестов
                     </a>
                 </li>
             }
+
             @if (User.IsInRole("Teacher"))
             {
+                <li><hr class="dropdown-divider"></li>
                 <li>
-                    <a class="dropdown-item" href="#">
-                        <i class="fas fa-chart-bar"></i> Статистика
+                    <a class="dropdown-item" asp-controller="Teacher" asp-action="Dashboard">
+                        <i class="fas fa-chart-bar"></i> Панель управления
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" asp-controller="Teacher" asp-action="Tests">
+                        <i class="fas fa-clipboard-list"></i> Мои тесты
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" asp-controller="Teacher" asp-action="Students">
+                        <i class="fas fa-users"></i> Мои ученики
                     </a>
                 </li>
             }
+
+            @if (User.IsInRole("Admin"))
+            {
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <a class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                        <i class="fas fa-shield-alt"></i> Админ-панель
+                    </a>
+                </li>
+            }
+
             <li><hr class="dropdown-divider"></li>
             <li>
                 <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
