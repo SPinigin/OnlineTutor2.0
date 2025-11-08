@@ -1,0 +1,75 @@
+﻿@model OnlineTutor2.Models.ApplicationUser
+@{
+    ViewData["Title"] = "Профиль";
+}
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-user-circle text-primary" style="font-size: 5rem;"></i>
+                    </div>
+                    <h4>@Model.FirstName @Model.LastName</h4>
+                    <p class="text-muted">@Model.Email</p>
+                    <hr>
+                    <div class="d-grid gap-2">
+                        <a asp-action="ChangePassword" class="btn btn-primary">
+                            <i class="fas fa-key"></i> Сменить пароль
+                        </a>
+                        <a asp-action="EditProfile" class="btn btn-outline-primary">
+                            <i class="fas fa-edit"></i> Редактировать профиль
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle"></i> Информация о профиле
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold">Имя:</div>
+                        <div class="col-sm-8">@Model.FirstName</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold">Фамилия:</div>
+                        <div class="col-sm-8">@Model.LastName</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold">Email:</div>
+                        <div class="col-sm-8">
+                            @Model.Email
+                            @if (Model.EmailConfirmed)
+                            {
+                                <span class="badge bg-success ms-2">
+                                    <i class="fas fa-check"></i> Подтвержден
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning ms-2">
+                                    <i class="fas fa-exclamation"></i> Не подтвержден
+                                </span>
+                            }
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold">Телефон:</div>
+                        <div class="col-sm-8">@(Model.PhoneNumber ?? "Не указан")</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-4 fw-bold">Дата регистрации:</div>
+                        <div class="col-sm-8">@Model.CreatedAt.ToString("dd MMMM yyyy")</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
