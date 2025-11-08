@@ -1,0 +1,128 @@
+﻿@model OnlineTutor2.ViewModels.EditProfileViewModel
+@{
+    ViewData["Title"] = "Редактирование профиля";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-edit"></i> Редактирование профиля
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-exclamation-triangle"></i> Ошибка
+                            </h6>
+                            <div asp-validation-summary="All" class="text-danger"></div>
+                        </div>
+                    }
+
+                    <form asp-action="EditProfile" method="post">
+                        <div class="row">
+
+                            <div class="col-md-12">
+                                <h5 class="mb-3 text-primary">
+                                    <i class="fas fa-id-card"></i> Основная информация
+                                </h5>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FirstName" class="form-label">
+                                    <i class="fas fa-user"></i> Имя <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="FirstName" class="form-control" placeholder="Введите имя" />
+                                <span asp-validation-for="FirstName" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="LastName" class="form-label">
+                                    <i class="fas fa-user"></i> Фамилия <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="LastName" class="form-control" placeholder="Введите фамилию" />
+                                <span asp-validation-for="LastName" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label asp-for="DateOfBirth" class="form-label">
+                                    <i class="fas fa-birthday-cake"></i> Дата рождения <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="DateOfBirth" class="form-control" type="date" max="@DateTime.Now.AddYears(-7).ToString("yyyy-MM-dd")" />
+                                <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                                <small class="text-muted">Минимальный возраст - 7 лет</small>
+                            </div>
+
+
+                            <div class="col-md-12 mt-3">
+                                <h5 class="mb-3 text-primary">
+                                    <i class="fas fa-address-book"></i> Контактная информация
+                                </h5>
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label asp-for="Email" class="form-label">
+                                    <i class="fas fa-envelope"></i> Email <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="Email" class="form-control" placeholder="example@mail.com" />
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                                @if (Model.Email != Model.CurrentEmail)
+                                {
+                                    <div class="alert alert-warning mt-2 mb-0" role="alert">
+                                        <small>
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            После изменения email потребуется повторное подтверждение
+                                        </small>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label asp-for="PhoneNumber" class="form-label">
+                                    <i class="fas fa-phone"></i> Телефон
+                                </label>
+                                <input asp-for="PhoneNumber" class="form-control" placeholder="+7 (999) 123-45-67" />
+                                <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                                <small class="text-muted">Формат: +7 (999) 123-45-67</small>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Profile" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Отмена
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Сохранить изменения
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6 class="text-muted mb-3">
+                        <i class="fas fa-lightbulb"></i> Подсказки
+                    </h6>
+                    <ul class="small text-muted mb-0">
+                        <li>Поля, отмеченные <span class="text-danger">*</span>, обязательны для заполнения</li>
+                        <li>Убедитесь, что email указан правильно - на него будут приходить важные уведомления</li>
+                        <li>Личная информация видна только вам и администраторам</li>
+                        <li>После изменения email необходимо будет подтвердить новый адрес</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
