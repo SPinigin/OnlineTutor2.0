@@ -82,10 +82,10 @@ namespace OnlineTutor2.Controllers
                     students = students.OrderByDescending(s => s.User.LastName);
                     break;
                 case "Date":
-                    students = students.OrderBy(s => s.EnrollmentDate);
+                    students = students.OrderBy(s => s.CreatedAt);
                     break;
                 case "date_desc":
-                    students = students.OrderByDescending(s => s.EnrollmentDate);
+                    students = students.OrderByDescending(s => s.CreatedAt);
                     break;
                 default:
                     students = students.OrderBy(s => s.User.LastName);
@@ -502,7 +502,7 @@ namespace OnlineTutor2.Controllers
                 {
                     UserId = userId,
                     StudentNumber = await GenerateStudentNumber(),
-                    EnrollmentDate = DateTime.Now
+                    CreatedAt = DateTime.Now
                 };
                 _context.Students.Add(student);
                 await _context.SaveChangesAsync();
