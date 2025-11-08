@@ -12,20 +12,12 @@
         </a>
         <ul class="dropdown-menu dropdown-menu-end">
             <li>
-                <h6 class="dropdown-header">
-                    <i class="fas fa-user"></i> @Model.FullName
-                </h6>
-            </li>
-            <li><hr class="dropdown-divider"></li>
-
-
-            <li>
                 <a class="dropdown-item" asp-controller="Account" asp-action="Profile">
                     <i class="fas fa-user-edit"></i> Мой профиль
                 </a>
             </li>
 
-            @if (User.IsInRole("Student"))
+@*             @if (User.IsInRole("Student"))
             {
                 <li><hr class="dropdown-divider"></li>
                 <li>
@@ -68,7 +60,7 @@
                         <i class="fas fa-shield-alt"></i> Админ-панель
                     </a>
                 </li>
-            }
+            } *@
 
             <li><hr class="dropdown-divider"></li>
             <li>
