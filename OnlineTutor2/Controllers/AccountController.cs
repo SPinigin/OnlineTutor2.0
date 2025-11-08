@@ -244,10 +244,117 @@ namespace OnlineTutor2.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound();
+                return NotFound($"Невозможно загрузить пользователя с ID '{_userManager.GetUserId(User)}'.");
             }
 
             return View(user);
+        }
+
+        // GET: Account/EditProfile
+        [HttpGet]
+        public async Task<IActionResult> EditProfile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var model = new EditProfileViewModel
+            {
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                DateOfBirth = user.DateOfBirth,
+                CurrentEmail = user.Email
+            };
+
+            return View(model);
+        }
+
+        // POST: Account/EditProfile
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditProfile(EditProfileViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            // Проверка возраста (минимум 7 лет)
+            var age = DateTime.Now.Year - model.DateOfBirth.Year;
+            if (DateTime.Now.DayOfYear < model.DateOfBirth.DayOfYear)
+                age--;
+
+            if (age < 7)
+            {
+                ModelState.AddModelError(nameof(model.DateOfBirth), "Минимальный возраст - 7 лет");
+                return View(model);
+            }
+
+            if (age > 120)
+            {
+                ModelState.AddModelError(nameof(model.DateOfBirth), "Указана некорректная дата рождения");
+                return View(model);
+            }
+
+            // Обновляем основные данные
+            user.FirstName = model.FirstName;
+            user.LastName = model.LastName;
+            user.PhoneNumber = model.PhoneNumber;
+            user.DateOfBirth = model.DateOfBirth;
+
+            // Проверяем, изменился ли email
+            if (model.Email != user.Email)
+            {
+                var setEmailResult = await _userManager.SetEmailAsync(user, model.Email);
+                if (!setEmailResult.Succeeded)
+                {
+                    foreach (var error in setEmailResult.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                    return View(model);
+                }
+
+                // Устанавливаем новый username (если используется email как username)
+                var setUserNameResult = await _userManager.SetUserNameAsync(user, model.Email);
+                if (!setUserNameResult.Succeeded)
+                {
+                    foreach (var error in setUserNameResult.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                    return View(model);
+                }
+
+                // Помечаем email как неподтвержденный
+                user.EmailConfirmed = false;
+            }
+
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                foreach (var error in updateResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return View(model);
+            }
+
+            await _signInManager.RefreshSignInAsync(user);
+            _logger.LogInformation("Пользователь успешно обновил профиль.");
+
+            TempData["SuccessMessage"] = "Профиль успешно обновлен!";
+            return RedirectToAction(nameof(Profile));
         }
 
         private IActionResult RedirectToLocal(string? returnUrl)
