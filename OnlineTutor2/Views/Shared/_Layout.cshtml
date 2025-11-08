@@ -154,36 +154,6 @@
         </nav>
     </header>
 
-    @* @if (TempData["SuccessMessage"] != null)
-    {
-            <div class="container">
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            </div>
-    }
-
-    @if (TempData["ErrorMessage"] != null)
-    {
-            <div class="container">
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="fas fa-exclamation-triangle"></i> @TempData["ErrorMessage"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            </div>
-    }
-
-    @if (TempData["InfoMessage"] != null)
-    {
-            <div class="container">
-                <div class="alert alert-info alert-dismissible fade show" role="alert">
-                    <i class="fas fa-info-circle"></i> @TempData["InfoMessage"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            </div>
-    } *@
-
     <div class="container-fluid main-content px-2 px-md-3 px-lg-4">
     <main role="main" class="pb-3" style="max-width: 1600px; margin: 0 auto;">
         <partial name="_Notifications" />
