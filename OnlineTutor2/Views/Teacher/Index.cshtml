@@ -1,126 +1,129 @@
 ﻿@{
-    ViewData["Title"] = "Кабинет учителя";
+    ViewData["Title"] = "Учительская";
 }
+
 
 <div class="section-header">
     <h3><i class="fas fa-cogs"></i> Управление</h3>
 </div>
 
-<div class="row">
-    <div class="col-md-4 mb-4">
-        <div class="card card-fixed-height">
+<div class="row g-2 g-md-3">
+    <div class="col-4 col-md-4 mb-3 mb-md-4">
+        <div class="card teacher-card h-100">
             <div class="card-header">
-                <h5 class="card-title">Классы</h5>
+                <h5 class="card-title mb-0">Классы</h5>
             </div>
             <div class="card-body d-flex flex-column">
-                <p class="card-text">Управление классами, добавление учеников в классы</p>
+                <p class="card-text d-none d-md-block">Управление классами, добавление учеников в классы</p>
                 <a asp-controller="Class" asp-action="Index" class="btn btn-primary mt-auto w-100">
-                    <i class="fas fa-users"></i> Классы
+                    <i class="fas fa-users"></i> <span class="d-none d-sm-inline">Классы</span>
                 </a>
             </div>
         </div>
     </div>
-    <div class="col-md-4 mb-4">
-        <div class="card card-fixed-height">
+    <div class="col-4 col-md-4 mb-3 mb-md-4">
+        <div class="card teacher-card h-100">
             <div class="card-header">
-                <h5 class="card-title">Ученики</h5>
+                <h5 class="card-title mb-0">Ученики</h5>
             </div>
             <div class="card-body d-flex flex-column">
-                <p class="card-text">Добавление, редактирование и управление учениками</p>
+                <p class="card-text d-none d-md-block">Добавление, редактирование и управление учениками</p>
                 <a asp-controller="StudentManagement" asp-action="Index" class="btn btn-primary mt-auto w-100">
-                    <i class="fas fa-user-plus"></i> Ученики
+                    <i class="fas fa-user-plus"></i> <span class="d-none d-sm-inline">Ученики</span>
                 </a>
             </div>
         </div>
     </div>
-    <div class="col-md-4 mb-4">
-        <div class="card card-fixed-height">
+    <div class="col-4 col-md-4 mb-3 mb-md-4">
+        <div class="card teacher-card h-100">
             <div class="card-header">
-                <h5 class="card-title">Оценки</h5>
+                <h5 class="card-title mb-0">Оценки</h5>
             </div>
             <div class="card-body d-flex flex-column">
-                <p class="card-text">Проверка выполненных заданий и выставление оценок</p>
+                <p class="card-text d-none d-md-block">Проверка выполненных заданий и выставление оценок</p>
                 <a href="#" class="btn btn-primary mt-auto w-100">
-                    <i class="fas fa-check-circle"></i> Оценки
+                    <i class="fas fa-check-circle"></i> <span class="d-none d-sm-inline">Оценки</span>
                 </a>
             </div>
         </div>
     </div>
 </div>
+
 
 <div class="section-header">
     <h3><i class="fas fa-graduation-cap"></i> Образование</h3>
 </div>
 
-<div class="row">
-    <div class="col-md-6 mb-4">
-        <div class="card card-fixed-height">
+<div class="row g-2 g-md-3">
+    <div class="col-6 col-md-6 mb-3 mb-md-4">
+        <div class="card teacher-card h-100">
             <div class="card-header">
-                <h5 class="card-title">Тесты</h5>
+                <h5 class="card-title mb-0">Тесты</h5>
             </div>
             <div class="card-body d-flex flex-column">
-                <p class="card-text">Создание и управление различными типами тестов</p>
+                <p class="card-text d-none d-md-block">Создание и управление различными типами тестов</p>
                 <a asp-controller="Test" asp-action="Index" class="btn btn-primary mt-auto w-100">
-                    <i class="fas fa-tasks"></i> Управление тестами
+                    <i class="fas fa-tasks"></i> <span class="d-none d-sm-inline">Тесты</span>
                 </a>
             </div>
         </div>
     </div>
-    <div class="col-md-6 mb-4">
-        <div class="card card-fixed-height">
+    <div class="col-6 col-md-6 mb-3 mb-md-4">
+        <div class="card teacher-card h-100">
             <div class="card-header">
-                <h5 class="card-title">Материалы</h5>
+                <h5 class="card-title mb-0">Материалы</h5>
             </div>
             <div class="card-body d-flex flex-column">
-                <p class="card-text">Загрузка и управление учебными материалами</p>
+                <p class="card-text d-none d-md-block">Загрузка и управление учебными материалами</p>
                 <a asp-controller="Material" asp-action="Index" class="btn btn-primary mt-auto w-100">
-                    <i class="fas fa-book"></i> Материалы
+                    <i class="fas fa-book"></i> <span class="d-none d-sm-inline">Материалы</span>
                 </a>
             </div>
         </div>
     </div>
 </div>
+
 
 <div class="section-header">
-    <h3><i class="fas fa-chart-bar"></i> Статистика и отчеты</h3>
+    <h3><i class="fas fa-chart-bar"></i> Статистика</h3>
 </div>
 
-<div class="row">
-    <div class="col-md-4 mb-4">
-        <div class="card card-fixed-height">
+<div class="row g-2 g-md-3">
+    <div class="col-4 col-md-4 mb-3 mb-md-4">
+        <div class="card teacher-card h-100">
             <div class="card-header">
-                <h5 class="card-title">Успеваемость</h5>
+                <h5 class="card-title mb-0">Успеваемость</h5>
             </div>
             <div class="card-body d-flex flex-column">
-                <p class="card-text">Анализ успеваемости учеников и классов</p>
+                <p class="card-text d-none d-md-block">Анализ успеваемости учеников и классов</p>
                 <a href="#" class="btn btn-primary mt-auto w-100">
-                    <i class="fas fa-chart-line"></i> Успеваемость
+                    <i class="fas fa-chart-line"></i> <span class="d-none d-sm-inline">Анализ</span>
                 </a>
             </div>
         </div>
     </div>
-    <div class="col-md-4 mb-4">
-        <div class="card card-fixed-height">
+    <div class="col-4 col-md-4 mb-3 mb-md-4">
+        <div class="card teacher-card h-100">
             <div class="card-header">
-                <h5 class="card-title">Отчеты</h5>
+                <h5 class="card-title mb-0">Отчеты</h5>
             </div>
             <div class="card-body d-flex flex-column">
-                <p class="card-text">Генерация и экспорт различных отчетов</p>
+                <p class="card-text d-none d-md-block">Генерация и экспорт отчетов</p>
                 <a href="#" class="btn btn-primary mt-auto w-100">
-                    <i class="fas fa-file-alt"></i> Отчеты
+                    <i class="fas fa-file-alt"></i> <span class="d-none d-sm-inline">Отчеты</span>
                 </a>
             </div>
         </div>
     </div>
-    <div class="col-md-4 mb-4">
-        <div class="card card-fixed-height">
+    <div class="col-4 col-md-4 mb-3 mb-md-4">
+        <div class="card teacher-card h-100">
             <div class="card-header">
-                <h5 class="card-title">Календарь</h5>
+                <h5 class="card-title mb-0">Календарь</h5>
             </div>
             <div class="card-body d-flex flex-column">
-                <p class="card-text">Планирование уроков и событий.</p>
+                <p class="card-text d-none d-md-block">Планирование уроков и событий</p>
                 <a asp-controller="Calendar" asp-action="Index" class="btn btn-primary mt-auto w-100">
-                    <i class="fas fa-calendar-alt"></i> Календарь
+                    <i class="fas fa-calendar-alt"></i> <span class="d-none d-sm-inline">Календарь</span>
                 </a>
             </div>
         </div>

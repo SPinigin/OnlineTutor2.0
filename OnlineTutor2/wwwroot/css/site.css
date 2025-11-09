@@ -487,3 +487,144 @@ body {
         line-height: 1.1;
     }
 }
+
+/* ===== КАРТОЧКИ УЧИТЕЛЯ ===== */
+.teacher-card {
+    transition: all 0.2s ease;
+}
+
+    .teacher-card .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #007bff;
+    }
+
+    .teacher-card .card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .teacher-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+/* Мобильные (< 576px) - компактные карточки */
+@media (max-width: 575.98px) {
+    .teacher-card {
+        height: auto !important;
+        min-height: auto !important;
+    }
+
+        .teacher-card .card-header {
+            padding: 0.5rem 0.75rem;
+        }
+
+        .teacher-card .card-title {
+            font-size: 0.8rem;
+            margin-bottom: 0;
+        }
+
+        .teacher-card .card-body {
+            padding: 0.75rem 0.5rem;
+        }
+
+        .teacher-card .card-text {
+            font-size: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .teacher-card .btn {
+            padding: 0.375rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+            .teacher-card .btn i {
+                font-size: 0.875rem;
+            }
+
+    /* Убираем фиксированную высоту на мобильных */
+    .card-fixed-height {
+        height: auto !important;
+    }
+
+    /* Компактные заголовки секций */
+    .section-header {
+        margin-bottom: 1rem;
+        padding-bottom: 0.25rem;
+    }
+
+        .section-header h3 {
+            font-size: 1rem;
+            margin-bottom: 0;
+        }
+}
+
+/* Планшеты (576px - 767px) */
+@media (min-width: 576px) and (max-width: 767.98px) {
+    .teacher-card .card-header {
+        padding: 0.75rem 1rem;
+    }
+
+    .teacher-card .card-title {
+        font-size: 0.95rem;
+    }
+
+    .teacher-card .card-body {
+        padding: 1rem;
+    }
+
+    .teacher-card .btn {
+        font-size: 0.875rem;
+    }
+}
+
+/* Средние экраны (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .card-fixed-height {
+        height: 220px;
+    }
+}
+
+/* ===== DROPDOWN MENU АДАПТАЦИЯ ===== */
+.dropdown-menu {
+    max-width: calc(100vw - 2rem);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+@media (max-width: 767.98px) {
+    .btn-group .dropdown-menu,
+    .dropdown .dropdown-menu {
+        right: 0 !important;
+        left: auto !important;
+        transform: none !important;
+    }
+
+    /* Компактное меню */
+    .dropdown-menu {
+        min-width: 180px;
+        font-size: 0.9rem;
+    }
+
+    .dropdown-item {
+        padding: 0.5rem 1rem;
+        white-space: nowrap;
+    }
+
+        .dropdown-item i {
+            width: 1.25rem;
+            margin-right: 0.5rem;
+        }
+}
+
+/* Для очень узких экранов */
+@media (max-width: 375px) {
+    .dropdown-menu {
+        min-width: 160px;
+        font-size: 0.85rem;
+    }
+
+    .dropdown-item {
+        padding: 0.4rem 0.75rem;
+    }
+}
