@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.UI.Services;
-using MimeKit;
-using MailKit.Net.Smtp;
-using MailKit.Security;
+using SendGrid;
+using SendGrid.Helpers.Mail;
 
 namespace OnlineTutor2.Services
 {
@@ -20,39 +19,43 @@ namespace OnlineTutor2.Services
         {
             try
             {
-                var smtpServer = _configuration["EmailSettings:SmtpServer"];
-                var smtpPort = int.Parse(_configuration["EmailSettings:SmtpPort"]);
-                var smtpUsername = _configuration["EmailSettings:SmtpUsername"];
-                var smtpPassword = _configuration["EmailSettings:SmtpPassword"];
+                var apiKey = _configuration["EmailSettings:SendGridApiKey"];
+
+                if (string.IsNullOrEmpty(apiKey))
+                {
+                    throw new Exception("SendGrid API ключ не настроен");
+                }
+
                 var fromEmail = _configuration["EmailSettings:FromEmail"];
                 var fromName = _configuration["EmailSettings:FromName"];
 
-                var message = new MimeMessage();
-                message.From.Add(new MailboxAddress(fromName, fromEmail));
-                message.To.Add(new MailboxAddress("", email));
-                message.Subject = subject;
+                _logger.LogInformation($"Отправка email через SendGrid на {email}");
 
-                var bodyBuilder = new BodyBuilder
+                var client = new SendGridClient(apiKey);
+                var from = new EmailAddress(fromEmail, fromName);
+                var to = new EmailAddress(email);
+
+                var msg = MailHelper.CreateSingleEmail(
+                    from,
+                    to,
+                    subject,
+                    null,
+                    htmlMessage
+                );
+
+                var response = await client.SendEmailAsync(msg);
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Accepted ||
+                    response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    HtmlBody = htmlMessage
-                };
-                message.Body = bodyBuilder.ToMessageBody();
-
-                using (var client = new SmtpClient())
-                {
-                    // Подключаемся к SMTP серверу
-                    await client.ConnectAsync(smtpServer, smtpPort, SecureSocketOptions.StartTls);
-
-                    // Аутентификация
-                    await client.AuthenticateAsync(smtpUsername, smtpPassword);
-
-                    // Отправка
-                    await client.SendAsync(message);
-
-                    // Отключаемся
-                    await client.DisconnectAsync(true);
-
                     _logger.LogInformation($"Email успешно отправлен на {email}");
+                }
+                else
+                {
+                    var body = await response.Body.ReadAsStringAsync();
+                    _logger.LogError($"SendGrid вернул код: {response.StatusCode}");
+                    _logger.LogError($"Ответ: {body}");
+                    throw new Exception($"SendGrid ошибка: {response.StatusCode}");
                 }
             }
             catch (Exception ex)
