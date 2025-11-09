@@ -95,17 +95,16 @@
 }
 else
 {
-
-    <div class="row mb-4">
-        <div class="col-md-3">
+    <div class="row mb-4 g-2 g-md-3">
+        <div class="col-6 col-md-3">
             <div class="card text-center border-primary">
                 <div class="card-body">
                     <h4 class="text-primary">@Model.Count()</h4>
-                    <small class="text-muted">Материалов найдено</small>
+                    <small class="text-muted">Материалов</small>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card text-center border-info">
                 <div class="card-body">
                     <h4 class="text-info">@OnlineTutor2.ViewModels.MaterialStatisticsViewModel.FormatFileSize(Model.Sum(m => m.FileSize))</h4>
@@ -113,7 +112,7 @@ else
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card text-center border-success">
                 <div class="card-body">
                     <h4 class="text-success">@Model.Count(m => m.IsActive)</h4>
@@ -121,7 +120,7 @@ else
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card text-center border-warning">
                 <div class="card-body">
                     <h4 class="text-warning">@Model.Count(m => m.ClassId != null)</h4>
