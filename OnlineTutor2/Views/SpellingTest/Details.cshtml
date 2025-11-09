@@ -32,37 +32,37 @@
 </div>
 
 <div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-center">
+    <div class="col-6 col-sm-6 col-md-3 mb-3 mb-md-0">
+        <div class="card text-center stats-card">
             <div class="card-body">
-                <i class="fas fa-question-circle text-primary" style="font-size: 2rem;"></i>
+                <i class="fas fa-question-circle text-primary"></i>
                 <h4 class="mt-2 text-primary">@Model.SpellingQuestions.Count</h4>
                 <small class="text-muted">Вопросов</small>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center">
+    <div class="col-6 col-sm-6 col-md-3 mb-3 mb-md-0">
+        <div class="card text-center stats-card">
             <div class="card-body">
-                <i class="fas fa-clock text-info" style="font-size: 2rem;"></i>
+                <i class="fas fa-clock text-info"></i>
                 <h4 class="mt-2 text-info">@Model.TimeLimit</h4>
-                <small class="text-muted">Минут на тест</small>
+                <small class="text-muted">Минут</small>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center">
+    <div class="col-6 col-sm-6 col-md-3">
+        <div class="card text-center stats-card">
             <div class="card-body">
-                <i class="fas fa-redo text-warning" style="font-size: 2rem;"></i>
+                <i class="fas fa-redo text-warning"></i>
                 <h4 class="mt-2 text-warning">@Model.MaxAttempts</h4>
-                <small class="text-muted">Попыток на тест</small>
+                <small class="text-muted">Попыток</small>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center">
+    <div class="col-6 col-sm-6 col-md-3">
+        <div class="card text-center stats-card">
             <div class="card-body">
-                <i class="fas fa-users text-success" style="font-size: 2rem;"></i>
+                <i class="fas fa-users text-success"></i>
                 <h4 class="mt-2 text-success">@Model.SpellingTestResults.Count</h4>
                 <small class="text-muted">Прохождений</small>
             </div>
