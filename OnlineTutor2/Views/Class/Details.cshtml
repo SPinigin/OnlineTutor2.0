@@ -27,8 +27,8 @@
 </div>
 
 <div class="row mb-4 g-2 g-md-3">
-    <div class="col-6 col-sm-4 col-md-2">
-        <div class="card text-center border-primary stats-card">
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-primary">
             <div class="card-body">
                 <i class="fas fa-users text-primary" style="font-size: 2rem;"></i>
                 <h6 class="mt-2 mb-0">@Model.Students.Count</h6>
@@ -36,8 +36,8 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-sm-4 col-md-2">
-        <div class="card text-center border-warning stats-card">
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-info">
         <div class="card-body">
             <i class="fas fa-tasks text-info" style="font-size: 2rem;"></i>
                 <h6 class="mt-2 mb-0">@(ViewBag.AllTestsCount ?? 0)</h6>
@@ -45,8 +45,8 @@
         </div>
     </div>
 </div>
-    <div class="col-6 col-sm-4 col-md-2">
-        <div class="card text-center">
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-warning">
             <div class="card-body">
                 <i class="fas fa-book text-warning" style="font-size: 2rem;"></i>
                 <h6 class="mt-2 mb-0">@Model.Materials.Count</h6>
@@ -54,8 +54,8 @@
             </div>
         </div>
     </div>
-    <<div class="col-6 col-sm-4 col-md-2">
-        <div class="card text-center">
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-success">
             <div class="card-body">
                 <i class="fas fa-calendar-plus text-success" style="font-size: 2rem;"></i>
                 <h6 class="mt-2 mb-0">@Model.CreatedAt.ToString("dd.MM.yyyy")</h6>
