@@ -153,50 +153,51 @@
     <footer class="footer-fixed footer-compact bg-light border-top">
         <div class="container">
 
-            <div class="row d-none d-md-flex">
+            <div class="row d-none d-md-flex align-items-center">
 
-                <div class="col-md-4 footer-column">
-                    <h6><i class="fas fa-graduation-cap text-primary"></i> Тьюторная</h6>
-                    <p>&copy; 2025 - Образовательная платформа</p>
-                    <p>
-                        <a asp-area="" asp-controller="Home" asp-action="Privacy">
-                            <i class="fas fa-shield-alt"></i> Конфиденциальность
+                <div class="col-md-4 footer-column text-center">
+                    <h6><i class="fas fa-graduation-cap text-primary text-center"></i> Тьюторная</h6>
+                    <p class="mb-0">
+                        <a asp-area="" asp-controller="Home" asp-action="Privacy" class="text-decoration-none">
+                            <i class="fas fa-shield-alt text-center"></i> Конфиденциальность
                         </a>
                     </p>
+                    <p class="mb-1">&copy; 2025</p>
                 </div>
 
-                <div class="col-md-4 footer-column">
+                <div class="col-md-4 footer-column text-center">
                     <h6><i class="fas fa-address-book text-success"></i> Контакты</h6>
-                    <p><i class="fas fa-user"></i> Пинигина Наталья Анатольевна</p>
-                    <p>
-                        <i class="fas fa-envelope"></i>
-                        <a href="mailto:pn31@mail.ru">pn31@mail.ru</a>
-                    </p>
-                    <p><i class="fas fa-map-marker-alt"></i> г. Нефтеюганск</p>
-                    <p>
-                        <i class="fas fa-phone"></i>
-                        <a href="tel:+79324224597">+7 (932) 422-45-97</a>
-                    </p>
-                </div>
-
-                <div class="col-md-4 footer-column">
-                    <h6><i class="fas fa-code text-info"></i> Техническая поддержка</h6>
-                    <p><i class="fas fa-user-cog"></i> Пинигин Сергей</p>
-                    <div class="social-links mt-2">
-                        <a href="mailto:pinigin09@yandex.ru" title="Email">
+                    <p class="mb-1">Пинигина Наталья Анатольевна</p>
+                    <div class="social-links justify-content-center">
+                        <a href="mailto:pn31@mail.ru" title="Email: pn31@mail.ru">
                             <i class="fas fa-envelope"></i>
                         </a>
-                        <a href="https://t.me/SPin09" class="telegram" target="_blank" title="Telegram">
+                        <a href="tel:+79324224597" title="Телефон: +7 (932) 422-45-97">
+                            <i class="fas fa-phone"></i>
+                        </a>
+                    </div>
+                </div>
+
+
+                <div class="col-md-4 footer-column text-center">
+                    <h6><i class="fas fa-code text-info"></i> Тех.поддержка</h6>
+                    <p class="mb-1">Пинигин Сергей</p>
+                    <div class="social-links justify-content-center">
+                        <a href="mailto:pinigin09@yandex.ru" title="Email: pinigin09@yandex.ru">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                        <a href="https://t.me/SPin09" class="telegram" target="_blank" title="Telegram: @@SPin09">
                             <i class="fab fa-telegram"></i>
                         </a>
-                        <a href="https://github.com/SPinigin" class="github" target="_blank" title="GitHub">
+                        <a href="https://github.com/SPinigin" class="github" target="_blank" title="GitHub: github.com/SPinigin">
                             <i class="fab fa-github"></i>
                         </a>
                     </div>
                 </div>
             </div>
 
-            <div class="row d-md-none">
+
+            <div class="row d-md-none gx-2">
                 <div class="col-6 footer-column-mobile">
                     <div class="text-center">
                         <h6 class="footer-mobile-title">
@@ -235,9 +236,10 @@
                 </div>
             </div>
 
-            <div class="row d-md-none">
-                <div class="col-12 text-center mt-2">
-                    <small class="text-muted">&copy; 2025 Образовательная платформа</small>
+
+            <div class="row d-md-none mt-1">
+                <div class="col-12 text-center">
+                    <small class="text-muted" style="font-size: 0.65rem;">&copy; 2025 Тьюторная</small>
                 </div>
             </div>
         </div>
