@@ -26,14 +26,15 @@ else
     <div class="row">
         @foreach (var item in Model)
         {
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100 @(item.IsActive ? "" : "opacity-75")">
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2-4 col-xxl-5th mb-3">
+            <div class="card @(item.IsActive ? "" : "opacity-75")">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-graduation-cap"></i> @item.Name
                     </h5>
-                    <span class="badge bg-@(item.IsActive ? "success" : "secondary")">
-                        @(item.IsActive ? "Активный" : "Неактивный")
+                    <span class="badge bg-@(item.IsActive ? "success" : "secondary") flex-shrink-0 status-badge"
+                            title="@(item.IsActive ? "Активный" : "Неактивный")">
+                            <i class="fas fa-@(item.IsActive ? "check-circle" : "times-circle")"></i>
                     </span>
                 </div>
                 <div class="card-body d-flex flex-column">
@@ -47,7 +48,7 @@ else
                     }
 
                     <div class="mt-auto">
-                        <div class="row text-center mb-3">
+                            <div class="row text-center mb-2 g-1">
                             <div class="col">
                                 <div class="d-flex flex-column">
                                     <span class="h5 text-primary mb-0">@item.Students.Count</span>
@@ -77,37 +78,40 @@ else
                         </small>
                     </div>
                 </div>
-                <div class="card-footer">
-                    <div class="btn-group w-100" role="group">
-                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm">
-                            <i class="fas fa-eye"></i> Детали
-                        </a>
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-edit"></i> Изменить
-                        </a>
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li>
-                                    <form asp-action="ToggleStatus" asp-route-id="@item.Id" method="post" class="d-inline">
-                                        <button type="submit" class="dropdown-item">
-                                            <i class="fas fa-@(item.IsActive ? "pause" : "play")"></i>
-                                            @(item.IsActive ? "Деактивировать" : "Активировать")
-                                        </button>
-                                    </form>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <a asp-action="Delete" asp-route-id="@item.Id" class="dropdown-item text-danger">
-                                        <i class="fas fa-trash"></i> Удалить
-                                    </a>
-                                </li>
-                            </ul>
+                    <div class="card-footer">
+                        <div class="btn-group w-100" role="group">
+                            <a asp-action="Details"
+                               asp-route-id="@item.Id"
+                               class="btn btn-outline-info btn-sm"
+                               title="Детали">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a asp-action="Edit"
+                               asp-route-id="@item.Id"
+                               class="btn btn-outline-primary btn-sm"
+                               title="Изменить">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form asp-action="ToggleStatus"
+                                  asp-route-id="@item.Id"
+                                  method="post"
+                                  class="flex-fill">
+                                <button type="submit"
+                                        class="btn btn-outline-@(item.IsActive ? "warning" : "success") btn-sm w-100 rounded-0"
+                                        title="@(item.IsActive ? "Деактивировать" : "Активировать")">
+                                    <i class="fas fa-@(item.IsActive ? "pause" : "play")"></i>
+                                </button>
+                            </form>
+                            <a asp-action="Delete"
+                               asp-route-id="@item.Id"
+                               class="btn btn-outline-danger btn-sm"
+                               title="Удалить"
+                               onclick="return confirm('Вы уверены, что хотите удалить этот класс?');">
+                                <i class="fas fa-trash"></i>
+                            </a>
                         </div>
                     </div>
-                </div>
+
             </div>
         </div>
         }

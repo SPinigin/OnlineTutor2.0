@@ -364,6 +364,10 @@ body {
         font-size: 0.875rem;
     }
 
+.status-badge {
+    cursor: help;
+}
+
 /* ===== КАРТОЧКИ УЧИТЕЛЯ ===== */
 .teacher-card {
     transition: all 0.2s ease;
