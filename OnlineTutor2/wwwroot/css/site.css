@@ -464,3 +464,26 @@ body {
         font-size: 0.8rem;
     }
 }
+
+/* Экстра-компактные карточки для очень узких экранов */
+@media (max-width: 375px) {
+    .stats-card .card-body {
+        padding: 0.5rem 0.25rem;
+    }
+
+    .stats-card i {
+        font-size: 1.25rem !important;
+    }
+
+    .stats-card h4 {
+        font-size: 1.1rem !important;
+        margin-top: 0.15rem;
+        margin-bottom: 0;
+    }
+
+    .stats-card small {
+        font-size: 0.65rem;
+        display: block;
+        line-height: 1.1;
+    }
+}
