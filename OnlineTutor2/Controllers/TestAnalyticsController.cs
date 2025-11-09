@@ -20,7 +20,7 @@ namespace OnlineTutor2.Controllers
             _userManager = userManager;
         }
 
-        // GET: TestAnalytics/Spelling/5 - Аналитика теста на орфографию
+        // GET: TestAnalytics/Spelling/5 - Аналитика теста по орфографии
         public async Task<IActionResult> Spelling(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -92,7 +92,7 @@ namespace OnlineTutor2.Controllers
             return View("OrthoeopyTestAnalytics", analytics);
         }
 
-        // GET: TestAnalytics/Punctuation/5 - Аналитика теста на пунктуацию
+        // GET: TestAnalytics/Punctuation/5 - Аналитика теста по пунктуации
         public async Task<IActionResult> Punctuation(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -116,7 +116,7 @@ namespace OnlineTutor2.Controllers
             return View("PunctuationAnalytics", analytics);
         }
 
-        // Методы для тестов на орфографию
+        // Методы для тестов по орфографии
         private async Task<SpellingTestAnalyticsViewModel> BuildSpellingAnalyticsAsync(SpellingTest test)
         {
             var analytics = new SpellingTestAnalyticsViewModel
@@ -299,7 +299,7 @@ namespace OnlineTutor2.Controllers
             return questionAnalytics;
         }
 
-        // Методы для тестов на пунктуацию
+        // Методы для тестов по пунктуации
         private async Task<PunctuationTestAnalyticsViewModel> BuildPunctuationAnalyticsAsync(PunctuationTest test)
         {
             var analytics = new PunctuationTestAnalyticsViewModel
@@ -845,7 +845,7 @@ namespace OnlineTutor2.Controllers
             return Json(response);
         }
 
-        // GET: TestAnalytics/Orthoepy/5 - Аналитика теста на орфоэпию
+        // GET: TestAnalytics/Orthoepy/5 - Аналитика теста по орфоэпии
         public async Task<IActionResult> Orthoepy(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);

@@ -140,7 +140,7 @@ namespace OnlineTutor2.Services
             try
             {
                 using var package = new ExcelPackage();
-                var worksheet = package.Workbook.Worksheets.Add("Вопросы на орфоэпию");
+                var worksheet = package.Workbook.Worksheets.Add("Вопросы по орфоэпии");
 
                 // Заголовки
                 worksheet.Cells[1, 1].Value = "Слово*";
@@ -198,7 +198,7 @@ namespace OnlineTutor2.Services
 
                 // Добавляем лист с инструкциями
                 var instructionSheet = package.Workbook.Worksheets.Add("Инструкция");
-                instructionSheet.Cells[1, 1].Value = "Инструкция по заполнению вопросов на орфоэпию";
+                instructionSheet.Cells[1, 1].Value = "Инструкция по заполнению вопросов по орфоэпии";
                 instructionSheet.Cells[1, 1].Style.Font.Bold = true;
                 instructionSheet.Cells[1, 1].Style.Font.Size = 14;
 

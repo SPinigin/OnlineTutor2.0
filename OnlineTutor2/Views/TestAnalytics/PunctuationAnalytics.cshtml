@@ -8,7 +8,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-controller="Test" asp-action="Category" asp-route-id="5">Тесты на пунктуацию</a>
+                    <a asp-controller="Test" asp-action="Category" asp-route-id="5">Тесты по пунктуации</a>
                 </li>
                 <li class="breadcrumb-item">
                     <a asp-controller="PunctuationTest" asp-action="Details" asp-route-id="@Model.PunctuationTest.Id">@Model.PunctuationTest.Title</a>
@@ -16,7 +16,7 @@
                 <li class="breadcrumb-item active">Аналитика</li>
             </ol>
         </nav>
-        <h2><i class="fas fa-chart-bar text-warning"></i> Аналитика теста на пунктуацию</h2>
+        <h2><i class="fas fa-chart-bar text-warning"></i> Аналитика теста по пунктуации</h2>
         <p class="text-muted">Детальный анализ результатов и статистика прохождения</p>
     </div>
     <div>
@@ -95,7 +95,7 @@
                 <div class="info-column">
                     <div class="test-info-item mb-2">
                         <i class="fas fa-exclamation text-warning"></i>
-                        <span class="info-label">Тест на пунктуацию</span>
+                        <span class="info-label">Тест по пунктуации</span>
                     </div>
                     @if (!string.IsNullOrEmpty(Model.PunctuationTest.Description))
                     {

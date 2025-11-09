@@ -46,7 +46,7 @@ namespace OnlineTutor2.Controllers
                 Student = student
             };
 
-            // Получаем тесты на орфографию
+            // Получаем тесты по орфографии
             if (category == null || category == "spelling")
             {
                 viewModel.SpellingTests = await _context.SpellingTests
@@ -61,7 +61,7 @@ namespace OnlineTutor2.Controllers
                     .ToListAsync();
             }
 
-            // Получаем тесты на пунктуацию
+            // Получаем тесты по пунктуации
             if (category == null || category == "punctuation")
             {
                 viewModel.PunctuationTests = await _context.PunctuationTests
@@ -76,7 +76,7 @@ namespace OnlineTutor2.Controllers
                     .ToListAsync();
             }
 
-            // Получаем тесты на орфоэпию
+            // Получаем тесты по орфоэпии
             if (category == null || category == "orthoepy")
             {
                 viewModel.OrthoeopyTests = await _context.OrthoeopyTests
@@ -112,7 +112,7 @@ namespace OnlineTutor2.Controllers
 
         #region Spelling Tests
 
-        // GET: StudentTest/StartSpelling/5 - Начало теста на орфографию
+        // GET: StudentTest/StartSpelling/5 - Начало теста по орфографии
         public async Task<IActionResult> StartSpelling(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -170,7 +170,7 @@ namespace OnlineTutor2.Controllers
             return RedirectToAction(nameof(TakeSpelling), new { id = testResult.Id });
         }
 
-        // GET: StudentTest/TakeSpelling/5 - Прохождение теста на орфографию
+        // GET: StudentTest/TakeSpelling/5 - Прохождение теста по орфографии
         public async Task<IActionResult> TakeSpelling(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -213,7 +213,7 @@ namespace OnlineTutor2.Controllers
             return View(viewModel);
         }
 
-        // POST: StudentTest/SubmitSpellingAnswer - Сохранение ответа на орфографию
+        // POST: StudentTest/SubmitSpellingAnswer - Сохранение ответа по орфографии
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitSpellingAnswer(SubmitSpellingAnswerViewModel model)
@@ -280,7 +280,7 @@ namespace OnlineTutor2.Controllers
             });
         }
 
-        // POST: StudentTest/CompleteSpelling - Завершение теста на орфографию
+        // POST: StudentTest/CompleteSpelling - Завершение теста по орфографии
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CompleteSpelling(int testResultId)
@@ -322,7 +322,7 @@ namespace OnlineTutor2.Controllers
             }
         }
 
-        // GET: StudentTest/SpellingResult/5 - Результат теста на орфографию
+        // GET: StudentTest/SpellingResult/5 - Результат теста по орфографии
         public async Task<IActionResult> SpellingResult(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -349,7 +349,7 @@ namespace OnlineTutor2.Controllers
 
         #region Punctuation Tests
 
-        // GET: StudentTest/StartPunctuation/5 - Начало теста на пунктуацию
+        // GET: StudentTest/StartPunctuation/5 - Начало теста по пунктуации
         public async Task<IActionResult> StartPunctuation(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -409,7 +409,7 @@ namespace OnlineTutor2.Controllers
             return RedirectToAction(nameof(TakePunctuation), new { id = testResult.Id });
         }
 
-        // GET: StudentTest/TakePunctuation/5 - Прохождение теста на пунктуацию
+        // GET: StudentTest/TakePunctuation/5 - Прохождение теста по пунктуации
         public async Task<IActionResult> TakePunctuation(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -452,7 +452,7 @@ namespace OnlineTutor2.Controllers
             return View(viewModel);
         }
 
-        // POST: StudentTest/SubmitPunctuationAnswer - Сохранение ответа на пунктуацию
+        // POST: StudentTest/SubmitPunctuationAnswer - Сохранение ответа по пунктуации
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitPunctuationAnswer(SubmitPunctuationAnswerViewModel model)
@@ -519,7 +519,7 @@ namespace OnlineTutor2.Controllers
             });
         }
 
-        // POST: StudentTest/CompletePunctuation - Завершение теста на пунктуацию
+        // POST: StudentTest/CompletePunctuation - Завершение теста по пунктуации
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CompletePunctuation(int testResultId)
@@ -559,7 +559,7 @@ namespace OnlineTutor2.Controllers
             }
         }
 
-        // GET: StudentTest/PunctuationResult/5 - Результат теста на пунктуацию
+        // GET: StudentTest/PunctuationResult/5 - Результат теста по пунктуации
         public async Task<IActionResult> PunctuationResult(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -658,7 +658,7 @@ namespace OnlineTutor2.Controllers
 
         #region Orthoepy Tests
 
-        // GET: StudentTest/StartOrthoepy/5 - Начало теста на орфоэпию
+        // GET: StudentTest/StartOrthoepy/5 - Начало теста по орфоэпии
         public async Task<IActionResult> StartOrthoepy(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -718,7 +718,7 @@ namespace OnlineTutor2.Controllers
             return RedirectToAction(nameof(TakeOrthoepy), new { id = testResult.Id });
         }
 
-        // GET: StudentTest/TakeOrthoepy/5 - Прохождение теста на орфоэпию
+        // GET: StudentTest/TakeOrthoepy/5 - Прохождение теста по орфоэпии
         public async Task<IActionResult> TakeOrthoepy(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -761,7 +761,7 @@ namespace OnlineTutor2.Controllers
             return View(viewModel);
         }
 
-        // POST: StudentTest/SubmitOrthoeopyAnswer - Сохранение ответа на орфоэпию
+        // POST: StudentTest/SubmitOrthoeopyAnswer - Сохранение ответа по орфоэпии
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitOrthoeopyAnswer(int TestResultId, int QuestionId, int SelectedStressPosition)
@@ -828,7 +828,7 @@ namespace OnlineTutor2.Controllers
             });
         }
 
-        // POST: StudentTest/CompleteOrthoepy - Завершение теста на орфоэпию
+        // POST: StudentTest/CompleteOrthoepy - Завершение теста по орфоэпии
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CompleteOrthoepy(int testResultId)
@@ -869,7 +869,7 @@ namespace OnlineTutor2.Controllers
             }
         }
 
-        // GET: StudentTest/OrthoeopyResult/5 - Результат теста на орфоэпию
+        // GET: StudentTest/OrthoeopyResult/5 - Результат теста по орфоэпии
         public async Task<IActionResult> OrthoeopyResult(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
