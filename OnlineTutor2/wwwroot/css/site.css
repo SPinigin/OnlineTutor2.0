@@ -43,7 +43,7 @@ body {
 
 /* ===== MAIN CONTENT ===== */
 .main-content {
-    padding-top: 65px; /* Уменьшили с 70px */
+    padding-top: 65px;
     grid-row: 2;
 }
 
@@ -408,7 +408,7 @@ body {
     }
 }
 
-/* Планшеты (768px - 991px) - УБРАЛИ margin-top! */
+/* Планшеты (768px - 991px) */
 @media (min-width: 768px) and (max-width: 991.98px) {
     .card-fixed-height {
         height: auto;
@@ -454,7 +454,7 @@ body {
     }
 }
 
-/* Мобильные (< 768px) - УБРАЛИ margin-top! */
+/* Мобильные (< 768px) */
 @media (max-width: 767.98px) {
     .card-fixed-height {
         height: auto !important;
