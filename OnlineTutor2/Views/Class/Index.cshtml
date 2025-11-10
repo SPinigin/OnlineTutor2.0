@@ -79,16 +79,16 @@ else
                     </div>
                 </div>
                     <div class="card-footer">
-                        <div class="btn-group w-100" role="group">
+                        <div class="d-flex gap-2 w-100" role="group">
                             <a asp-action="Details"
                                asp-route-id="@item.Id"
-                               class="btn btn-outline-info btn-sm"
+                               class="btn btn-outline-info btn-sm flex-fill"
                                title="Детали">
                                 <i class="fas fa-eye"></i>
                             </a>
                             <a asp-action="Edit"
                                asp-route-id="@item.Id"
-                               class="btn btn-outline-primary btn-sm"
+                               class="btn btn-outline-primary btn-sm flex-fill"
                                title="Изменить">
                                 <i class="fas fa-edit"></i>
                             </a>
@@ -97,14 +97,14 @@ else
                                   method="post"
                                   class="flex-fill">
                                 <button type="submit"
-                                        class="btn btn-outline-@(item.IsActive ? "warning" : "success") btn-sm w-100 rounded-0"
+                                        class="btn btn-outline-@(item.IsActive ? "warning" : "success") btn-sm w-100 flex-fill"
                                         title="@(item.IsActive ? "Деактивировать" : "Активировать")">
                                     <i class="fas fa-@(item.IsActive ? "pause" : "play")"></i>
                                 </button>
                             </form>
                             <a asp-action="Delete"
                                asp-route-id="@item.Id"
-                               class="btn btn-outline-danger btn-sm"
+                               class="btn btn-outline-danger btn-sm flex-fill"
                                title="Удалить"
                                onclick="return confirm('Вы уверены, что хотите удалить этот класс?');">
                                 <i class="fas fa-trash"></i>
