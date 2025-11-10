@@ -137,6 +137,16 @@ else
                                 title="Изменить">
                                 <i class="fas fa-edit"></i>
                             </a>
+                            @* <form asp-action="ToggleStatus"
+                                  asp-route-id="@test.Id"
+                                  method="post"
+                                  class="flex-fill">
+                                <button type="submit"
+                                        class="btn btn-outline-@(test.IsActive ? "warning" : "success") btn-sm w-100 flex-fill"
+                                        title="@(test.IsActive ? "Деактивировать" : "Активировать")">
+                                    <i class="fas fa-@(test.IsActive ? "pause" : "play")"></i>
+                                </button>
+                            </form> *@
                             <a asp-controller="SpellingTest" 
                                 asp-action="Delete" 
                                 asp-route-id="@test.Id"
