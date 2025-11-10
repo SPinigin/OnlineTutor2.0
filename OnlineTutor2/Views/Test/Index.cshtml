@@ -53,29 +53,29 @@ else
                         <div class="category-icon mb-3 text-center">
                             @if (category.Id == 1)
                             {
-                                <i class="fas fa-spell-check text-primary" style="font-size: 3rem;"></i>
+                                <i class="@category.IconClass text-primary" style="font-size: 3rem;"></i>
                             }
                             else if (category.Id == 2)
                             {
-                                <i class="fas fa-quote-right text-warning" style="font-size: 3rem;"></i>
+                                <i class="@category.IconClass text-warning" style="font-size: 3rem;"></i>
                             }
                             else if (category.Id == 3)
                             {
-                                <i class="fas fa-volume-up text-success" style="font-size: 3rem;"></i>
+                                <i class="@category.IconClass text-success" style="font-size: 3rem;"></i>
                             }
                             else if (category.Id == 4)
                             {
-                                <i class="fas fa-list-ul text-success" style="font-size: 3rem;"></i>
+                                <i class="@category.IconClass text-success" style="font-size: 3rem;"></i>
                             }
                             //свободные ответы
                             @* else if (category.Id == 5)
                             {
-                                <i class="fas fa-volume-up text-success" style="font-size: 3rem;"></i>
+                                <i class="@category.IconClass text-success" style="font-size: 3rem;"></i>
                             } *@
                             //средства выразительности
                             @* else if (category.Id == 6)
                             {
-                                <i class="fas fa-volume-up text-success" style="font-size: 3rem;"></i>
+                                <i class="@category.IconClass text-success" style="font-size: 3rem;"></i>
                             } *@
                             else
                             {
