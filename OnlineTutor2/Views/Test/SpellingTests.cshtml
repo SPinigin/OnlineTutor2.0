@@ -11,21 +11,18 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-action="Index"><i class="fas fa-tasks"></i> Тесты</a>
+                    <a asp-action="Index"><i class="@category.IconClass"></i> Тесты</a>
                 </li>
                 <li class="breadcrumb-item active">
                     <i class="@category.IconClass"></i> @category.Name
                 </li>
             </ol>
         </nav>
-        <h2>@category.Name</h2>
-        @if (!string.IsNullOrEmpty(category.Description))
-        {
-            <p class="text-muted">@category.Description</p>
-        }
     </div>
     <div>
-        <a asp-controller="SpellingTest" asp-action="Create" class="btn btn-success">
+        <a asp-controller="SpellingTest"
+            asp-action="Create"
+            class="btn btn-success">
             <i class="fas fa-plus"></i> Создать тест
         </a>
     </div>
@@ -46,10 +43,10 @@ else
 {
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h6 class="mb-0">
-            <i class="fas fa-tasks"></i> Всего тестов: @Model.Count()
+            <i class="@category.IconClass"></i> Всего тестов: @Model.Count()
         </h6>
         <div class="btn-group btn-group-sm" role="group">
-            <button type="button" class="btn btn-outline-secondary active" onclick="filterTestsByStatus('all')">
+            <button type="button" class="btn btn-outline-primary active" onclick="filterTestsByStatus('all')">
                 Все (@Model.Count())
             </button>
             <button type="button" class="btn btn-outline-success" onclick="filterTestsByStatus('active')">
@@ -68,7 +65,7 @@ else
                 <div class="card h-100 @(test.IsActive ? "" : "opacity-75")">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h6 class="card-title mb-0">
-                            <i class="fas fa-spell-check text-primary"></i> @test.Title
+                            <i class="@category.IconClass text-primary"></i> @test.Title
                         </h6>
                         <div>
                             <span class="badge bg-@(test.IsActive ? "success" : "secondary") flex-shrink-0 status-badge"
@@ -103,7 +100,7 @@ else
                             <div class="col-4">
                                 <div class="d-flex flex-column">
                                     <span class="h6 text-success mb-0">@test.SpellingTestResults.Count</span>
-                                    <small class="text-muted">прохождений</small>
+                                    <small class="text-muted">результатов</small>
                                 </div>
                             </div>
                         </div>
@@ -127,25 +124,25 @@ else
                         </div>
                     </div>
                     <div class="card-footer">
-                        <div class="btn-group w-100" role="group">
+                        <div class="d-flex gap-2 w-100" role="group">
                             <a asp-controller="SpellingTest"
                                 asp-action="Details"
                                 asp-route-id="@test.Id"
-                               class="btn btn-outline-info btn-sm"
+                               class="btn btn-outline-info btn-sm flex-fill"
                                 title="Детали">
                                 <i class="fas fa-eye"></i>
                             </a>
                             <a asp-controller="SpellingTest"
                                 asp-action="Edit"
                                 asp-route-id="@test.Id"
-                                class="btn btn-outline-primary btn-sm"
+                               class="btn btn-outline-primary btn-sm flex-fill"
                                 title="Изменить">
                                 <i class="fas fa-edit"></i>
                             </a>
                             <a asp-controller="SpellingTest" 
                                 asp-action="Delete" 
                                 asp-route-id="@test.Id"
-                                class="btn btn-outline-danger btn-sm"
+                               class="btn btn-outline-danger btn-sm flex-fill"
                                 title="Удалить">
                                 <i class="fas fa-trash"></i>
                             </a>
