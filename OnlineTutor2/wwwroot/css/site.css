@@ -515,20 +515,15 @@ body {
         line-height: 1.2;
     }
 
-    .btn-group .dropdown-menu,
-    .dropdown .dropdown-menu {
-        right: 0 !important;
-        left: auto !important;
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start !important;
     }
 
-    .dropdown-menu {
-        min-width: 180px;
-        font-size: 0.9rem;
-    }
-
-    .dropdown-item {
-        padding: 0.5rem 1rem;
-    }
+        .card-header > div:last-child {
+            margin-top: 0.5rem;
+            width: 100%;
+        }
 }
 
 /* Мелкие мобильные (< 576px) */
@@ -599,3 +594,14 @@ body {
         padding: 0.4rem 0.75rem;
     }
 }
+
+/* ===== BUTTON GROUPS С ПРОМЕЖУТКАМИ ===== */
+.btn-group-separated {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+    .btn-group-separated .btn {
+        border-radius: 0.25rem !important;
+    }
