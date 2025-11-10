@@ -15,8 +15,9 @@
         </nav>
         <h2>
             <i class="fas fa-spell-check text-primary"></i> @Model.Title
-            <span class="badge bg-@(Model.IsActive ? "success" : "secondary") ms-2">
-                @(Model.IsActive ? "Активный" : "Неактивный")
+            <span class="badge bg-@(Model.IsActive ? "success" : "secondary") flex-shrink-0 status-badge"
+                  title=@(Model.IsActive ? "Активный" : "Неактивный")>
+                <i class="fas fa-@(Model.IsActive ? "check-circle" : "times-circle")"></i>
             </span>
         </h2>
         @if (!string.IsNullOrEmpty(Model.Description))
