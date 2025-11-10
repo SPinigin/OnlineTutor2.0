@@ -71,8 +71,9 @@ else
                             <i class="fas fa-spell-check text-primary"></i> @test.Title
                         </h6>
                         <div>
-                            <span class="badge bg-@(test.IsActive ? "success" : "secondary")">
-                                @(test.IsActive ? "Активный" : "Неактивный")
+                            <span class="badge bg-@(test.IsActive ? "success" : "secondary") flex-shrink-0 status-badge"
+                                title=@(test.IsActive ? "Активный" : "Неактивный")>
+                                <i class="fas fa-@(test.IsActive ? "check-circle" : "times-circle")"></i>
                             </span>
                             @if (test.Class != null)
                             {
@@ -127,42 +128,27 @@ else
                     </div>
                     <div class="card-footer">
                         <div class="btn-group w-100" role="group">
-                            <a asp-controller="SpellingTest" asp-action="Details" asp-route-id="@test.Id"
-                               class="btn btn-outline-info btn-sm">
-                                <i class="fas fa-eye"></i> Детали
+                            <a asp-controller="SpellingTest"
+                                asp-action="Details"
+                                asp-route-id="@test.Id"
+                               class="btn btn-outline-info btn-sm"
+                                title="Детали">
+                                <i class="fas fa-eye"></i>
                             </a>
-                            <a asp-controller="SpellingTest" asp-action="Edit" asp-route-id="@test.Id"
-                               class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-edit"></i> Изменить
+                            <a asp-controller="SpellingTest"
+                                asp-action="Edit"
+                                asp-route-id="@test.Id"
+                                class="btn btn-outline-primary btn-sm"
+                                title="Изменить">
+                                <i class="fas fa-edit"></i>
                             </a>
-                            <div class="btn-group" role="group">
-                                <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle"
-                                        data-bs-toggle="dropdown">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </button>
-                                <ul class="dropdown-menu">
-                                    @if (test.SpellingQuestions.Any())
-                                    {
-                                        <li>
-                                            <a class="dropdown-item" href="#">
-                                                <i class="fas fa-play"></i> Предварительный просмотр
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item" href="#">
-                                                <i class="fas fa-copy"></i> Дублировать
-                                            </a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                    }
-                                    <li>
-                                        <a asp-controller="SpellingTest" asp-action="Delete" asp-route-id="@test.Id"
-                                           class="dropdown-item text-danger">
-                                            <i class="fas fa-trash"></i> Удалить
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
+                            <a asp-controller="SpellingTest" 
+                                asp-action="Delete" 
+                                asp-route-id="@test.Id"
+                                class="btn btn-outline-danger btn-sm"
+                                title="Удалить">
+                                <i class="fas fa-trash"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
