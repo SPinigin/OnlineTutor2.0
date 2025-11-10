@@ -1,11 +1,10 @@
 ﻿@{
-    ViewData["Title"] = "Календарь занятий";
+    ViewData["Title"] = "Календарь";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h2><i class="fas fa-calendar-alt text-primary"></i> Календарь занятий</h2>
-        <p class="text-muted">Планируйте и управляйте расписанием занятий</p>
+        <h2><i class="fas fa-calendar-alt text-primary"></i> Календарь</h2>
     </div>
     <div>
         <a asp-action="Create" class="btn btn-success">
@@ -15,30 +14,30 @@
 </div>
 
 <div class="row mb-4">
-    <div class="col-md-4">
+    <div class="col-4 col-md-4">
         <div class="card text-center border-primary">
-            <div class="card-body">
-                <i class="fas fa-clock text-primary" style="font-size: 2rem;"></i>
-                <h4 class="mt-2 text-primary">@ViewBag.UpcomingEvents</h4>
-                <p class="text-muted mb-0">Предстоящих занятий</p>
+            <div class="card-body p-2 p-md-3">
+                <i class="fas fa-clock text-primary" style="font-size: 1.5rem;"></i>
+                <h4 class="mt-2 text-primary fs-6 fs-md-4">@ViewBag.UpcomingEvents</h4>
+                <p class="text-muted mb-0 small">Предстоящих занятий</p>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-4 col-md-4">
         <div class="card text-center border-success">
-            <div class="card-body">
-                <i class="fas fa-calendar-day text-success" style="font-size: 2rem;"></i>
-                <h4 class="mt-2 text-success">@ViewBag.TodayEvents</h4>
-                <p class="text-muted mb-0">Занятий сегодня</p>
+            <div class="card-body p-2 p-md-3">
+                <i class="fas fa-calendar-day text-success" style="font-size: 1.5rem;"></i>
+                <h4 class="mt-2 text-success fs-6 fs-md-4">@ViewBag.TodayEvents</h4>
+                <p class="text-muted mb-0 small">Занятий сегодня</p>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-4 col-md-4">
         <div class="card text-center border-info">
-            <div class="card-body">
-                <i class="fas fa-check-circle text-info" style="font-size: 2rem;"></i>
-                <h4 class="mt-2 text-info">@ViewBag.CompletedThisMonth</h4>
-                <p class="text-muted mb-0">Проведено за месяц</p>
+            <div class="card-body p-2 p-md-3">
+                <i class="fas fa-check-circle text-info" style="font-size: 1.5rem;"></i>
+                <h4 class="mt-2 text-info fs-6 fs-md-4">@ViewBag.CompletedThisMonth</h4>
+                <p class="text-muted mb-0 small">Проведено за месяц</p>
             </div>
         </div>
     </div>
