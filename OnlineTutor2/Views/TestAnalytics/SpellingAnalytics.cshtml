@@ -17,7 +17,6 @@
             </ol>
         </nav>
         <h2><i class="fas fa-chart-bar text-primary"></i> Аналитика теста по орфографии</h2>
-        <p class="text-muted">Детальный анализ результатов и статистика прохождения</p>
     </div>
     <div>
         <a asp-controller="SpellingTest" asp-action="Details" asp-route-id="@Model.SpellingTest.Id" class="btn btn-outline-secondary">
@@ -33,6 +32,24 @@
                 <i class="fas fa-users text-primary"></i>
                 <h4 class="mt-2 text-primary">@Model.Statistics.TotalStudents</h4>
                 <small class="text-muted">Всего учеников</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-sm-4 col-md-2">
+        <div class="card text-center border-info stats-card">
+            <div class="card-body">
+                <i class="fas fa-percentage text-info"></i>
+                <h4 class="mt-2 text-info">@Model.Statistics.AveragePercentage.ToString("F1")%</h4>
+                <small class="text-muted">Ср. результат</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-sm-4 col-md-2">
+        <div class="card text-center border-secondary stats-card">
+            <div class="card-body">
+                <i class="fas fa-stopwatch text-secondary"></i>
+                <h4 class="mt-2 text-secondary">@($"{Model.Statistics.AverageCompletionTime.Minutes:D2}:{Model.Statistics.AverageCompletionTime.Seconds:D2}")</h4>
+                <small class="text-muted">Ср. время</small>
             </div>
         </div>
     </div>
@@ -60,24 +77,6 @@
                 <i class="fas fa-times-circle text-danger"></i>
                 <h4 class="mt-2 text-danger">@Model.Statistics.StudentsNotStarted</h4>
                 <small class="text-muted">Не начали</small>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-sm-4 col-md-2">
-        <div class="card text-center border-info stats-card">
-            <div class="card-body">
-                <i class="fas fa-percentage text-info"></i>
-                <h4 class="mt-2 text-info">@Model.Statistics.AveragePercentage.ToString("F1")%</h4>
-                <small class="text-muted">Ср. результат</small>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-sm-4 col-md-2">
-        <div class="card text-center border-secondary stats-card">
-            <div class="card-body">
-                <i class="fas fa-stopwatch text-secondary"></i>
-                <h4 class="mt-2 text-secondary">@($"{Model.Statistics.AverageCompletionTime.Minutes:D2}:{Model.Statistics.AverageCompletionTime.Seconds:D2}")</h4>
-                <small class="text-muted">Ср. время</small>
             </div>
         </div>
     </div>
