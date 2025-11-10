@@ -11,21 +11,18 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-action="Index"><i class="fas fa-tasks"></i> Тесты</a>
+                    <a asp-action="Index"><i class="@category.IconClass"></i> Тесты</a>
                 </li>
                 <li class="breadcrumb-item active">
                     <i class="@category.IconClass"></i> @category.Name
                 </li>
             </ol>
         </nav>
-        <h2>@category.Name</h2>
-        @if (!string.IsNullOrEmpty(category.Description))
-        {
-            <p class="text-muted">@category.Description</p>
-        }
     </div>
     <div>
-        <a asp-controller="PunctuationTest" asp-action="Create" class="btn btn-warning">
+        <a asp-controller="PunctuationTest"
+            asp-action="Create"
+            class="btn btn-warning">
             <i class="fas fa-plus"></i> Создать тест
         </a>
     </div>
@@ -36,7 +33,6 @@
     <div class="text-center py-5">
         <i class="@category.IconClass text-muted" style="font-size: 4rem;"></i>
         <h4 class="mt-3 text-muted">У вас пока нет тестов по пунктуации</h4>
-        <p class="text-muted">Создайте свой первый тест для проверки знаний пунктуации</p>
         <a asp-controller="PunctuationTest" asp-action="Create" class="btn btn-warning">
             <i class="fas fa-plus"></i> Создать первый тест
         </a>
@@ -46,10 +42,10 @@ else
 {
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h6 class="mb-0">
-            <i class="fas fa-tasks"></i> Всего тестов: @Model.Count()
+            <i class="@category.IconClass"></i> Всего тестов: @Model.Count()
         </h6>
         <div class="btn-group btn-group-sm" role="group">
-            <button type="button" class="btn btn-outline-secondary active" onclick="filterTestsByStatus('all')">
+            <button type="button" class="btn btn-outline-primary active" onclick="filterTestsByStatus('all')">
                 Все (@Model.Count())
             </button>
             <button type="button" class="btn btn-outline-success" onclick="filterTestsByStatus('active')">
@@ -102,7 +98,7 @@ else
                             <div class="col-4">
                                 <div class="d-flex flex-column">
                                     <span class="h6 text-success mb-0">@test.PunctuationTestResults.Count</span>
-                                    <small class="text-muted">прохождений</small>
+                                    <small class="text-muted">результатов</small>
                                 </div>
                             </div>
                         </div>
@@ -126,43 +122,28 @@ else
                         </div>
                     </div>
                     <div class="card-footer">
-                        <div class="btn-group w-100" role="group">
-                            <a asp-controller="PunctuationTest" asp-action="Details" asp-route-id="@test.Id"
-                               class="btn btn-outline-info btn-sm">
-                                <i class="fas fa-eye"></i> Детали
+                        <div class="d-flex gap-2 w-100" role="group">
+                            <a asp-controller="PunctuationTest"
+                                asp-action="Details"
+                                asp-route-id="@test.Id"
+                                class="btn btn-outline-info btn-sm flex-fill"
+                                title="Детали">
+                                <i class="fas fa-eye"></i>
                             </a>
-                            <a asp-controller="PunctuationTest" asp-action="Edit" asp-route-id="@test.Id"
-                               class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-edit"></i> Изменить
+                                <a asp-controller="PunctuationTest"
+                                asp-action="Edit" 
+                                asp-route-id="@test.Id"
+                                class="btn btn-outline-primary btn-sm flex-fill"
+                                title="Изменить">
+                                <i class="fas fa-edit"></i>
                             </a>
-                            <div class="btn-group" role="group">
-                                <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle"
-                                        data-bs-toggle="dropdown">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </button>
-                                <ul class="dropdown-menu">
-                                    @if (test.PunctuationQuestions.Any())
-                                    {
-                                        <li>
-                                            <a class="dropdown-item" href="#">
-                                                <i class="fas fa-play"></i> Предварительный просмотр
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item" href="#">
-                                                <i class="fas fa-copy"></i> Дублировать
-                                            </a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                    }
-                                    <li>
-                                        <a asp-controller="PunctuationTest" asp-action="Delete" asp-route-id="@test.Id"
-                                           class="dropdown-item text-danger">
-                                            <i class="fas fa-trash"></i> Удалить
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
+                            <a asp-controller="PunctuationTest"
+                                asp-action="Delete"
+                                asp-route-id="@test.Id"
+                                class="btn btn-outline-danger btn-sm flex-fill"
+                                title="Удалить">
+                                <i class="fas fa-trash"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
