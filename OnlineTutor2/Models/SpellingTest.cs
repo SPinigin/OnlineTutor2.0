@@ -16,7 +16,7 @@ namespace OnlineTutor2.Models
 
         // Внешние ключи
         public string TeacherId { get; set; } = string.Empty;
-        public int TestCategoryId { get; set; } = 1;
+        public int TestCategoryId { get; set; }
         public int? ClassId { get; set; }
 
         // Настройки теста
