@@ -605,3 +605,25 @@ body {
     .btn-group-separated .btn {
         border-radius: 0.25rem !important;
     }
+
+.stats-card-compact {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+    .stats-card-compact:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .stats-card-compact .card-body {
+        padding: 0.5rem !important;
+    }
+
+    .stats-card-compact h5 {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .stats-card-compact i {
+        font-size: 1.2rem;
+    }
