@@ -25,163 +25,108 @@
     </div>
 </div>
 
-<div class="row mb-4 g-2 g-md-3">
+<div class="row mb-3 g-2">
     <div class="col-6 col-sm-4 col-md-2">
-        <div class="card text-center border-primary stats-card">
-            <div class="card-body">
-                <i class="fas fa-users text-primary"></i>
-                <h4 class="mt-2 text-primary">@Model.Statistics.TotalStudents</h4>
-                <small class="text-muted">Учеников</small>
+        <div class="card text-center border-primary stats-card-compact">
+            <div class="card-body p-2">
+                <i class="fas fa-users text-primary fs-5"></i>
+                <h5 class="mt-1 mb-0 text-primary">@Model.Statistics.TotalStudents</h5>
+                <small class="text-muted d-block" style="font-size: 0.7rem;">Учеников</small>
             </div>
         </div>
     </div>
     <div class="col-6 col-sm-4 col-md-2">
-        <div class="card text-center border-info stats-card">
-            <div class="card-body">
-                <i class="fas fa-percentage text-info"></i>
-                <h4 class="mt-2 text-info">@Model.Statistics.AveragePercentage.ToString("F1")%</h4>
-                <small class="text-muted">Ср. результат</small>
+        <div class="card text-center border-info stats-card-compact">
+            <div class="card-body p-2">
+                <i class="fas fa-percentage text-info fs-5"></i>
+                <h5 class="mt-1 mb-0 text-info">@Model.Statistics.AveragePercentage.ToString("F1")%</h5>
+                <small class="text-muted d-block" style="font-size: 0.7rem;">Ср. результат</small>
             </div>
         </div>
     </div>
     <div class="col-6 col-sm-4 col-md-2">
-        <div class="card text-center border-secondary stats-card">
-            <div class="card-body">
-                <i class="fas fa-stopwatch text-secondary"></i>
-                <h4 class="mt-2 text-secondary">@($"{Model.Statistics.AverageCompletionTime.Minutes:D2}:{Model.Statistics.AverageCompletionTime.Seconds:D2}")</h4>
-                <small class="text-muted">Ср. время</small>
+        <div class="card text-center border-secondary stats-card-compact">
+            <div class="card-body p-2">
+                <i class="fas fa-stopwatch text-secondary fs-5"></i>
+                <h5 class="mt-1 mb-0 text-secondary">@($"{Model.Statistics.AverageCompletionTime.Minutes:D2}:{Model.Statistics.AverageCompletionTime.Seconds:D2}")</h5>
+                <small class="text-muted d-block" style="font-size: 0.7rem;">Ср. время</small>
             </div>
         </div>
     </div>
     <div class="col-6 col-sm-4 col-md-2">
-        <div class="card text-center border-success stats-card">
-            <div class="card-body">
-                <i class="fas fa-check-circle text-success"></i>
-                <h4 class="mt-2 text-success">@Model.Statistics.StudentsCompleted</h4>
-                <small class="text-muted">Завершили</small>
+        <div class="card text-center border-success stats-card-compact">
+            <div class="card-body p-2">
+                <i class="fas fa-check-circle text-success fs-5"></i>
+                <h5 class="mt-1 mb-0 text-success">@Model.Statistics.StudentsCompleted</h5>
+                <small class="text-muted d-block" style="font-size: 0.7rem;">Завершили</small>
             </div>
         </div>
     </div>
     <div class="col-6 col-sm-4 col-md-2">
-        <div class="card text-center border-warning stats-card">
-            <div class="card-body">
-                <i class="fas fa-clock text-warning"></i>
-                <h4 class="mt-2 text-warning">@Model.Statistics.StudentsInProgress</h4>
-                <small class="text-muted">В процессе</small>
+        <div class="card text-center border-warning stats-card-compact">
+            <div class="card-body p-2">
+                <i class="fas fa-clock text-warning fs-5"></i>
+                <h5 class="mt-1 mb-0 text-warning">@Model.Statistics.StudentsInProgress</h5>
+                <small class="text-muted d-block" style="font-size: 0.7rem;">В процессе</small>
             </div>
         </div>
     </div>
     <div class="col-6 col-sm-4 col-md-2">
-        <div class="card text-center border-danger stats-card">
-            <div class="card-body">
-                <i class="fas fa-times-circle text-danger"></i>
-                <h4 class="mt-2 text-danger">@Model.Statistics.StudentsNotStarted</h4>
-                <small class="text-muted">Не начали</small>
+        <div class="card text-center border-danger stats-card-compact">
+            <div class="card-body p-2">
+                <i class="fas fa-times-circle text-danger fs-5"></i>
+                <h5 class="mt-1 mb-0 text-danger">@Model.Statistics.StudentsNotStarted</h5>
+                <small class="text-muted d-block" style="font-size: 0.7rem;">Не начали</small>
             </div>
         </div>
     </div>
 </div>
+
 
 <div class="card mb-4 border-1 shadow-sm">
-    <div class="card-header bg-white border-0 py-3">
-        <h6 class="mb-0 text-primary">
-            <i class="fas fa-info-circle me-2"></i>Информация о тесте
-        </h6>
-    </div>
-    <div class="card-body py-3">
-        <div class="row">
+    <div class="card-body py-2 px-3">
+        <div class="d-flex align-items-center flex-wrap gap-3 small">
 
-            <div class="col-md-4">
-                <div class="info-column">
-                    <div class="test-info-item mb-2">
-                        <i class="fas fa-spell-check text-primary"></i>
-                        <span class="info-label">Тест по орфографии</span>
-                    </div>
-                    @if (!string.IsNullOrEmpty(Model.SpellingTest.Description))
+            <div class="me-2">
+                <i class="fas fa-info-circle me-1"></i>
+                <strong>Информация о тесте: </strong>
+            </div>
+
+
+            <div class="d-flex gap-3 flex-wrap">
+                <span><i class="fas fa-list text-info me-1"></i>@Model.SpellingTest.SpellingQuestions.Count</span>
+                <span><i class="fas fa-clock text-warning me-1"></i>@Model.SpellingTest.TimeLimit</span>
+                <span><i class="fas fa-redo text-secondary me-1"></i>@Model.SpellingTest.MaxAttempts</span>
+            </div>
+
+
+            <div class="d-flex gap-1">
+                <span class="badge @(Model.SpellingTest.ShowHints ? "bg-success" : "bg-secondary")">
+                    <i class="fas fa-lightbulb"></i>
+                </span>
+                <span class="badge @(Model.SpellingTest.ShowCorrectAnswers ? "bg-success" : "bg-secondary")">
+                    <i class="fas fa-check"></i>
+                </span>
+            </div>
+
+
+            @if (Model.SpellingTest.StartDate.HasValue || Model.SpellingTest.EndDate.HasValue)
+            {
+                <div class="d-flex gap-2 ms-auto">
+                    @if (Model.SpellingTest.StartDate.HasValue)
                     {
-                        <p class="text-muted mb-0 small">@Model.SpellingTest.Description</p>
+                        <span><i class="fas fa-play text-success me-1"></i>@Model.SpellingTest.StartDate.Value.ToString("dd.MM HH:mm")</span>
+                    }
+                    @if (Model.SpellingTest.EndDate.HasValue)
+                    {
+                        <span><i class="fas fa-stop text-danger me-1"></i>@Model.SpellingTest.EndDate.Value.ToString("dd.MM HH:mm")</span>
                     }
                 </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="info-column">
-                    <div class="test-info-item mb-2">
-                        <i class="fas fa-list text-info"></i>
-                        <span class="info-label">Количество вопросов: </span>
-                        <span class="info-value">@Model.SpellingTest.SpellingQuestions.Count</span>
-                    </div>
-                    <div class="test-info-item mb-2">
-                        <i class="fas fa-clock text-warning"></i>
-                        <span class="info-label">Время на выполнение: </span>
-                        <span class="info-value">@Model.SpellingTest.TimeLimit</span>
-                        <span class="info-label">минут</span>
-                    </div>
-                    <div class="test-info-item">
-                        <i class="fas fa-redo text-secondary"></i>
-                        <span class="info-label">Количество попыток:</span>
-                        <span class="info-value">@Model.SpellingTest.MaxAttempts</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="info-column">
-                    <h6 class="test-info-item mb-2">
-                        <i class="fas fa-cog me-2"></i>Настройки:
-                    </h6>
-                    <div class="mb-2">
-                        @if (Model.SpellingTest.ShowHints)
-                        {
-                            <span class="setting-tag setting-enabled">
-                                <i class="fas fa-lightbulb"></i> Подсказки
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="setting-tag setting-disabled">
-                                <i class="fas fa-lightbulb"></i> Подсказки
-                            </span>
-                        }
-
-                        @if (Model.SpellingTest.ShowCorrectAnswers)
-                        {
-                            <span class="setting-tag setting-enabled">
-                                <i class="fas fa-check"></i> Показ ответов
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="setting-tag setting-disabled">
-                                <i class="fas fa-check"></i> Показ ответов
-                            </span>
-                        }
-                    </div>
-
-                    @if (Model.SpellingTest.StartDate.HasValue || Model.SpellingTest.EndDate.HasValue)
-                    {
-                        <div>
-                            @if (Model.SpellingTest.StartDate.HasValue)
-                            {
-                                <div class="date-info mb-1">
-                                    <i class="fas fa-play text-success"></i>
-                                    <span class="small">@Model.SpellingTest.StartDate.Value.ToString("dd.MM.yyyy HH:mm")</span>
-                                </div>
-                            }
-                            @if (Model.SpellingTest.EndDate.HasValue)
-                            {
-                                <div class="date-info">
-                                    <i class="fas fa-stop text-danger"></i>
-                                    <span class="small">@Model.SpellingTest.EndDate.Value.ToString("dd.MM.yyyy HH:mm")</span>
-                                </div>
-                            }
-                        </div>
-                    }
-                </div>
-            </div>
+            }
         </div>
     </div>
 </div>
+
 
 <ul class="nav nav-tabs" id="analyticsTabsNav" role="tablist">
     <li class="nav-item" role="presentation">
