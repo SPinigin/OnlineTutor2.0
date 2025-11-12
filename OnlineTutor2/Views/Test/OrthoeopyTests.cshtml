@@ -1,6 +1,6 @@
 ﻿@model IEnumerable<OnlineTutor2.Models.OrthoeopyTest>
 @{
-    ViewData["Title"] = "Тесты по орфоэпии";
+    ViewData["Title"] = $"Тесты:{ViewBag.Category.Name}";
     var category = ViewBag.Category as OnlineTutor2.Models.TestCategory;
 }
 

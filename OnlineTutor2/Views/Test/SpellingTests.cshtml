@@ -1,6 +1,6 @@
 ﻿@model IEnumerable<OnlineTutor2.Models.SpellingTest>
 @{
-    ViewData["Title"] = $"{ViewBag.Category.Name} - Тесты";
+    ViewData["Title"] = $"Тесты:{ViewBag.Category.Name}";
     var category = ViewBag.Category as OnlineTutor2.Models.TestCategory;
     var activeTests = Model.Count(t => t.IsActive);
     var inactiveTests = Model.Count(t => !t.IsActive);
