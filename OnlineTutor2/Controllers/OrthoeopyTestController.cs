@@ -95,7 +95,7 @@ namespace OnlineTutor2.Controllers
                     Title = model.Title,
                     Description = model.Description,
                     TeacherId = currentUser.Id,
-                    TestCategoryId = TestCategoryConstants.Orthoeopy, // ✅ ИСПРАВЛЕНО: 3 вместо 6
+                    TestCategoryId = TestCategoryConstants.Orthoeopy,
                     ClassId = model.ClassId,
                     TimeLimit = model.TimeLimit,
                     MaxAttempts = model.MaxAttempts,
