@@ -14,6 +14,8 @@ namespace OnlineTutor2.Controllers
     [Authorize(Roles = ApplicationRoles.Teacher)]
     public class PunctuationTestController : Controller
     {
+        #region Fields and Constructor
+
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IPunctuationQuestionImportService _questionImportService;
@@ -31,6 +33,10 @@ namespace OnlineTutor2.Controllers
             _logger = logger;
         }
 
+        #endregion
+
+        #region Test CRUD Operations
+
         // GET: PunctuationTest
         public async Task<IActionResult> Index()
         {
@@ -39,6 +45,7 @@ namespace OnlineTutor2.Controllers
                 .Where(pt => pt.TeacherId == currentUser.Id)
                 .Include(pt => pt.Class)
                 .Include(pt => pt.PunctuationQuestions)
+                .Include(pt => pt.PunctuationTestResults)
                 .OrderByDescending(pt => pt.CreatedAt)
                 .ToListAsync();
 
@@ -88,7 +95,7 @@ namespace OnlineTutor2.Controllers
                     Title = model.Title,
                     Description = model.Description,
                     TeacherId = currentUser.Id,
-                    TestCategoryId = 2,
+                    TestCategoryId = TestCategoryConstants.Punctuation,
                     ClassId = model.ClassId,
                     TimeLimit = model.TimeLimit,
                     MaxAttempts = model.MaxAttempts,
@@ -102,14 +109,17 @@ namespace OnlineTutor2.Controllers
                 _context.PunctuationTests.Add(test);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Учитель {TeacherId} создал тест пунктуации {TestId}: {Title}, ClassId: {ClassId}, TimeLimit: {TimeLimit}",
-                    currentUser.Id, test.Id, test.Title, test.ClassId, test.TimeLimit);
+                _logger.LogInformation(
+                    "Учитель {TeacherId} создал тест пунктуации {TestId}: {Title}",
+                    currentUser.Id, test.Id, test.Title);
 
                 TempData["SuccessMessage"] = $"Тест \"{test.Title}\" успешно создан! Теперь добавьте вопросы.";
                 return RedirectToAction(nameof(Details), new { id = test.Id });
             }
 
-            _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму создания теста пунктуации", currentUser.Id);
+            _logger.LogWarning(
+                "Учитель {TeacherId} отправил невалидную форму создания теста пунктуации",
+                currentUser.Id);
 
             await LoadClasses();
             return View(model);
@@ -175,21 +185,20 @@ namespace OnlineTutor2.Controllers
                     _context.Update(test);
                     await _context.SaveChangesAsync();
 
-                    _logger.LogInformation("Учитель {TeacherId} обновил тест пунктуации {TestId}: {Title}, ClassId: {ClassId}",
-                        currentUser.Id, id, test.Title, test.ClassId);
+                    _logger.LogInformation(
+                        "Учитель {TeacherId} обновил тест пунктуации {TestId}: {Title}",
+                        currentUser.Id, id, test.Title);
 
                     TempData["SuccessMessage"] = $"Тест \"{test.Title}\" успешно обновлен!";
                     return RedirectToAction(nameof(Details), new { id });
                 }
                 catch (DbUpdateConcurrencyException ex)
                 {
-                    _logger.LogError(ex, "Ошибка конкурентности при обновлении теста пунктуации {TestId} учителем {TeacherId}", id, currentUser.Id);
+                    _logger.LogError(ex,
+                        "Ошибка конкурентности при обновлении теста пунктуации {TestId}",
+                        id);
                     ModelState.AddModelError("", "Произошла ошибка при сохранении. Попробуйте еще раз.");
                 }
-            }
-            else
-            {
-                _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму обновления теста пунктуации {TestId}", currentUser.Id, id);
             }
 
             await LoadClasses();
@@ -209,8 +218,6 @@ namespace OnlineTutor2.Controllers
                 .Include(pt => pt.PunctuationTestResults)
                     .ThenInclude(tr => tr.Student)
                         .ThenInclude(s => s.User)
-                .Include(pt => pt.PunctuationTestResults)
-                    .ThenInclude(tr => tr.PunctuationAnswers)
                 .FirstOrDefaultAsync(pt => pt.Id == id && pt.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -232,8 +239,9 @@ namespace OnlineTutor2.Controllers
 
             if (test.PunctuationTestResults.Any())
             {
-                _logger.LogWarning("Учитель {TeacherId} попытался удалить тест пунктуации {TestId} с результатами ({ResultsCount})",
-                    currentUser.Id, id, test.PunctuationTestResults.Count);
+                _logger.LogWarning(
+                    "Учитель {TeacherId} попытался удалить тест пунктуации {TestId} с результатами",
+                    currentUser.Id, id);
                 TempData["ErrorMessage"] = "Нельзя удалить тест, который уже проходили ученики.";
                 return RedirectToAction(nameof(Delete), new { id });
             }
@@ -242,14 +250,17 @@ namespace OnlineTutor2.Controllers
             _context.PunctuationTests.Remove(test);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Учитель {TeacherId} удалил тест пунктуации {TestId}: {Title}", currentUser.Id, id, testTitle);
+            _logger.LogInformation(
+                "Учитель {TeacherId} удалил тест пунктуации {TestId}: {Title}",
+                currentUser.Id, id, testTitle);
 
-            TempData["SuccessMessage"] = $"Тест \"{test.Title}\" успешно удален!";
+            TempData["SuccessMessage"] = $"Тест \"{testTitle}\" успешно удален!";
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: PunctuationTest/ImportQuestions/5
-        public async Task<IActionResult> ImportQuestions(int id)
+        // POST: PunctuationTest/ToggleStatus/5
+        [HttpPost]
+        public async Task<IActionResult> ToggleStatus(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.PunctuationTests
@@ -257,255 +268,22 @@ namespace OnlineTutor2.Controllers
 
             if (test == null) return NotFound();
 
-            ViewBag.Test = test;
-            return View(new PunctuationQuestionImportViewModel { PunctuationTestId = id });
+            test.IsActive = !test.IsActive;
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Учитель {TeacherId} изменил статус теста пунктуации {TestId} на {Status}",
+                currentUser.Id, id, test.IsActive);
+
+            var status = test.IsActive ? "активирован" : "деактивирован";
+            TempData["InfoMessage"] = $"Тест \"{test.Title}\" {status}.";
+
+            return RedirectToAction(nameof(Details), new { id });
         }
 
-        // POST: PunctuationTest/ImportQuestions
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ImportQuestions(PunctuationQuestionImportViewModel model)
-        {
-            var currentUser = await _userManager.GetUserAsync(User);
-            var test = await _context.PunctuationTests
-                .FirstOrDefaultAsync(pt => pt.Id == model.PunctuationTestId && pt.TeacherId == currentUser.Id);
+        #endregion
 
-            if (test == null)
-            {
-                TempData["ErrorMessage"] = "Тест не найден";
-                return RedirectToAction(nameof(Index));
-            }
-
-            ViewBag.Test = test;
-
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
-            try
-            {
-                if (model.ExcelFile == null || model.ExcelFile.Length == 0)
-                {
-                    ModelState.AddModelError("ExcelFile", "Выберите файл для импорта");
-                    return View(model);
-                }
-
-                if (model.ExcelFile.Length > 10 * 1024 * 1024)
-                {
-                    _logger.LogWarning("Учитель {TeacherId} попытался импортировать слишком большой файл ({FileSize} байт) для теста пунктуации {TestId}",
-                        currentUser.Id, model.ExcelFile.Length, model.PunctuationTestId);
-                    ModelState.AddModelError("ExcelFile", "Размер файла не должен превышать 10 МБ");
-                    return View(model);
-                }
-
-                var allowedExtensions = new[] { ".xlsx", ".xls" };
-                var fileExtension = Path.GetExtension(model.ExcelFile.FileName).ToLowerInvariant();
-                if (!allowedExtensions.Contains(fileExtension))
-                {
-                    _logger.LogWarning("Учитель {TeacherId} попытался импортировать файл недопустимого формата ({FileExtension}) для теста пунктуации {TestId}",
-                        currentUser.Id, fileExtension, model.PunctuationTestId);
-                    ModelState.AddModelError("ExcelFile", "Поддерживаются только файлы Excel (.xlsx, .xls)");
-                    return View(model);
-                }
-
-                var questions = await _questionImportService.ParseExcelFileAsync(model.ExcelFile);
-
-                if (questions == null || !questions.Any())
-                {
-                    _logger.LogWarning("Учитель {TeacherId} импортировал пустой файл для теста пунктуации {TestId}", currentUser.Id, model.PunctuationTestId);
-                    TempData["ErrorMessage"] = "Файл не содержит данных для импорта";
-                    return View(model);
-                }
-
-                var importData = new
-                {
-                    TestId = model.PunctuationTestId,
-                    Questions = questions,
-                    PointsPerQuestion = model.PointsPerQuestion
-                };
-
-                var sessionKey = $"ImportPunctuationQuestions_{model.PunctuationTestId}_{DateTime.Now.Ticks}";
-                HttpContext.Session.SetString(sessionKey, JsonSerializer.Serialize(importData));
-                TempData["ImportSessionKey"] = sessionKey;
-
-                _logger.LogInformation("Учитель {TeacherId} инициировал импорт {QuestionsCount} вопросов для теста пунктуации {TestId}",
-                    currentUser.Id, questions.Count, model.PunctuationTestId);
-
-                return RedirectToAction(nameof(PreviewQuestions));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка импорта вопросов для теста пунктуации {TestId} учителем {TeacherId}", model.PunctuationTestId, currentUser.Id);
-                TempData["ErrorMessage"] = $"Произошла ошибка: {ex.Message}";
-                return View(model);
-            }
-        }
-
-        // GET: PunctuationTest/PreviewQuestions
-        public async Task<IActionResult> PreviewQuestions()
-        {
-            try
-            {
-                var sessionKey = TempData["ImportSessionKey"] as string;
-                if (string.IsNullOrEmpty(sessionKey))
-                {
-                    TempData["ErrorMessage"] = "Данные импорта не найдены. Попробуйте еще раз.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                var importDataJson = HttpContext.Session.GetString(sessionKey);
-                if (string.IsNullOrEmpty(importDataJson))
-                {
-                    TempData["ErrorMessage"] = "Данные импорта истекли. Попробуйте еще раз.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                var importData = JsonSerializer.Deserialize<JsonElement>(importDataJson);
-                var testId = importData.GetProperty("TestId").GetInt32();
-                var pointsPerQuestion = importData.GetProperty("PointsPerQuestion").GetInt32();
-
-                var currentUser = await _userManager.GetUserAsync(User);
-                var test = await _context.PunctuationTests
-                    .FirstOrDefaultAsync(pt => pt.Id == testId && pt.TeacherId == currentUser.Id);
-
-                if (test == null)
-                {
-                    TempData["ErrorMessage"] = "Тест не найден";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                var questionsArray = importData.GetProperty("Questions");
-                var questions = new List<ImportPunctuationQuestionRow>();
-
-                foreach (var questionElement in questionsArray.EnumerateArray())
-                {
-                    try
-                    {
-                        var question = JsonSerializer.Deserialize<ImportPunctuationQuestionRow>(questionElement.GetRawText());
-                        if (question != null)
-                        {
-                            questions.Add(question);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error deserializing question: {ex.Message}");
-                    }
-                }
-
-                ViewBag.Test = test;
-                ViewBag.PointsPerQuestion = pointsPerQuestion;
-                TempData["ImportSessionKey"] = sessionKey;
-
-                return View(questions);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка обработки предпросмотра импорта");
-                TempData["ErrorMessage"] = $"Ошибка обработки данных: {ex.Message}";
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
-        // POST: PunctuationTest/ConfirmImport
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ConfirmImport()
-        {
-            var sessionKey = TempData["ImportSessionKey"] as string;
-            if (string.IsNullOrEmpty(sessionKey))
-            {
-                TempData["ErrorMessage"] = "Данные импорта не найдены";
-                return RedirectToAction(nameof(Index));
-            }
-
-            var importDataJson = HttpContext.Session.GetString(sessionKey);
-            if (string.IsNullOrEmpty(importDataJson))
-            {
-                TempData["ErrorMessage"] = "Данные импорта истекли";
-                return RedirectToAction(nameof(Index));
-            }
-
-            try
-            {
-                var importData = JsonSerializer.Deserialize<JsonElement>(importDataJson);
-                var testId = importData.GetProperty("TestId").GetInt32();
-                var pointsPerQuestion = importData.GetProperty("PointsPerQuestion").GetInt32();
-
-                var currentUser = await _userManager.GetUserAsync(User);
-                var test = await _context.PunctuationTests
-                    .Include(pt => pt.PunctuationQuestions)
-                    .FirstOrDefaultAsync(pt => pt.Id == testId && pt.TeacherId == currentUser.Id);
-
-                if (test == null) return NotFound();
-
-                var questionsArray = importData.GetProperty("Questions");
-                var validQuestions = new List<ImportPunctuationQuestionRow>();
-                var orderIndex = test.PunctuationQuestions.Count;
-
-                foreach (var questionElement in questionsArray.EnumerateArray())
-                {
-                    var questionData = JsonSerializer.Deserialize<ImportPunctuationQuestionRow>(questionElement.GetRawText());
-                    if (questionData.IsValid)
-                    {
-                        validQuestions.Add(questionData);
-                    }
-                }
-
-                // Создаем вопросы в базе данных
-                foreach (var questionData in validQuestions)
-                {
-                    var question = new PunctuationQuestion
-                    {
-                        PunctuationTestId = testId,
-                        SentenceWithNumbers = questionData.SentenceWithNumbers,
-                        CorrectPositions = questionData.CorrectPositions,
-                        PlainSentence = questionData.PlainSentence,
-                        Hint = questionData.Hint,
-                        Points = pointsPerQuestion,
-                        OrderIndex = ++orderIndex
-                    };
-
-                    _context.PunctuationQuestions.Add(question);
-                }
-
-                await _context.SaveChangesAsync();
-                HttpContext.Session.Remove(sessionKey);
-
-                _logger.LogInformation("Учитель {TeacherId} подтвердил импорт {QuestionsCount} вопросов для теста пунктуации {TestId}",
-                    currentUser.Id, validQuestions.Count, testId);
-
-                TempData["SuccessMessage"] = $"Успешно импортировано {validQuestions.Count} вопросов!";
-                return RedirectToAction(nameof(Details), new { id = testId });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка подтверждения импорта вопросов пунктуации");
-                TempData["ErrorMessage"] = $"Ошибка при импорте: {ex.Message}";
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
-        // GET: PunctuationTest/DownloadQuestionTemplate
-        public async Task<IActionResult> DownloadQuestionTemplate()
-        {
-            var currentUser = _userManager.GetUserAsync(User);
-
-            try
-            {
-                var templateBytes = await _questionImportService.GenerateTemplateAsync();
-                return File(templateBytes,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "Шаблон_вопросов_пунктуация.xlsx");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка генерации шаблона вопросов пунктуации для учителя {TeacherId}", currentUser.Id);
-                TempData["ErrorMessage"] = $"Ошибка генерации шаблона: {ex.Message}";
-                return RedirectToAction(nameof(Index));
-            }
-        }
+        #region Question Management
 
         // GET: PunctuationTest/AddQuestion/5
         public async Task<IActionResult> AddQuestion(int id)
@@ -525,8 +303,6 @@ namespace OnlineTutor2.Controllers
             };
 
             ViewBag.Test = test;
-            ViewBag.NextOrderIndex = test.PunctuationQuestions.Count + 1;
-
             return View(model);
         }
 
@@ -560,41 +336,16 @@ namespace OnlineTutor2.Controllers
                 _context.PunctuationQuestions.Add(question);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Учитель {TeacherId} добавил вопрос {QuestionId} к тесту пунктуации {TestId}: Предложение: {Sentence}",
-                    currentUser.Id, question.Id, model.PunctuationTestId, model.PlainSentence);
+                _logger.LogInformation(
+                    "Учитель {TeacherId} добавил вопрос к тесту пунктуации {TestId}",
+                    currentUser.Id, model.PunctuationTestId);
 
                 TempData["SuccessMessage"] = "Вопрос успешно добавлен!";
                 return RedirectToAction(nameof(Details), new { id = model.PunctuationTestId });
             }
 
-            _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму добавления вопроса к тесту пунктуации {TestId}", currentUser.Id, model.PunctuationTestId);
-
             ViewBag.Test = test;
-            ViewBag.NextOrderIndex = test.PunctuationQuestions.Count + 1;
             return View(model);
-        }
-
-        // POST: PunctuationTest/ToggleStatus/5
-        [HttpPost]
-        public async Task<IActionResult> ToggleStatus(int id)
-        {
-            var currentUser = await _userManager.GetUserAsync(User);
-            var test = await _context.PunctuationTests
-                .FirstOrDefaultAsync(pt => pt.Id == id && pt.TeacherId == currentUser.Id);
-
-            if (test == null) return NotFound();
-
-            var oldStatus = test.IsActive;
-            test.IsActive = !test.IsActive;
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("Учитель {TeacherId} изменил статус теста пунктуации {TestId}: {Title} с {OldStatus} на {NewStatus}",
-                currentUser.Id, id, test.Title, oldStatus, test.IsActive);
-
-            var status = test.IsActive ? "активирован" : "деактивирован";
-            TempData["InfoMessage"] = $"Тест \"{test.Title}\" {status}.";
-
-            return RedirectToAction(nameof(Details), new { id });
         }
 
         // GET: PunctuationTest/EditQuestion/5
@@ -643,21 +394,18 @@ namespace OnlineTutor2.Controllers
                     _context.Update(existingQuestion);
                     await _context.SaveChangesAsync();
 
-                    _logger.LogInformation("Учитель {TeacherId} обновил вопрос пунктуации {QuestionId}: Предложение: {Sentence}",
-                        currentUser.Id, id, model.PlainSentence);
+                    _logger.LogInformation(
+                        "Учитель {TeacherId} обновил вопрос пунктуации {QuestionId}",
+                        currentUser.Id, id);
 
                     TempData["SuccessMessage"] = "Вопрос успешно обновлен!";
                     return RedirectToAction(nameof(Details), new { id = existingQuestion.PunctuationTestId });
                 }
                 catch (DbUpdateConcurrencyException ex)
                 {
-                    _logger.LogError(ex, "Ошибка конкурентности при обновлении вопроса пунктуации {QuestionId} учителем {TeacherId}", id, currentUser.Id);
-                    ModelState.AddModelError("", "Произошла ошибка при сохранении. Попробуйте еще раз.");
+                    _logger.LogError(ex, "Ошибка обновления вопроса {QuestionId}", id);
+                    ModelState.AddModelError("", "Произошла ошибка при сохранении.");
                 }
-            }
-            else
-            {
-                _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму обновления вопроса пунктуации {QuestionId}", currentUser.Id, id);
             }
 
             ViewBag.Test = existingQuestion.PunctuationTest;
@@ -680,9 +428,6 @@ namespace OnlineTutor2.Controllers
 
             if (question.StudentAnswers.Any())
             {
-                _logger.LogWarning("Учитель {TeacherId} попытался удалить вопрос пунктуации {QuestionId} с ответами студентов ({AnswersCount})",
-                    currentUser.Id, id, question.StudentAnswers.Count);
-
                 return Json(new
                 {
                     success = false,
@@ -695,30 +440,249 @@ namespace OnlineTutor2.Controllers
                 var testId = question.PunctuationTestId;
                 _context.PunctuationQuestions.Remove(question);
                 await _context.SaveChangesAsync();
-
                 await ReorderQuestions(testId);
 
-                _logger.LogInformation("Учитель {TeacherId} удалил вопрос пунктуации {QuestionId} из теста {TestId}",
+                _logger.LogInformation(
+                    "Учитель {TeacherId} удалил вопрос {QuestionId} из теста {TestId}",
                     currentUser.Id, id, testId);
 
                 return Json(new
                 {
                     success = true,
                     message = "Вопрос успешно удален",
-                    testId = testId
+                    testId
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка удаления вопроса пунктуации {QuestionId} учителем {TeacherId}", id, currentUser.Id);
-
-                return Json(new
-                {
-                    success = false,
-                    message = "Ошибка при удалении вопроса: " + ex.Message
-                });
+                _logger.LogError(ex, "Ошибка удаления вопроса {QuestionId}", id);
+                return Json(new { success = false, message = $"Ошибка: {ex.Message}" });
             }
         }
+
+        #endregion
+
+        #region Question Import
+
+        // GET: PunctuationTest/ImportQuestions/5
+        public async Task<IActionResult> ImportQuestions(int id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var test = await _context.PunctuationTests
+                .FirstOrDefaultAsync(pt => pt.Id == id && pt.TeacherId == currentUser.Id);
+
+            if (test == null) return NotFound();
+
+            ViewBag.Test = test;
+            return View(new PunctuationQuestionImportViewModel { PunctuationTestId = id });
+        }
+
+        // POST: PunctuationTest/ImportQuestions
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ImportQuestions(PunctuationQuestionImportViewModel model)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var test = await _context.PunctuationTests
+                .FirstOrDefaultAsync(pt => pt.Id == model.PunctuationTestId && pt.TeacherId == currentUser.Id);
+
+            if (test == null)
+            {
+                TempData["ErrorMessage"] = "Тест не найден";
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewBag.Test = test;
+
+            if (!ModelState.IsValid) return View(model);
+
+            try
+            {
+                if (!await ValidateImportFile(model.ExcelFile, model.PunctuationTestId, currentUser.Id))
+                    return View(model);
+
+                var questions = await _questionImportService.ParseExcelFileAsync(model.ExcelFile);
+
+                if (questions == null || !questions.Any())
+                {
+                    TempData["ErrorMessage"] = "Файл не содержит данных для импорта";
+                    return View(model);
+                }
+
+                var sessionKey = $"ImportPunctuationQuestions_{model.PunctuationTestId}_{DateTime.Now.Ticks}";
+                var importData = new
+                {
+                    TestId = model.PunctuationTestId,
+                    Questions = questions,
+                    PointsPerQuestion = model.PointsPerQuestion
+                };
+
+                HttpContext.Session.SetString(sessionKey, JsonSerializer.Serialize(importData));
+                TempData["ImportSessionKey"] = sessionKey;
+
+                _logger.LogInformation(
+                    "Учитель {TeacherId} инициировал импорт {Count} вопросов для теста {TestId}",
+                    currentUser.Id, questions.Count, model.PunctuationTestId);
+
+                return RedirectToAction(nameof(PreviewQuestions));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка импорта для теста {TestId}", model.PunctuationTestId);
+                TempData["ErrorMessage"] = $"Ошибка: {ex.Message}";
+                return View(model);
+            }
+        }
+
+        // GET: PunctuationTest/PreviewQuestions
+        public async Task<IActionResult> PreviewQuestions()
+        {
+            try
+            {
+                var sessionKey = TempData["ImportSessionKey"] as string;
+                if (string.IsNullOrEmpty(sessionKey))
+                {
+                    TempData["ErrorMessage"] = "Данные импорта не найдены";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                var importDataJson = HttpContext.Session.GetString(sessionKey);
+                if (string.IsNullOrEmpty(importDataJson))
+                {
+                    TempData["ErrorMessage"] = "Данные импорта истекли";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                var importData = JsonSerializer.Deserialize<JsonElement>(importDataJson);
+                var testId = importData.GetProperty("TestId").GetInt32();
+                var pointsPerQuestion = importData.GetProperty("PointsPerQuestion").GetInt32();
+
+                var currentUser = await _userManager.GetUserAsync(User);
+                var test = await _context.PunctuationTests
+                    .FirstOrDefaultAsync(pt => pt.Id == testId && pt.TeacherId == currentUser.Id);
+
+                if (test == null)
+                {
+                    TempData["ErrorMessage"] = "Тест не найден";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                var questions = new List<ImportPunctuationQuestionRow>();
+                foreach (var questionElement in importData.GetProperty("Questions").EnumerateArray())
+                {
+                    var question = JsonSerializer.Deserialize<ImportPunctuationQuestionRow>(questionElement.GetRawText());
+                    if (question != null) questions.Add(question);
+                }
+
+                ViewBag.Test = test;
+                ViewBag.PointsPerQuestion = pointsPerQuestion;
+                TempData["ImportSessionKey"] = sessionKey;
+
+                return View(questions);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка предпросмотра импорта");
+                TempData["ErrorMessage"] = "Ошибка обработки данных";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        // POST: PunctuationTest/ConfirmImport
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ConfirmImport()
+        {
+            var sessionKey = TempData["ImportSessionKey"] as string;
+            if (string.IsNullOrEmpty(sessionKey))
+            {
+                TempData["ErrorMessage"] = "Данные импорта не найдены";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var importDataJson = HttpContext.Session.GetString(sessionKey);
+            if (string.IsNullOrEmpty(importDataJson))
+            {
+                TempData["ErrorMessage"] = "Данные импорта истекли";
+                return RedirectToAction(nameof(Index));
+            }
+
+            try
+            {
+                var importData = JsonSerializer.Deserialize<JsonElement>(importDataJson);
+                var testId = importData.GetProperty("TestId").GetInt32();
+                var pointsPerQuestion = importData.GetProperty("PointsPerQuestion").GetInt32();
+
+                var currentUser = await _userManager.GetUserAsync(User);
+                var test = await _context.PunctuationTests
+                    .Include(pt => pt.PunctuationQuestions)
+                    .FirstOrDefaultAsync(pt => pt.Id == testId && pt.TeacherId == currentUser.Id);
+
+                if (test == null) return NotFound();
+
+                var orderIndex = test.PunctuationQuestions.Count;
+                var importedCount = 0;
+
+                foreach (var questionElement in importData.GetProperty("Questions").EnumerateArray())
+                {
+                    var questionData = JsonSerializer.Deserialize<ImportPunctuationQuestionRow>(questionElement.GetRawText());
+                    if (questionData?.IsValid == true)
+                    {
+                        var question = new PunctuationQuestion
+                        {
+                            PunctuationTestId = testId,
+                            SentenceWithNumbers = questionData.SentenceWithNumbers,
+                            CorrectPositions = questionData.CorrectPositions,
+                            PlainSentence = questionData.PlainSentence,
+                            Hint = questionData.Hint,
+                            Points = pointsPerQuestion,
+                            OrderIndex = ++orderIndex
+                        };
+
+                        _context.PunctuationQuestions.Add(question);
+                        importedCount++;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                HttpContext.Session.Remove(sessionKey);
+
+                _logger.LogInformation(
+                    "Учитель {TeacherId} импортировал {Count} вопросов в тест {TestId}",
+                    currentUser.Id, importedCount, testId);
+
+                TempData["SuccessMessage"] = $"Успешно импортировано {importedCount} вопросов!";
+                return RedirectToAction(nameof(Details), new { id = testId });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка подтверждения импорта");
+                TempData["ErrorMessage"] = "Ошибка при импорте";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        // GET: PunctuationTest/DownloadQuestionTemplate
+        public async Task<IActionResult> DownloadQuestionTemplate()
+        {
+            try
+            {
+                var templateBytes = await _questionImportService.GenerateTemplateAsync();
+                return File(templateBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "Шаблон_вопросов_пунктуация.xlsx");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка генерации шаблона");
+                TempData["ErrorMessage"] = "Ошибка генерации шаблона";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        #endregion
+
+        #region Helper Methods
 
         private async Task LoadClasses()
         {
@@ -744,5 +708,34 @@ namespace OnlineTutor2.Controllers
 
             await _context.SaveChangesAsync();
         }
+
+        private async Task<bool> ValidateImportFile(IFormFile file, int testId, string teacherId)
+        {
+            if (file == null || file.Length == 0)
+            {
+                ModelState.AddModelError("ExcelFile", "Выберите файл для импорта");
+                return false;
+            }
+
+            if (file.Length > 10 * 1024 * 1024)
+            {
+                _logger.LogWarning("Файл слишком большой: {Size} байт", file.Length);
+                ModelState.AddModelError("ExcelFile", "Размер файла не должен превышать 10 МБ");
+                return false;
+            }
+
+            var allowedExtensions = new[] { ".xlsx", ".xls" };
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(fileExtension))
+            {
+                _logger.LogWarning("Недопустимый формат файла: {Extension}", fileExtension);
+                ModelState.AddModelError("ExcelFile", "Поддерживаются только файлы Excel (.xlsx, .xls)");
+                return false;
+            }
+
+            return true;
+        }
+
+        #endregion
     }
 }
