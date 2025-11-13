@@ -244,7 +244,7 @@ namespace OnlineTutor2.Controllers
             _logger.LogInformation("Учитель {TeacherId} удалил классический тест {TestId}: {Title}", currentUser.Id, id, testTitle);
 
             TempData["SuccessMessage"] = $"Тест \"{testTitle}\" успешно удален!";
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Category", "Test", new { id = TestCategoryConstants.Regular });
         }
 
         // POST: RegularTest/ToggleStatus/5
