@@ -1,40 +1,99 @@
-﻿.card {
-    transition: transform 0.2s ease-in-out;
+﻿/* ===== ОСНОВНЫЕ СТИЛИ КАРТОЧЕК ===== */
+.card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
     .card:hover {
         transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
     }
+
+.card-header {
+    padding: 0.75rem 1rem;
+}
+
+.card-body {
+    padding: 0.75rem 1rem;
+}
 
 .border-start {
     border-left-width: 3px !important;
 }
 
+/* ===== КОМПАКТНЫЕ КАРТОЧКИ СТАТИСТИКИ ===== */
+.stats-card-compact {
+    transition: all 0.2s ease;
+}
+
+    .stats-card-compact:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .stats-card-compact .card-body {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .stats-card-compact i {
+        font-size: 1.25rem;
+    }
+
+    .stats-card-compact h5 {
+        font-size: 1.25rem;
+        margin: 0.25rem 0;
+    }
+
+    .stats-card-compact small {
+        font-size: 0.7rem;
+    }
+
+/* ===== ТАБЛИЦЫ ===== */
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+    white-space: nowrap;
+}
+
+.table-compact td {
+    padding: 0.5rem;
+    vertical-align: middle;
+}
+
+.table-compact th {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* ===== ОТОБРАЖЕНИЕ СЛОВ И РЕЗУЛЬТАТОВ ===== */
 .word-display {
     font-size: 1.1em;
     font-weight: 600;
     color: #0d6efd;
 }
 
-.badge.fs-6 {
-    font-size: 0.9rem !important;
+.result-display {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
 }
 
-.table th {
-    border-top: none;
-    font-weight: 600;
-    color: #495057;
-}
+    .result-display .badge {
+        font-size: 0.8rem;
+    }
 
-.card-header {
-    padding-bottom: 0.75rem;
-}
+    .result-display small {
+        font-size: 0.7rem;
+        line-height: 1.2;
+    }
 
-.card-body {
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
-}
-
+/* ===== ИНФОРМАЦИЯ О ТЕСТЕ ===== */
 .test-info-item {
     display: flex;
     align-items: center;
@@ -55,36 +114,14 @@
 
 .info-label {
     color: #6c757d;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
 }
 
 .info-column {
     padding: 0 10px;
 }
 
-.test-info-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.85rem;
-}
-
-    .test-info-item i {
-        font-size: 0.9rem;
-        width: 16px;
-        text-align: center;
-    }
-
-.info-value {
-    font-weight: 600;
-    color: #495057;
-}
-
-.info-label {
-    color: #6c757d;
-    font-size: 0.85rem;
-}
-
+/* ===== НАСТРОЙКИ ТЕСТА ===== */
 .setting-tag {
     display: inline-flex;
     align-items: center;
@@ -109,6 +146,7 @@
     border: 1px solid #e9ecef;
 }
 
+/* ===== ИНФОРМАЦИЯ О ДАТАХ ===== */
 .date-info {
     display: flex;
     align-items: center;
@@ -122,34 +160,21 @@
         width: 12px;
     }
 
-@@media (max-width: 768px) {
-    .info-column {
-        padding: 10px 0;
-        border-bottom: 1px solid #e9ecef;
-    }
-
-        .info-column:last-child {
-            border-bottom: none;
-        }
-}
-
-.result-display {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-}
-
-    .result-display .badge {
-        font-size: 0.8rem;
-    }
-
-    .result-display small {
-        font-size: 0.7rem;
-        line-height: 1.2;
-    }
-
+/* ===== ОЦЕНКИ ===== */
 .grade-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: white;
+    flex-shrink: 0;
+}
+
+.grade-badge-compact {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -157,8 +182,9 @@
     height: 24px;
     border-radius: 50%;
     font-size: 0.75rem;
-    font-weight: bold;
+    font-weight: 600;
     color: white;
+    flex-shrink: 0;
 }
 
 .grade-excellent {
@@ -178,6 +204,7 @@
     background-color: #dc3545;
 }
 
+/* ===== СТУДЕНТЫ И ОШИБКИ ===== */
 .students-minimal {
     display: flex;
     flex-wrap: wrap;
@@ -189,9 +216,397 @@
     display: inline-block;
     background: #f8f9fa;
     color: #6c757d;
-    padding: 1px 6px;
+    padding: 2px 8px;
     border-radius: 8px;
-    font-size: 0.9rem;
-    line-height: 1.2;
+    font-size: 0.75rem;
+    line-height: 1.4;
     border: 1px solid #e9ecef;
+}
+
+/* ===== БАДЖЕ И КНОПКИ ===== */
+.badge {
+    font-weight: 500;
+}
+
+    .badge.fs-6 {
+        font-size: 0.9rem !important;
+    }
+
+.badge-sm {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.btn-icon {
+    padding: 0.25rem 0.5rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .btn-icon i {
+        margin: 0;
+    }
+
+/* ===== BREADCRUMB ===== */
+.breadcrumb-compact {
+    font-size: 0.875rem;
+    padding: 0;
+    margin: 0;
+    background: none;
+}
+
+    .breadcrumb-compact .breadcrumb-item {
+        font-size: 0.875rem;
+    }
+
+/* ===== СТАТУС-БАДЖ ===== */
+.status-badge-compact {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+}
+
+/* ===== МЕДИА ЗАПРОСЫ ===== */
+
+/* Планшеты и меньше (768px) */
+@media (max-width: 767.98px) {
+    /* Колонки информации */
+    .info-column {
+        padding: 10px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+        .info-column:last-child {
+            border-bottom: none;
+        }
+
+    /* Компактные таблицы */
+    .table-compact td,
+    .table-compact th {
+        padding: 0.4rem 0.3rem;
+        font-size: 0.85rem;
+    }
+
+    /* Оценки еще компактнее */
+    .grade-badge {
+        width: 24px;
+        height: 24px;
+        font-size: 0.75rem;
+    }
+
+    .grade-badge-compact {
+        width: 20px;
+        height: 20px;
+        font-size: 0.7rem;
+    }
+
+    /* Результаты */
+    .result-display {
+        align-items: center;
+    }
+
+        .result-display .badge {
+            font-size: 0.7rem;
+        }
+
+        .result-display small {
+            font-size: 0.65rem;
+        }
+
+    /* Карточки статистики */
+    .stats-card-compact .card-body {
+        padding: 0.5rem 0.25rem;
+    }
+
+    .stats-card-compact i {
+        font-size: 1rem;
+    }
+
+    .stats-card-compact h5 {
+        font-size: 1rem;
+    }
+
+    .stats-card-compact small {
+        font-size: 0.65rem;
+    }
+
+    /* Студенческие теги */
+    .student-tag {
+        font-size: 0.7rem;
+        padding: 1px 6px;
+    }
+
+    /* Кнопки */
+    .btn-icon {
+        padding: 0.2rem 0.4rem;
+    }
+
+    /* Заголовки карточек */
+    .card-header h5,
+    .card-header h6 {
+        font-size: 0.95rem;
+    }
+
+    /* Информация о тесте - вертикальная компоновка */
+    .test-info-item {
+        font-size: 0.8rem;
+    }
+}
+
+/* Мобильные устройства (576px) */
+@media (max-width: 575.98px) {
+    /* Карточки */
+    .card-header,
+    .card-body {
+        padding: 0.5rem 0.75rem;
+    }
+
+    /* Еще более компактные таблицы */
+    .table-compact td,
+    .table-compact th {
+        padding: 0.35rem 0.25rem;
+        font-size: 0.8rem;
+    }
+
+    /* Бадже меньше */
+    .badge-sm {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    /* Статистика в 2 колонки */
+    .stats-card-compact {
+        margin-bottom: 0.5rem;
+    }
+
+    /* Скрываем некоторые иконки на мобильных */
+    .d-sm-inline-flex .fa-user-graduate {
+        font-size: 0.9rem;
+    }
+}
+
+/* ===== ДОПОЛНИТЕЛЬНЫЕ УТИЛИТЫ ===== */
+
+/* Анимация появления */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Индикатор загрузки */
+.loading-spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Улучшенные тени для модальных окон */
+.modal-content {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* Переходы для вкладок */
+.tab-content {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Улучшенный hover для строк таблицы */
+.table-hover tbody tr {
+    transition: background-color 0.15s ease-in-out;
+}
+
+/* Адаптивная ширина модального окна */
+@media (min-width: 768px) {
+    .modal-dialog-centered {
+        max-width: 600px;
+    }
+}
+
+/* Прокрутка таблиц с тенью */
+.table-responsive {
+    position: relative;
+}
+
+    .table-responsive::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 30px;
+        background: linear-gradient(to left, rgba(255, 255, 255, 0.8), transparent);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .table-responsive.scrollable::after {
+        opacity: 1;
+    }
+
+/* ===== МОБИЛЬНАЯ ТАБЛИЦА РЕЗУЛЬТАТОВ ===== */
+
+/* Компактное отображение имени на мобильных */
+@media (max-width: 767.98px) {
+    .student-name-mobile {
+        font-size: 0.85rem;
+        line-height: 1.3;
+    }
+
+    /* Уменьшаем размер бадже на очень маленьких экранах */
+    .table-compact .badge-sm {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    /* Компактные оценки на мобильных */
+    .table-compact .grade-badge-compact {
+        width: 20px;
+        height: 20px;
+        font-size: 0.7rem;
+    }
+
+    /* Убираем лишние отступы в ячейках */
+    .table-compact td {
+        padding: 0.4rem 0.25rem;
+    }
+
+    /* Иконки в статусах */
+    .badge-sm i {
+        font-size: 0.8rem;
+    }
+}
+
+/* Очень маленькие экраны */
+@media (max-width: 575.98px) {
+    .student-name-mobile {
+        font-size: 0.8rem;
+    }
+
+    .table-compact td {
+        padding: 0.35rem 0.2rem;
+    }
+
+    /* Еще более компактные бадже */
+    .table-compact .badge-sm {
+        font-size: 0.65rem;
+        padding: 0.15rem 0.3rem;
+    }
+
+    /* Совсем маленькие оценки */
+    .table-compact .grade-badge-compact {
+        width: 18px;
+        height: 18px;
+        font-size: 0.65rem;
+    }
+}
+
+/* ===== ФИЛЬТР ВОПРОСОВ ===== */
+
+/* Стиль переключателя */
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.form-check-input:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Анимация карточек вопросов */
+.question-analytics-card {
+    transition: all 0.3s ease-in-out;
+}
+
+    .question-analytics-card.fade-in {
+        animation: fadeInSlide 0.3s ease-in-out;
+    }
+
+@keyframes fadeInSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Подсветка вопросов с ошибками */
+.question-analytics-card.has-mistakes {
+    border-left: 3px solid transparent;
+    transition: border-left-color 0.3s ease;
+}
+
+    .question-analytics-card.has-mistakes:hover {
+        border-left-color: #dc3545;
+    }
+
+/* Фон для вопросов без ошибок */
+.bg-light-success {
+    background-color: #d1f4e0 !important;
+}
+
+/* Адаптивность фильтра */
+@media (max-width: 767.98px) {
+    /* Вертикальная компоновка на мобильных */
+    .card-body .d-flex.justify-content-between {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+
+    .form-check-label {
+        font-size: 0.85rem;
+    }
+
+    /* Скрываем текст в бадже на мобильных */
+    .question-analytics-card .badge .d-none.d-sm-inline {
+        display: none !important;
+    }
+}
+
+/* Сообщение "Нет результатов" */
+#noQuestionsMessage {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+    #noQuestionsMessage i {
+        opacity: 0.3;
+    }
+
+/* Улучшенный вид счетчиков */
+.badge.bg-secondary,
+.badge.bg-danger {
+    font-weight: 500;
+    letter-spacing: 0.3px;
 }
