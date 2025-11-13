@@ -82,6 +82,11 @@ namespace OnlineTutor2.Data
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            modelBuilder.Entity<Student>()
+                .Property(s => s.StudentNumber)
+                .HasMaxLength(50)
+                .IsRequired(false);
+
             // Class
             modelBuilder.Entity<Class>()
                 .HasOne(c => c.Teacher)

@@ -11,7 +11,7 @@ namespace OnlineTutor2.Models
 
         public int? ClassId { get; set; }
 
-        [StringLength(20)]
+        [MaxLength(50)]
         public string? StudentNumber { get; set; }
 
         [StringLength(200)]

@@ -805,9 +805,10 @@ namespace OnlineTutor2.Controllers
                 .FirstOrDefaultAsync();
 
             int nextNumber = 1;
-            if (lastStudent != null && lastStudent.StudentNumber.Length >= 8)
+            if (lastStudent != null && lastStudent.StudentNumber != null && lastStudent.StudentNumber.Length >= 8)
             {
-                if (int.TryParse(lastStudent.StudentNumber.Substring(4), out int lastNumber))
+                var numberPart = lastStudent.StudentNumber.Substring(4);
+                if (int.TryParse(numberPart, out int lastNumber))
                 {
                     nextNumber = lastNumber + 1;
                 }
