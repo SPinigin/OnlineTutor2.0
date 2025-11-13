@@ -162,8 +162,12 @@
                         <label for="confirmationText" class="form-label">
                             <strong>Для подтверждения введите название теста:</strong>
                         </label>
-                        <input type="text" id="confirmationText" class="form-control"
-                               placeholder="@Model.Title" autocomplete="off" />
+                        <input type="text" 
+                               id="confirmationText" 
+                               class="form-control"
+                               data-expected-text="@Model.Title"
+                               placeholder="@Model.Title" 
+                               autocomplete="off" />
                         <div class="form-text">
                             Введите: <strong>@Model.Title</strong>
                         </div>
@@ -211,29 +215,49 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const confirmationText = document.getElementById('confirmationText');
+            const confirmationInput = document.getElementById('confirmationText');
             const deleteButton = document.getElementById('deleteButton');
             const deleteForm = document.getElementById('deleteForm');
-            const expectedText = '@Model.Title';
 
-            if (confirmationText && deleteButton && deleteForm) {
-                confirmationText.addEventListener('input', function() {
-                    if (this.value.trim() === expectedText) {
+            if (confirmationInput && deleteButton && deleteForm) {
+                // ✅ ИСПРАВЛЕНИЕ: Получаем ожидаемый текст из data-атрибута
+                const expectedText = confirmationInput.dataset.expectedText;
+
+                console.log('Expected text:', expectedText); // Для отладки
+
+                confirmationInput.addEventListener('input', function() {
+                    const inputValue = this.value.trim();
+                    
+                    console.log('Input value:', inputValue); // Для отладки
+                    console.log('Match:', inputValue === expectedText); // Для отладки
+
+                    if (inputValue === expectedText) {
                         deleteButton.disabled = false;
                         deleteButton.classList.remove('btn-outline-danger');
                         deleteButton.classList.add('btn-danger');
+                        confirmationInput.classList.remove('is-invalid');
+                        confirmationInput.classList.add('is-valid');
                     } else {
                         deleteButton.disabled = true;
                         deleteButton.classList.remove('btn-danger');
                         deleteButton.classList.add('btn-outline-danger');
+                        confirmationInput.classList.remove('is-valid');
+                        if (inputValue.length > 0) {
+                            confirmationInput.classList.add('is-invalid');
+                        } else {
+                            confirmationInput.classList.remove('is-invalid');
+                        }
                     }
                 });
 
                 // Предотвращаем случайную отправку формы
                 deleteForm.addEventListener('submit', function(e) {
-                    if (confirmationText.value.trim() !== expectedText) {
+                    const inputValue = confirmationInput.value.trim();
+                    
+                    if (inputValue !== expectedText) {
                         e.preventDefault();
                         alert('Введите точное название теста для подтверждения удаления');
+                        confirmationInput.focus();
                         return false;
                     }
 
@@ -243,6 +267,9 @@
                         return false;
                     }
                 });
+
+                // Фокус на поле ввода при загрузке
+                confirmationInput.focus();
             }
         });
     </script>
