@@ -199,40 +199,26 @@ else
                                     <small class="text-muted">@student.CreatedAt.ToString("dd.MM.yyyy")</small>
                                 </td>
                                 <td>
-                                    <div class="btn-group" role="group">
+                                    <div class="btn-group gap-1" role="group">
                                         <a asp-action="Details" asp-route-id="@student.Id"
-                                           class="btn btn-outline-info btn-sm" title="Подробности">
+                                           class="btn btn-outline-info btn-sm rounded" title="Детали">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         <a asp-action="Edit" asp-route-id="@student.Id"
-                                           class="btn btn-outline-primary btn-sm" title="Редактировать">
+                                           class="btn btn-outline-primary btn-sm rounded" title="Редактировать">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <div class="btn-group" role="group">
-                                            <button type="button"
-                                                    class="btn btn-outline-secondary btn-sm dropdown-toggle"
-                                                    data-bs-toggle="dropdown"
-                                                    data-bs-auto-close="true"
-                                                    data-bs-boundary="viewport"
-                                                    aria-expanded="false"
-                                                    title="Дополнительно">
-                                                <i class="fas fa-ellipsis-v"></i>
-                                            </button>
-                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                <li>
-                                                    <button type="button" class="dropdown-item"
-                                                            onclick="showAssignClassModal(@student.Id, '@student.User.FullName', @(student.ClassId?.ToString() ?? "null"))">
-                                                        <i class="fas fa-users"></i> Назначить в класс
-                                                    </button>
-                                                </li>
-                                                <li><hr class="dropdown-divider"></li>
-                                                <li>
-                                                    <a asp-action="Delete" asp-route-id="@student.Id" class="dropdown-item text-danger">
-                                                        <i class="fas fa-trash"></i> Удалить
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </div>
+                                        <button type="button" 
+                                                class="btn btn-outline-success btn-sm rounded" 
+                                                title="Назначить в класс"
+                                                onclick="showAssignClassModal(@student.Id, '@student.User.FullName', @(student.ClassId?.ToString() ?? "null"))">
+                                            <i class="fas fa-users"></i>
+                                        </button>
+                                        <a asp-action="Delete" asp-route-id="@student.Id" 
+                                           class="btn btn-outline-danger btn-sm rounded" 
+                                           title="Удалить">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
