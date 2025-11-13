@@ -255,7 +255,7 @@ namespace OnlineTutor2.Controllers
                 currentUser.Id, id, testTitle);
 
             TempData["SuccessMessage"] = $"Тест \"{testTitle}\" успешно удален!";
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Category", "Test", new { id = TestCategoryConstants.Orthoeopy });
         }
 
         // POST: OrthoeopyTest/ToggleStatus/5
