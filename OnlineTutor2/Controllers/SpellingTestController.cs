@@ -14,13 +14,16 @@ namespace OnlineTutor2.Controllers
     [Authorize(Roles = ApplicationRoles.Teacher)]
     public class SpellingTestController : Controller
     {
+        #region Fields and Constructor
+
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ISpellingQuestionImportService _questionImportService;
         private readonly ILogger<SpellingTestController> _logger;
 
-        public SpellingTestController(ApplicationDbContext context, 
-            UserManager<ApplicationUser> userManager, 
+        public SpellingTestController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager,
             ISpellingQuestionImportService questionImportService,
             ILogger<SpellingTestController> logger)
         {
@@ -28,8 +31,11 @@ namespace OnlineTutor2.Controllers
             _userManager = userManager;
             _questionImportService = questionImportService;
             _logger = logger;
-
         }
+
+        #endregion
+
+        #region Test CRUD Operations
 
         // GET: SpellingTest
         public async Task<IActionResult> Index()
@@ -39,6 +45,7 @@ namespace OnlineTutor2.Controllers
                 .Where(st => st.TeacherId == currentUser.Id)
                 .Include(st => st.Class)
                 .Include(st => st.SpellingQuestions)
+                .Include(st => st.SpellingTestResults)
                 .OrderByDescending(st => st.CreatedAt)
                 .ToListAsync();
 
@@ -88,7 +95,7 @@ namespace OnlineTutor2.Controllers
                     Title = model.Title,
                     Description = model.Description,
                     TeacherId = currentUser.Id,
-                    TestCategoryId = 1,
+                    TestCategoryId = TestCategoryConstants.Spelling,
                     ClassId = model.ClassId,
                     TimeLimit = model.TimeLimit,
                     MaxAttempts = model.MaxAttempts,
@@ -102,14 +109,17 @@ namespace OnlineTutor2.Controllers
                 _context.SpellingTests.Add(test);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Учитель {TeacherId} создал тест орфографии {TestId}: {Title}, ClassId: {ClassId}, TimeLimit: {TimeLimit}",
-                    currentUser.Id, test.Id, test.Title, test.ClassId, test.TimeLimit);
+                _logger.LogInformation(
+                    "Учитель {TeacherId} создал тест орфографии {TestId}: {Title}",
+                    currentUser.Id, test.Id, test.Title);
 
                 TempData["SuccessMessage"] = $"Тест \"{test.Title}\" успешно создан! Теперь добавьте вопросы.";
                 return RedirectToAction(nameof(Details), new { id = test.Id });
             }
 
-            _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму создания теста орфографии", currentUser.Id);
+            _logger.LogWarning(
+                "Учитель {TeacherId} отправил невалидную форму создания теста орфографии",
+                currentUser.Id);
 
             await LoadClasses();
             return View(model);
@@ -175,21 +185,20 @@ namespace OnlineTutor2.Controllers
                     _context.Update(test);
                     await _context.SaveChangesAsync();
 
-                    _logger.LogInformation("Учитель {TeacherId} обновил тест орфографии {TestId}: {Title}, ClassId: {ClassId}",
-                        currentUser.Id, id, test.Title, test.ClassId);
+                    _logger.LogInformation(
+                        "Учитель {TeacherId} обновил тест орфографии {TestId}: {Title}",
+                        currentUser.Id, id, test.Title);
 
                     TempData["SuccessMessage"] = $"Тест \"{test.Title}\" успешно обновлен!";
                     return RedirectToAction(nameof(Details), new { id });
                 }
                 catch (DbUpdateConcurrencyException ex)
                 {
-                    _logger.LogError(ex, "Ошибка конкурентности при обновлении теста орфографии {TestId} учителем {TeacherId}", id, currentUser.Id);
+                    _logger.LogError(ex,
+                        "Ошибка конкурентности при обновлении теста орфографии {TestId}",
+                        id);
                     ModelState.AddModelError("", "Произошла ошибка при сохранении. Попробуйте еще раз.");
                 }
-            }
-            else
-            {
-                _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму обновления теста орфографии {TestId}", currentUser.Id, id);
             }
 
             await LoadClasses();
@@ -209,8 +218,6 @@ namespace OnlineTutor2.Controllers
                 .Include(st => st.SpellingTestResults)
                     .ThenInclude(tr => tr.Student)
                         .ThenInclude(s => s.User)
-                .Include(st => st.SpellingTestResults)
-                    .ThenInclude(tr => tr.SpellingAnswers)
                 .FirstOrDefaultAsync(st => st.Id == id && st.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -232,8 +239,9 @@ namespace OnlineTutor2.Controllers
 
             if (test.SpellingTestResults.Any())
             {
-                _logger.LogWarning("Учитель {TeacherId} попытался удалить тест орфографии {TestId} с результатами ({ResultsCount})",
-                    currentUser.Id, id, test.SpellingTestResults.Count);
+                _logger.LogWarning(
+                    "Учитель {TeacherId} попытался удалить тест орфографии {TestId} с результатами",
+                    currentUser.Id, id);
                 TempData["ErrorMessage"] = "Нельзя удалить тест, который уже проходили ученики.";
                 return RedirectToAction(nameof(Delete), new { id });
             }
@@ -242,23 +250,17 @@ namespace OnlineTutor2.Controllers
             _context.SpellingTests.Remove(test);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Учитель {TeacherId} удалил тест орфографии {TestId}: {Title}", currentUser.Id, id, testTitle);
+            _logger.LogInformation(
+                "Учитель {TeacherId} удалил тест орфографии {TestId}: {Title}",
+                currentUser.Id, id, testTitle);
 
-            TempData["SuccessMessage"] = $"Тест \"{test.Title}\" успешно удален!";
+            TempData["SuccessMessage"] = $"Тест \"{testTitle}\" успешно удален!";
             return RedirectToAction(nameof(Index));
         }
 
-        private async Task LoadClasses()
-        {
-            var currentUser = await _userManager.GetUserAsync(User);
-            var classes = await _context.Classes
-                .Where(c => c.TeacherId == currentUser.Id && c.IsActive)
-                .ToListAsync();
-            ViewBag.Classes = new SelectList(classes, "Id", "Name");
-        }
-
-        // GET: SpellingTest/ImportQuestions/5
-        public async Task<IActionResult> ImportQuestions(int id)
+        // POST: SpellingTest/ToggleStatus/5
+        [HttpPost]
+        public async Task<IActionResult> ToggleStatus(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.SpellingTests
@@ -266,274 +268,22 @@ namespace OnlineTutor2.Controllers
 
             if (test == null) return NotFound();
 
-            ViewBag.Test = test;
-            return View(new SpellingQuestionImportViewModel { SpellingTestId = id });
+            test.IsActive = !test.IsActive;
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Учитель {TeacherId} изменил статус теста орфографии {TestId} на {Status}",
+                currentUser.Id, id, test.IsActive);
+
+            var status = test.IsActive ? "активирован" : "деактивирован";
+            TempData["InfoMessage"] = $"Тест \"{test.Title}\" {status}.";
+
+            return RedirectToAction(nameof(Details), new { id });
         }
 
-        // POST: SpellingTest/ImportQuestions
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ImportQuestions(SpellingQuestionImportViewModel model)
-        {
-            var currentUser = await _userManager.GetUserAsync(User);
-            var test = await _context.SpellingTests
-                .FirstOrDefaultAsync(st => st.Id == model.SpellingTestId && st.TeacherId == currentUser.Id);
+        #endregion
 
-            if (test == null)
-            {
-                TempData["ErrorMessage"] = "Тест не найден";
-                return RedirectToAction(nameof(Index));
-            }
-
-            ViewBag.Test = test;
-
-            if (!ModelState.IsValid)
-            {
-                _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму импорта вопросов для теста орфографии {TestId}", currentUser.Id, model.SpellingTestId);
-                return View(model);
-            }
-
-            try
-            {
-                // Проверка файла
-                if (model.ExcelFile == null || model.ExcelFile.Length == 0)
-                {
-                    ModelState.AddModelError("ExcelFile", "Выберите файл для импорта");
-                    return View(model);
-                }
-
-                // Проверка размера файла
-                if (model.ExcelFile.Length > 10 * 1024 * 1024)
-                {
-                    _logger.LogWarning("Учитель {TeacherId} попытался импортировать слишком большой файл ({FileSize} байт) для теста орфографии {TestId}",
-                        currentUser.Id, model.ExcelFile.Length, model.SpellingTestId);
-                    ModelState.AddModelError("ExcelFile", "Размер файла не должен превышать 10 МБ");
-                    return View(model);
-                }
-
-                // Проверка расширения
-                var allowedExtensions = new[] { ".xlsx", ".xls" };
-                var fileExtension = Path.GetExtension(model.ExcelFile.FileName).ToLowerInvariant();
-                if (!allowedExtensions.Contains(fileExtension))
-                {
-                    _logger.LogWarning("Учитель {TeacherId} попытался импортировать файл недопустимого формата ({FileExtension}) для теста орфографии {TestId}",
-                        currentUser.Id, fileExtension, model.SpellingTestId);
-                    ModelState.AddModelError("ExcelFile", "Поддерживаются только файлы Excel (.xlsx, .xls)");
-                    return View(model);
-                }
-
-                // Парсинг файла
-                List<ImportSpellingQuestionRow> questions;
-                try
-                {
-                    questions = await _questionImportService.ParseExcelFileAsync(model.ExcelFile);
-                    _logger.LogDebug("Парсинг завершен. Найдено {QuestionsCount} вопросов", questions?.Count ?? 0);
-                }
-                catch (Exception parseEx)
-                {
-                    _logger.LogError(parseEx, "Ошибка парсинга файла импорта для теста орфографии {TestId} учителем {TeacherId}", model.SpellingTestId, currentUser.Id);
-                    ModelState.AddModelError("ExcelFile", $"Ошибка при чтении файла Excel: {parseEx.Message}");
-                    return View(model);
-                }
-
-                if (questions == null || !questions.Any())
-                {
-                    _logger.LogWarning("Учитель {TeacherId} импортировал пустой файл для теста орфографии {TestId}", currentUser.Id, model.SpellingTestId);
-                    TempData["ErrorMessage"] = "Файл не содержит данных для импорта";
-                    return View(model);
-                }
-
-                var importData = new
-                {
-                    TestId = model.SpellingTestId,
-                    Questions = questions,
-                    PointsPerQuestion = model.PointsPerQuestion
-                };
-
-                var sessionKey = $"ImportQuestions_{model.SpellingTestId}_{DateTime.Now.Ticks}";
-                HttpContext.Session.SetString(sessionKey, JsonSerializer.Serialize(importData));
-
-                TempData["ImportSessionKey"] = sessionKey;
-
-                _logger.LogInformation("Учитель {TeacherId} инициировал импорт {QuestionsCount} вопросов для теста орфографии {TestId}",
-                    currentUser.Id, questions.Count, model.SpellingTestId);
-
-                return RedirectToAction(nameof(PreviewQuestions));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка импорта вопросов для теста орфографии {TestId} учителем {TeacherId}", model.SpellingTestId, currentUser.Id);
-                TempData["ErrorMessage"] = $"Произошла ошибка: {ex.Message}";
-                return View(model);
-            }
-        }
-
-
-        // GET: SpellingTest/PreviewQuestions
-        public async Task<IActionResult> PreviewQuestions()
-        {
-            try
-            {
-                var sessionKey = TempData["ImportSessionKey"] as string;
-                if (string.IsNullOrEmpty(sessionKey))
-                {
-                    TempData["ErrorMessage"] = "Данные импорта не найдены. Попробуйте еще раз.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                var importDataJson = HttpContext.Session.GetString(sessionKey);
-                if (string.IsNullOrEmpty(importDataJson))
-                {
-                    TempData["ErrorMessage"] = "Данные импорта истекли. Попробуйте еще раз.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                var importData = JsonSerializer.Deserialize<JsonElement>(importDataJson);
-                var testId = importData.GetProperty("TestId").GetInt32();
-                var pointsPerQuestion = importData.GetProperty("PointsPerQuestion").GetInt32();
-
-                var currentUser = await _userManager.GetUserAsync(User);
-                var test = await _context.SpellingTests
-                    .FirstOrDefaultAsync(st => st.Id == testId && st.TeacherId == currentUser.Id);
-
-                if (test == null)
-                {
-                    TempData["ErrorMessage"] = "Тест не найден";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                var questionsArray = importData.GetProperty("Questions");
-                var questions = new List<ImportSpellingQuestionRow>();
-
-                foreach (var questionElement in questionsArray.EnumerateArray())
-                {
-                    try
-                    {
-                        var question = JsonSerializer.Deserialize<ImportSpellingQuestionRow>(questionElement.GetRawText());
-                        if (question != null)
-                        {
-                            questions.Add(question);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Ошибка десериализации вопроса при предпросмотре импорта для теста {TestId}", testId);
-                    }
-                }
-
-                ViewBag.Test = test;
-                ViewBag.PointsPerQuestion = pointsPerQuestion;
-
-                TempData["ImportSessionKey"] = sessionKey;
-
-                return View(questions);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка обработки предпросмотра импорта");
-                TempData["ErrorMessage"] = $"Ошибка обработки данных: {ex.Message}";
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
-        // POST: SpellingTest/ConfirmImport
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ConfirmImport()
-        {
-            var sessionKey = TempData["ImportSessionKey"] as string;
-            if (string.IsNullOrEmpty(sessionKey))
-            {
-                TempData["ErrorMessage"] = "Данные импорта не найдены";
-                return RedirectToAction(nameof(Index));
-            }
-
-            var importDataJson = HttpContext.Session.GetString(sessionKey);
-            if (string.IsNullOrEmpty(importDataJson))
-            {
-                TempData["ErrorMessage"] = "Данные импорта истекли";
-                return RedirectToAction(nameof(Index));
-            }
-
-            try
-            {
-                var importData = JsonSerializer.Deserialize<JsonElement>(importDataJson);
-                var testId = importData.GetProperty("TestId").GetInt32();
-                var pointsPerQuestion = importData.GetProperty("PointsPerQuestion").GetInt32();
-
-                var currentUser = await _userManager.GetUserAsync(User);
-                var test = await _context.SpellingTests
-                    .Include(st => st.SpellingQuestions)
-                    .FirstOrDefaultAsync(st => st.Id == testId && st.TeacherId == currentUser.Id);
-
-                if (test == null) return NotFound();
-
-                var questionsArray = importData.GetProperty("Questions");
-                var validQuestions = new List<ImportSpellingQuestionRow>();
-                var orderIndex = test.SpellingQuestions.Count;
-
-                foreach (var questionElement in questionsArray.EnumerateArray())
-                {
-                    var questionData = JsonSerializer.Deserialize<ImportSpellingQuestionRow>(questionElement.GetRawText());
-                    if (questionData.IsValid)
-                    {
-                        validQuestions.Add(questionData);
-                    }
-                }
-
-                // Создаем вопросы в базе данных
-                foreach (var questionData in validQuestions)
-                {
-                    var question = new SpellingQuestion
-                    {
-                        SpellingTestId = testId,
-                        WordWithGap = questionData.WordWithGap,
-                        CorrectLetter = questionData.CorrectLetter,
-                        FullWord = questionData.FullWord,
-                        Hint = questionData.Hint,
-                        Points = pointsPerQuestion,
-                        OrderIndex = ++orderIndex
-                    };
-
-                    _context.SpellingQuestions.Add(question);
-                }
-
-                await _context.SaveChangesAsync();
-                HttpContext.Session.Remove(sessionKey);
-
-                _logger.LogInformation("Учитель {TeacherId} подтвердил импорт {QuestionsCount} вопросов для теста орфографии {TestId}",
-                    currentUser.Id, validQuestions.Count, testId);
-
-                TempData["SuccessMessage"] = $"Успешно импортировано {validQuestions.Count} вопросов!";
-                return RedirectToAction(nameof(Details), new { id = testId });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка подтверждения импорта вопросов орфографии");
-                TempData["ErrorMessage"] = $"Ошибка при импорте: {ex.Message}";
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
-        // GET: SpellingTest/DownloadQuestionTemplate
-        public async Task<IActionResult> DownloadQuestionTemplate()
-        {
-            var currentUser = _userManager.GetUserAsync(User);
-
-            try
-            {
-                var templateBytes = await _questionImportService.GenerateTemplateAsync();
-                return File(templateBytes,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "Шаблон_вопросов_орфография.xlsx");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка генерации шаблона вопросов орфографии для учителя {TeacherId}", currentUser.Id);
-                TempData["ErrorMessage"] = $"Ошибка генерации шаблона: {ex.Message}";
-                return RedirectToAction(nameof(Index));
-            }
-        }
+        #region Question Management
 
         // GET: SpellingTest/AddQuestion/5
         public async Task<IActionResult> AddQuestion(int id)
@@ -545,7 +295,6 @@ namespace OnlineTutor2.Controllers
 
             if (test == null) return NotFound();
 
-            // Создаем модель с уже заполненными данными
             var model = new SpellingQuestion
             {
                 SpellingTestId = test.Id,
@@ -554,8 +303,6 @@ namespace OnlineTutor2.Controllers
             };
 
             ViewBag.Test = test;
-            ViewBag.NextOrderIndex = test.SpellingQuestions.Count + 1;
-
             return View(model);
         }
 
@@ -571,12 +318,10 @@ namespace OnlineTutor2.Controllers
 
             if (test == null) return NotFound();
 
-            // Убираем проверку навигационного свойства из валидации
             ModelState.Remove("SpellingTest");
 
             if (ModelState.IsValid)
             {
-                // Создаем новый объект без Id (чтобы EF сгенерировал его автоматически)
                 var question = new SpellingQuestion
                 {
                     SpellingTestId = model.SpellingTestId,
@@ -591,41 +336,16 @@ namespace OnlineTutor2.Controllers
                 _context.SpellingQuestions.Add(question);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Учитель {TeacherId} добавил вопрос {QuestionId} к тесту орфографии {TestId}: Слово: {Word}, Правильная буква: {Letter}",
-                    currentUser.Id, question.Id, model.SpellingTestId, model.FullWord, model.CorrectLetter);
+                _logger.LogInformation(
+                    "Учитель {TeacherId} добавил вопрос к тесту орфографии {TestId}",
+                    currentUser.Id, model.SpellingTestId);
 
                 TempData["SuccessMessage"] = "Вопрос успешно добавлен!";
                 return RedirectToAction(nameof(Details), new { id = model.SpellingTestId });
             }
 
-            _logger.LogWarning("Учитель {TeacherId} отправил невалидную форму добавления вопроса к тесту орфографии {TestId}", currentUser.Id, model.SpellingTestId);
-
             ViewBag.Test = test;
-            ViewBag.NextOrderIndex = test.SpellingQuestions.Count + 1;
             return View(model);
-        }
-
-        // POST: SpellingTest/ToggleStatus/5
-        [HttpPost]
-        public async Task<IActionResult> ToggleStatus(int id)
-        {
-            var currentUser = await _userManager.GetUserAsync(User);
-            var test = await _context.SpellingTests
-                .FirstOrDefaultAsync(st => st.Id == id && st.TeacherId == currentUser.Id);
-
-            if (test == null) return NotFound();
-
-            var oldStatus = test.IsActive;
-            test.IsActive = !test.IsActive;
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("Учитель {TeacherId} изменил статус теста орфографии {TestId}: {Title} с {OldStatus} на {NewStatus}",
-                currentUser.Id, id, test.Title, oldStatus, test.IsActive);
-
-            var status = test.IsActive ? "активирован" : "деактивирован";
-            TempData["InfoMessage"] = $"Тест \"{test.Title}\" {status}.";
-
-            return RedirectToAction(nameof(Details), new { id });
         }
 
         // GET: SpellingTest/EditQuestion/5
@@ -674,16 +394,17 @@ namespace OnlineTutor2.Controllers
                     _context.Update(existingQuestion);
                     await _context.SaveChangesAsync();
 
-                    _logger.LogInformation("Учитель {TeacherId} обновил вопрос орфографии {QuestionId}: Слово: {Word}, Правильная буква: {Letter}",
-                        currentUser.Id, id, model.FullWord, model.CorrectLetter);
+                    _logger.LogInformation(
+                        "Учитель {TeacherId} обновил вопрос орфографии {QuestionId}",
+                        currentUser.Id, id);
 
                     TempData["SuccessMessage"] = "Вопрос успешно обновлен!";
                     return RedirectToAction(nameof(Details), new { id = existingQuestion.SpellingTestId });
                 }
                 catch (DbUpdateConcurrencyException ex)
                 {
-                    _logger.LogError(ex, "Ошибка конкурентности при обновлении вопроса орфографии {QuestionId} учителем {TeacherId}", id, currentUser.Id);
-                    ModelState.AddModelError("", "Произошла ошибка при сохранении. Попробуйте еще раз.");
+                    _logger.LogError(ex, "Ошибка обновления вопроса {QuestionId}", id);
+                    ModelState.AddModelError("", "Произошла ошибка при сохранении.");
                 }
             }
 
@@ -705,12 +426,8 @@ namespace OnlineTutor2.Controllers
             if (question == null)
                 return Json(new { success = false, message = "Вопрос не найден" });
 
-            // Проверяем, есть ли ответы студентов на этот вопрос
             if (question.StudentAnswers.Any())
             {
-                _logger.LogWarning("Учитель {TeacherId} попытался удалить вопрос орфографии {QuestionId} с ответами студентов ({AnswersCount})",
-                    currentUser.Id, id, question.StudentAnswers.Count);
-
                 return Json(new
                 {
                     success = false,
@@ -721,72 +438,262 @@ namespace OnlineTutor2.Controllers
             try
             {
                 var testId = question.SpellingTestId;
-                var word = question.FullWord;
                 _context.SpellingQuestions.Remove(question);
                 await _context.SaveChangesAsync();
+                await ReorderQuestions(testId);
 
-                _logger.LogInformation("Учитель {TeacherId} удалил вопрос орфографии {QuestionId}: {Word} из теста {TestId}",
-                    currentUser.Id, id, word, testId);
-
-                await ReorderQuestions(testId); // Перенумеровываем оставшиеся вопросы
+                _logger.LogInformation(
+                    "Учитель {TeacherId} удалил вопрос {QuestionId} из теста {TestId}",
+                    currentUser.Id, id, testId);
 
                 return Json(new
                 {
                     success = true,
                     message = "Вопрос успешно удален",
-                    testId = testId
+                    testId
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка удаления вопроса орфографии {QuestionId} учителем {TeacherId}", id, currentUser.Id);
-                return Json(new
-                {
-                    success = false,
-                    message = "Ошибка при удалении вопроса: " + ex.Message
-                });
+                _logger.LogError(ex, "Ошибка удаления вопроса {QuestionId}", id);
+                return Json(new { success = false, message = $"Ошибка: {ex.Message}" });
             }
         }
 
-        // POST: SpellingTest/ReorderQuestions
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ReorderQuestions(int testId, List<int> questionIds)
+        #endregion
+
+        #region Question Import
+
+        // GET: SpellingTest/ImportQuestions/5
+        public async Task<IActionResult> ImportQuestions(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.SpellingTests
-                .Include(st => st.SpellingQuestions)
-                .FirstOrDefaultAsync(st => st.Id == testId && st.TeacherId == currentUser.Id);
+                .FirstOrDefaultAsync(st => st.Id == id && st.TeacherId == currentUser.Id);
+
+            if (test == null) return NotFound();
+
+            ViewBag.Test = test;
+            return View(new SpellingQuestionImportViewModel { SpellingTestId = id });
+        }
+
+        // POST: SpellingTest/ImportQuestions
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ImportQuestions(SpellingQuestionImportViewModel model)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var test = await _context.SpellingTests
+                .FirstOrDefaultAsync(st => st.Id == model.SpellingTestId && st.TeacherId == currentUser.Id);
 
             if (test == null)
-                return Json(new { success = false, message = "Тест не найден" });
+            {
+                TempData["ErrorMessage"] = "Тест не найден";
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewBag.Test = test;
+
+            if (!ModelState.IsValid) return View(model);
 
             try
             {
-                for (int i = 0; i < questionIds.Count; i++)
+                if (!await ValidateImportFile(model.ExcelFile, model.SpellingTestId, currentUser.Id))
+                    return View(model);
+
+                var questions = await _questionImportService.ParseExcelFileAsync(model.ExcelFile);
+
+                if (questions == null || !questions.Any())
                 {
-                    var question = test.SpellingQuestions.FirstOrDefault(q => q.Id == questionIds[i]);
-                    if (question != null)
+                    TempData["ErrorMessage"] = "Файл не содержит данных для импорта";
+                    return View(model);
+                }
+
+                var sessionKey = $"ImportQuestions_{model.SpellingTestId}_{DateTime.Now.Ticks}";
+                var importData = new
+                {
+                    TestId = model.SpellingTestId,
+                    Questions = questions,
+                    PointsPerQuestion = model.PointsPerQuestion
+                };
+
+                HttpContext.Session.SetString(sessionKey, JsonSerializer.Serialize(importData));
+                TempData["ImportSessionKey"] = sessionKey;
+
+                _logger.LogInformation(
+                    "Учитель {TeacherId} инициировал импорт {Count} вопросов для теста {TestId}",
+                    currentUser.Id, questions.Count, model.SpellingTestId);
+
+                return RedirectToAction(nameof(PreviewQuestions));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка импорта для теста {TestId}", model.SpellingTestId);
+                TempData["ErrorMessage"] = $"Ошибка: {ex.Message}";
+                return View(model);
+            }
+        }
+
+        // GET: SpellingTest/PreviewQuestions
+        public async Task<IActionResult> PreviewQuestions()
+        {
+            try
+            {
+                var sessionKey = TempData["ImportSessionKey"] as string;
+                if (string.IsNullOrEmpty(sessionKey))
+                {
+                    TempData["ErrorMessage"] = "Данные импорта не найдены";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                var importDataJson = HttpContext.Session.GetString(sessionKey);
+                if (string.IsNullOrEmpty(importDataJson))
+                {
+                    TempData["ErrorMessage"] = "Данные импорта истекли";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                var importData = JsonSerializer.Deserialize<JsonElement>(importDataJson);
+                var testId = importData.GetProperty("TestId").GetInt32();
+                var pointsPerQuestion = importData.GetProperty("PointsPerQuestion").GetInt32();
+
+                var currentUser = await _userManager.GetUserAsync(User);
+                var test = await _context.SpellingTests
+                    .FirstOrDefaultAsync(st => st.Id == testId && st.TeacherId == currentUser.Id);
+
+                if (test == null)
+                {
+                    TempData["ErrorMessage"] = "Тест не найден";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                var questions = new List<ImportSpellingQuestionRow>();
+                foreach (var questionElement in importData.GetProperty("Questions").EnumerateArray())
+                {
+                    var question = JsonSerializer.Deserialize<ImportSpellingQuestionRow>(questionElement.GetRawText());
+                    if (question != null) questions.Add(question);
+                }
+
+                ViewBag.Test = test;
+                ViewBag.PointsPerQuestion = pointsPerQuestion;
+                TempData["ImportSessionKey"] = sessionKey;
+
+                return View(questions);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка предпросмотра импорта");
+                TempData["ErrorMessage"] = "Ошибка обработки данных";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        // POST: SpellingTest/ConfirmImport
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ConfirmImport()
+        {
+            var sessionKey = TempData["ImportSessionKey"] as string;
+            if (string.IsNullOrEmpty(sessionKey))
+            {
+                TempData["ErrorMessage"] = "Данные импорта не найдены";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var importDataJson = HttpContext.Session.GetString(sessionKey);
+            if (string.IsNullOrEmpty(importDataJson))
+            {
+                TempData["ErrorMessage"] = "Данные импорта истекли";
+                return RedirectToAction(nameof(Index));
+            }
+
+            try
+            {
+                var importData = JsonSerializer.Deserialize<JsonElement>(importDataJson);
+                var testId = importData.GetProperty("TestId").GetInt32();
+                var pointsPerQuestion = importData.GetProperty("PointsPerQuestion").GetInt32();
+
+                var currentUser = await _userManager.GetUserAsync(User);
+                var test = await _context.SpellingTests
+                    .Include(st => st.SpellingQuestions)
+                    .FirstOrDefaultAsync(st => st.Id == testId && st.TeacherId == currentUser.Id);
+
+                if (test == null) return NotFound();
+
+                var orderIndex = test.SpellingQuestions.Count;
+                var importedCount = 0;
+
+                foreach (var questionElement in importData.GetProperty("Questions").EnumerateArray())
+                {
+                    var questionData = JsonSerializer.Deserialize<ImportSpellingQuestionRow>(questionElement.GetRawText());
+                    if (questionData?.IsValid == true)
                     {
-                        question.OrderIndex = i + 1;
+                        var question = new SpellingQuestion
+                        {
+                            SpellingTestId = testId,
+                            WordWithGap = questionData.WordWithGap,
+                            CorrectLetter = questionData.CorrectLetter,
+                            FullWord = questionData.FullWord,
+                            Hint = questionData.Hint,
+                            Points = pointsPerQuestion,
+                            OrderIndex = ++orderIndex
+                        };
+
+                        _context.SpellingQuestions.Add(question);
+                        importedCount++;
                     }
                 }
 
                 await _context.SaveChangesAsync();
+                HttpContext.Session.Remove(sessionKey);
 
-                _logger.LogInformation("Учитель {TeacherId} изменил порядок {QuestionsCount} вопросов в тесте орфографии {TestId}",
-                    currentUser.Id, questionIds.Count, testId);
+                _logger.LogInformation(
+                    "Учитель {TeacherId} импортировал {Count} вопросов в тест {TestId}",
+                    currentUser.Id, importedCount, testId);
 
-                return Json(new { success = true, message = "Порядок вопросов обновлен" });
+                TempData["SuccessMessage"] = $"Успешно импортировано {importedCount} вопросов!";
+                return RedirectToAction(nameof(Details), new { id = testId });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка изменения порядка вопросов в тесте орфографии {TestId} учителем {TeacherId}", testId, currentUser.Id);
-                return Json(new { success = false, message = "Ошибка: " + ex.Message });
+                _logger.LogError(ex, "Ошибка подтверждения импорта");
+                TempData["ErrorMessage"] = "Ошибка при импорте";
+                return RedirectToAction(nameof(Index));
             }
         }
 
-        // Вспомогательный метод для перенумерации вопросов
+        // GET: SpellingTest/DownloadQuestionTemplate
+        public async Task<IActionResult> DownloadQuestionTemplate()
+        {
+            try
+            {
+                var templateBytes = await _questionImportService.GenerateTemplateAsync();
+                return File(templateBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "Шаблон_вопросов_орфография.xlsx");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка генерации шаблона");
+                TempData["ErrorMessage"] = "Ошибка генерации шаблона";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        #endregion
+
+        #region Helper Methods
+
+        private async Task LoadClasses()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var classes = await _context.Classes
+                .Where(c => c.TeacherId == currentUser.Id && c.IsActive)
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+            ViewBag.Classes = new SelectList(classes, "Id", "Name");
+        }
+
         private async Task ReorderQuestions(int testId)
         {
             var questions = await _context.SpellingQuestions
@@ -801,5 +708,34 @@ namespace OnlineTutor2.Controllers
 
             await _context.SaveChangesAsync();
         }
+
+        private async Task<bool> ValidateImportFile(IFormFile file, int testId, string teacherId)
+        {
+            if (file == null || file.Length == 0)
+            {
+                ModelState.AddModelError("ExcelFile", "Выберите файл для импорта");
+                return false;
+            }
+
+            if (file.Length > 10 * 1024 * 1024)
+            {
+                _logger.LogWarning("Файл слишком большой: {Size} байт", file.Length);
+                ModelState.AddModelError("ExcelFile", "Размер файла не должен превышать 10 МБ");
+                return false;
+            }
+
+            var allowedExtensions = new[] { ".xlsx", ".xls" };
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(fileExtension))
+            {
+                _logger.LogWarning("Недопустимый формат файла: {Extension}", fileExtension);
+                ModelState.AddModelError("ExcelFile", "Поддерживаются только файлы Excel (.xlsx, .xls)");
+                return false;
+            }
+
+            return true;
+        }
+
+        #endregion
     }
 }
