@@ -197,13 +197,14 @@ body {
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
-/* ===== CARDS ===== */
+/* ===== БАЗОВЫЕ СТИЛИ КАРТОЧЕК ===== */
 .card {
-    transition: transform 0.2s ease-in-out;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
     .card:hover {
         transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
 .card-fixed-height {
@@ -247,7 +248,7 @@ body {
     background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
 }
 
-/* ===== TEST STYLES ===== */
+/* ===== РЕЗУЛЬТАТЫ И ОЦЕНКИ ===== */
 .result-display {
     display: flex;
     flex-direction: column;
@@ -293,6 +294,7 @@ body {
     background-color: #dc3545;
 }
 
+/* ===== СТУДЕНТЫ ===== */
 .students-minimal {
     display: flex;
     flex-wrap: wrap;
@@ -311,20 +313,7 @@ body {
     border: 1px solid #e9ecef;
 }
 
-.test-card .card {
-    height: 100%;
-}
-
-.test-card .card-body {
-    display: flex;
-    flex-direction: column;
-}
-
-.test-card .dates-block {
-    min-height: 42px;
-    margin-bottom: 1rem;
-}
-
+/* ===== КАТЕГОРИИ ТЕСТОВ ===== */
 .test-category-card {
     cursor: pointer;
     transition: all 0.3s ease;
@@ -364,6 +353,28 @@ body {
         font-size: 0.875rem;
     }
 
+.stats-card-compact {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+    .stats-card-compact:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .stats-card-compact .card-body {
+        padding: 0.5rem !important;
+    }
+
+    .stats-card-compact h5 {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .stats-card-compact i {
+        font-size: 1.2rem;
+    }
+
 .status-badge {
     cursor: help;
 }
@@ -389,11 +400,134 @@ body {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
+/* ===== ТАБЛИЦА ТЕСТОВ ===== */
+.table-responsive {
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
+}
+
+.table {
+    margin-bottom: 0;
+    background-color: white;
+}
+
+    .table thead th {
+        font-weight: 600;
+        font-size: 0.875rem;
+        border-bottom: 2px solid #dee2e6;
+        padding: 0.75rem;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .table tbody td {
+        padding: 0.75rem;
+        vertical-align: middle;
+        font-size: 0.875rem;
+    }
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+.test-row.table-secondary {
+    opacity: 0.7;
+}
+
 /* ===== DROPDOWN ===== */
 .dropdown-menu {
     max-width: calc(100vw - 2rem);
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
+
+/* ===== BUTTON GROUPS ===== */
+.btn-group-separated {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+    .btn-group-separated .btn {
+        border-radius: 0.25rem !important;
+    }
+
+/* ===== CARD HEADER ФИКСЫ ===== */
+.card-header.d-flex {
+    flex-wrap: nowrap !important;
+}
+
+.card-header > div:last-child {
+    flex-shrink: 0;
+}
+
+.card-header h5,
+.card-header h6 {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.card-header .d-flex.gap-2 {
+    flex-wrap: nowrap !important;
+}
+
+/* ===== ПОИСК ТЕСТОВ ===== */
+.input-group-text {
+    border-right: none;
+}
+
+.input-group .form-control {
+    border-left: none;
+}
+
+    .input-group .form-control:focus {
+        border-left: none;
+        box-shadow: none;
+    }
+
+        .input-group .form-control:focus + .input-group-text {
+            border-color: #007bff;
+        }
+
+#searchInput {
+    transition: all 0.2s ease;
+}
+
+    #searchInput:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+#clearSearch {
+    border-left: none;
+}
+
+#noResultsMessage {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Highlight эффект при поиске */
+.test-row {
+    transition: all 0.2s ease;
+}
+
+    .test-row[style*="display: none"] {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
 
 /* ===== АДАПТИВНЫЕ СТИЛИ ===== */
 
@@ -455,6 +589,22 @@ body {
 
     .stats-card h4 {
         font-size: 1.3rem !important;
+    }
+
+    /* Таблица на планшетах */
+    .table thead th {
+        font-size: 0.75rem;
+        padding: 0.5rem;
+    }
+
+    .table tbody td {
+        font-size: 0.75rem;
+        padding: 0.5rem;
+    }
+
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.4rem;
+        font-size: 0.75rem;
     }
 }
 
@@ -524,6 +674,43 @@ body {
             margin-top: 0.5rem;
             width: 100%;
         }
+
+    /* КОМПАКТНАЯ ТАБЛИЦА НА МОБИЛЬНЫХ */
+    .table-responsive {
+        box-shadow: none;
+        border-radius: 0;
+    }
+
+    /* Скрываем ненужные столбцы на мобильных */
+    .table thead th:not(.mobile-visible),
+    .table tbody td:not(.mobile-visible) {
+        display: none;
+    }
+
+    .table thead th.mobile-visible,
+    .table tbody td.mobile-visible {
+        display: table-cell;
+    }
+
+    .table thead th {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.25rem;
+    }
+
+    .table tbody td {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.25rem;
+    }
+
+    /* Компактные кнопки для мобильных */
+    .mobile-actions-btn {
+        padding: 0.25rem 0.4rem;
+        font-size: 0.75rem;
+    }
+
+        .mobile-actions-btn i {
+            font-size: 0.875rem;
+        }
 }
 
 /* Мелкие мобильные (< 576px) */
@@ -547,9 +734,28 @@ body {
         height: 24px;
         font-size: 0.65rem;
     }
+
+    .table thead th {
+        font-size: 0.7rem;
+        padding: 0.4rem 0.2rem;
+    }
+
+    .table tbody td {
+        font-size: 0.7rem;
+        padding: 0.4rem 0.2rem;
+    }
+
+    .mobile-actions-btn {
+        padding: 0.2rem 0.35rem;
+        font-size: 0.7rem;
+    }
+
+        .mobile-actions-btn i {
+            font-size: 0.8rem;
+        }
 }
 
-/* Очень узкие (< 375px) */
+/* Очень узкие экраны (< 375px) */
 @media (max-width: 374.98px) {
     .stats-card .card-body {
         padding: 0.5rem 0.25rem;
@@ -593,55 +799,35 @@ body {
     .dropdown-item {
         padding: 0.4rem 0.75rem;
     }
-}
 
-/* ===== BUTTON GROUPS С ПРОМЕЖУТКАМИ ===== */
-.btn-group-separated {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-    .btn-group-separated .btn {
-        border-radius: 0.25rem !important;
+    .table thead th {
+        font-size: 0.65rem;
+        padding: 0.35rem 0.15rem;
     }
 
-.stats-card-compact {
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-    .stats-card-compact:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    .table tbody td {
+        font-size: 0.65rem;
+        padding: 0.35rem 0.15rem;
     }
 
-    .stats-card-compact .card-body {
-        padding: 0.5rem !important;
+    .mobile-actions-btn {
+        padding: 0.15rem 0.3rem;
+        font-size: 0.65rem;
     }
 
-    .stats-card-compact h5 {
-        font-size: 1.1rem;
-        font-weight: 600;
-    }
-
-    .stats-card-compact i {
-        font-size: 1.2rem;
-    }
-
-.card-header.d-flex {
-    flex-wrap: nowrap !important;
+        .mobile-actions-btn i {
+            font-size: 0.75rem;
+        }
 }
 
-.card-header > div:last-child {
-    flex-shrink: 0;
+/* Предотвращение переноса по буквам */
+* {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
-.card-header h5 {
-    flex: 1 1 auto;
-    min-width: 0;
-}
-
-
-.card-header .d-flex.gap-2 {
-    flex-wrap: nowrap !important;
+.card-text,
+p {
+    word-break: break-word;
+    hyphens: auto;
 }

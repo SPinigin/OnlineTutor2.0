@@ -11,17 +11,16 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-action="Index"> Тесты</a>
+                    <a asp-action="Index">Тесты</a>
                 </li>
-                <li class="breadcrumb-item active"> @category.Name
-                </li>
+                <li class="breadcrumb-item active">@category.Name</li>
             </ol>
         </nav>
     </div>
     <div>
         <a asp-controller="SpellingTest"
-            asp-action="Create"
-            class="btn btn-success">
+           asp-action="Create"
+           class="btn btn-success">
             <i class="fas fa-plus"></i> Создать тест
         </a>
     </div>
@@ -39,148 +38,376 @@
 }
 else
 {
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h6 class="mb-0">
-            <i class="@category.IconClass"></i> Всего тестов: @Model.Count()
-        </h6>
-        <div class="btn-group btn-group-sm" role="group">
-            <button type="button" class="btn btn-outline-primary active" onclick="filterTestsByStatus('all')">
-                Все (@Model.Count())
-            </button>
-            <button type="button" class="btn btn-outline-success" onclick="filterTestsByStatus('active')">
-                Активные (@activeTests)
-            </button>
-            <button type="button" class="btn btn-outline-secondary" onclick="filterTestsByStatus('inactive')">
-                Неактивные (@inactiveTests)
-            </button>
+    
+    <div class="row mb-3 align-items-center">
+        
+        <div class="col-12 col-md-4 mb-2 mb-md-0">
+            <h6 class="mb-0">
+                <i class="@category.IconClass"></i> 
+                <span id="testsCount">Всего тестов: @Model.Count()</span>
+            </h6>
+        </div>
+
+        
+        <div class="col-12 col-md-4 mb-2 mb-md-0">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white">
+                    <i class="fas fa-search text-muted"></i>
+                </span>
+                <input type="text" 
+                       id="searchInput" 
+                       class="form-control" 
+                       placeholder="Поиск по названию или описанию..."
+                       autocomplete="off">
+                <button class="btn btn-outline-secondary" 
+                        type="button" 
+                        id="clearSearch"
+                        style="display: none;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        
+        <div class="col-12 col-md-4">
+            <div class="btn-group btn-group-sm w-100" role="group">
+                <button type="button" 
+                        class="btn btn-outline-primary active" 
+                        data-filter="all"
+                        onclick="filterTestsByStatus('all')">
+                    Все (@Model.Count())
+                </button>
+                <button type="button" 
+                        class="btn btn-outline-success" 
+                        data-filter="active"
+                        onclick="filterTestsByStatus('active')">
+                    Активные (@activeTests)
+                </button>
+                <button type="button" 
+                        class="btn btn-outline-secondary" 
+                        data-filter="inactive"
+                        onclick="filterTestsByStatus('inactive')">
+                    Неактивные (@inactiveTests)
+                </button>
+            </div>
         </div>
     </div>
 
-    <div class="row">
-        @foreach (var test in Model)
-        {
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2-4 col-xxl-5th mb-3 test-card" data-status="@(test.IsActive ? "active" : "inactive")">
-                <div class="card h-100 test-card @(test.IsActive ? "" : "opacity-75")">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h6 class="card-title mb-0">
-                            <i class="@category.IconClass text-primary"></i> @test.Title
-                        </h6>
-                        <div>
-                            <span class="badge bg-@(test.IsActive ? "success" : "secondary") flex-shrink-0 status-badge"
-                                title=@(test.IsActive ? "Активный" : "Неактивный")>
-                                <i class="fas fa-@(test.IsActive ? "check-circle" : "times-circle")"></i>
-                            </span>
-                            @if (test.Class != null)
-                            {
-                                <span class="badge bg-info">@test.Class.Name</span>
-                            }
-                        </div>
-                    </div>
-                    <div class="card-body d-flex flex-column">
-                        @if (!string.IsNullOrEmpty(test.Description))
-                        {
-                            <p class="card-text text-muted small">@test.Description</p>
-                        }
+    
+    <div id="noResultsMessage" class="alert alert-info" style="display: none;">
+        <i class="fas fa-info-circle"></i> 
+        По вашему запросу ничего не найдено. Попробуйте изменить критерии поиска.
+    </div>
 
-                        <div class="row text-center mb-3">
-                            <div class="col-4">
-                                <div class="d-flex flex-column">
-                                    <span class="h6 text-primary mb-0">@test.SpellingQuestions.Count</span>
-                                    <small class="text-muted">вопросов</small>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="d-flex flex-column">
-                                    <span class="h6 text-info mb-0">@test.TimeLimit</span>
-                                    <small class="text-muted">минут</small>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="d-flex flex-column">
-                                    <span class="h6 text-success mb-0">@test.SpellingTestResults.Count</span>
-                                    <small class="text-muted">результатов</small>
-                                </div>
-                            </div>
-                        </div>
+    <div class="table-responsive">
+        <table class="table table-hover table-striped align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th class="mobile-visible text-center" style="width: 5%;">
+                        <i class="fas fa-check-circle"></i>
+                    </th>
+                    <th class="mobile-visible" style="width: 25%;">Название</th>
+                    <th class="mobile-visible" style="width: 25%;">Описание</th>
+                    <th class="d-none d-md-table-cell" style="width: 5%;">Класс</th>
+                    <th class="mobile-visible text-center" style="width: 10%;">
+                        <i class="fas fa-question-circle d-none d-md-inline"></i>
+                        <span class="d-md-none">Вопросы</span>
+                        <span class="d-none d-md-inline">Вопросы</span>
+                    </th>
+                    <th class="d-none d-md-table-cell text-center" style="width: 8%;">
+                        <i class="fas fa-clock"></i> Время
+                    </th>
+                    <th class="d-none d-md-table-cell text-center" style="width: 8%;">
+                        <i class="fas fa-chart-bar"></i> Результаты
+                    </th>
+                    <th class="d-none d-md-table-cell" style="width: 10%;">Даты</th>
+                    <th class="mobile-visible text-center" style="width: 15%;">Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+    @foreach (var test in Model)
+    {
+        <tr class="test-row @(test.IsActive ? "" : "table-secondary")" 
+            data-status="@(test.IsActive ? "active" : "inactive")"
+            data-test-id="@test.Id">
+            
+            
+            <td class="text-center mobile-visible">
+                <span class="badge bg-@(test.IsActive ? "success" : "secondary")" 
+                      title="@(test.IsActive ? "Активный" : "Неактивный")">
+                    <i class="fas fa-@(test.IsActive ? "check-circle" : "times-circle")"></i>
+                </span>
+            </td>
 
-                        <div class="mt-auto">
-                            <small class="text-muted d-block">
-                                <i class="fas fa-calendar"></i> Создан: @test.CreatedAt.ToString("dd.MM.yyyy")
-                            </small>
-                            @if (test.StartDate.HasValue)
-                            {
-                                <small class="text-muted d-block">
-                                    <i class="fas fa-play"></i> Начало: @test.StartDate.Value.ToString("dd.MM.yyyy HH:mm")
-                                </small>
-                            }
-                            @if (test.EndDate.HasValue)
-                            {
-                                <small class="text-muted d-block">
-                                    <i class="fas fa-stop"></i> Окончание: @test.EndDate.Value.ToString("dd.MM.yyyy HH:mm")
-                                </small>
-                            }
-                        </div>
-                    </div>
-                    <div class="card-footer">
-                        <div class="d-flex gap-2 w-100" role="group">
-                            <a asp-controller="SpellingTest"
-                                asp-action="Details"
-                                asp-route-id="@test.Id"
-                                class="btn btn-outline-info btn-sm flex-fill"
-                                title="Детали">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a asp-controller="SpellingTest"
-                                asp-action="Edit"
-                                asp-route-id="@test.Id"
-                                class="btn btn-outline-primary btn-sm flex-fill"
-                                title="Изменить">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            @* <form asp-action="ToggleStatus"
-                                  asp-route-id="@test.Id"
-                                  method="post"
-                                  class="flex-fill">
-                                <button type="submit"
-                                        class="btn btn-outline-@(test.IsActive ? "warning" : "success") btn-sm w-100 flex-fill"
-                                        title="@(test.IsActive ? "Деактивировать" : "Активировать")">
-                                    <i class="fas fa-@(test.IsActive ? "pause" : "play")"></i>
-                                </button>
-                            </form> *@
-                            <a asp-controller="SpellingTest" 
-                                asp-action="Delete" 
-                                asp-route-id="@test.Id"
-                                class="btn btn-outline-danger btn-sm flex-fill"
-                                title="Удалить">
-                                <i class="fas fa-trash"></i>
-                            </a>
-                        </div>
-                    </div>
+            
+            <td class="mobile-visible">
+            <div class="d-flex align-items-center">
+                <i class="@category.IconClass text-primary me-2 d-none d-md-inline"></i>
+                <div>
+                    <strong class="d-block">@test.Title</strong>
+                    <small class="text-muted d-block">
+                        <i class="fas fa-calendar"></i> @test.CreatedAt.ToString("dd.MM.yyyy")
+                    </small>
                 </div>
             </div>
-        }
+
+            
+            <td class="mobile-visible"> 
+                @if (!string.IsNullOrEmpty(test.Description))
+                {
+                    <small class="text-muted">@test.Description</small>
+                }
+                else
+                {
+                    <span class="text-muted">—</span>
+                }
+            </td>
+
+            
+            <td class="d-none d-md-table-cell">
+                @if (test.Class != null)
+                {
+                    <span class="badge bg-info">@test.Class.Name</span>
+                }
+                else
+                {
+                    <span class="text-muted">—</span>
+                }
+            </td>
+
+            
+            <td class="text-center mobile-visible">
+                <span class="badge bg-primary rounded-pill">
+                    @test.SpellingQuestions.Count
+                </span>
+            </td>
+
+            
+            <td class="text-center d-none d-md-table-cell">
+                <span class="badge bg-info rounded-pill">
+                    @test.TimeLimit
+                </span>
+            </td>
+
+            
+            <td class="text-center d-none d-md-table-cell">
+                <span class="badge bg-success rounded-pill">
+                    @test.SpellingTestResults.Count
+                </span>
+            </td>
+
+            
+            <td class="d-none d-md-table-cell">
+                <small class="d-block">
+                    @if (test.StartDate.HasValue)
+                    {
+                        <div class="mb-1">
+                            <i class="fas fa-play text-success"></i>
+                            @test.StartDate.Value.ToString("dd.MM.yyyy HH:mm")
+                        </div>
+                    }
+                    @if (test.EndDate.HasValue)
+                    {
+                        <div>
+                            <i class="fas fa-stop text-danger"></i>
+                            @test.EndDate.Value.ToString("dd.MM.yyyy HH:mm")
+                        </div>
+                    }
+                    @if (!test.StartDate.HasValue && !test.EndDate.HasValue)
+                    {
+                        <span class="text-muted">—</span>
+                    }
+                </small>
+            </td>
+
+            
+            <td class="text-center mobile-visible">
+                
+                <div class="btn-group btn-group-sm gap-1 d-none d-md-flex" role="group">
+                    <a asp-controller="SpellingTest"
+                        asp-action="Details"
+                        asp-route-id="@test.Id"
+                        class="btn btn-outline-info rounded"
+                        title="Просмотр">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a asp-controller="SpellingTest"
+                       asp-action="Edit"
+                       asp-route-id="@test.Id"
+                       class="btn btn-outline-primary rounded"
+                       title="Редактировать">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a asp-controller="SpellingTest"
+                       asp-action="Delete"
+                       asp-route-id="@test.Id"
+                       class="btn btn-outline-danger rounded"
+                       title="Удалить">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </div>
+
+                
+                <div class="d-flex d-md-none gap-1 justify-content-center">
+                    <a asp-controller="SpellingTest"
+                       asp-action="Edit"
+                       asp-route-id="@test.Id"
+                       class="btn btn-outline-primary mobile-actions-btn"
+                       title="Редактировать">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a asp-controller="SpellingTest"
+                       asp-action="Delete"
+                       asp-route-id="@test.Id"
+                       class="btn btn-outline-danger mobile-actions-btn"
+                       title="Удалить">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </div>
+            </td>
+        </tr>
+    }
+</tbody>
+        </table>
     </div>
 }
 
 @section Scripts {
     <script src="~/js/layout.js" asp-append-version="true"></script>
     <script>
+        let currentStatusFilter = 'all';
+        let currentSearchQuery = '';
+
+        // Фильтрация по статусу
         function filterTestsByStatus(status) {
-            const cards = document.querySelectorAll('.test-card');
+            currentStatusFilter = status;
             const buttons = document.querySelectorAll('.btn-group .btn');
 
             // Обновляем активную кнопку
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-
-            // Показываем/скрываем карточки
-            cards.forEach(card => {
-                if (status === 'all' || card.dataset.status === status) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.filter === status) {
+                    btn.classList.add('active');
                 }
             });
+
+            applyFilters();
         }
+
+        // Поиск по тестам
+        function searchTests(query) {
+            currentSearchQuery = query.toLowerCase().trim();
+            applyFilters();
+        }
+
+        // Применение всех фильтров
+        function applyFilters() {
+            const rows = document.querySelectorAll('.test-row');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const matchesStatus = currentStatusFilter === 'all' || 
+                                    row.dataset.status === currentStatusFilter;
+                
+                let matchesSearch = true;
+                if (currentSearchQuery) {
+                    const testData = row.dataset.searchText || '';
+                    matchesSearch = testData.includes(currentSearchQuery);
+                }
+
+                if (matchesStatus && matchesSearch) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Показываем сообщение если ничего не найдено
+            const noResultsMessage = document.getElementById('noResultsMessage');
+            if (visibleCount === 0) {
+                noResultsMessage.style.display = 'block';
+            } else {
+                noResultsMessage.style.display = 'none';
+            }
+
+            // Обновляем счетчик
+            updateTestsCount(visibleCount);
+        }
+
+        // Обновление счетчика тестов
+        function updateTestsCount(count) {
+            const countsElement = document.getElementById('testsCount');
+            const totalTests = document.querySelectorAll('.test-row').length;
+            
+            if (count === totalTests) {
+                countsElement.textContent = `Всего тестов: ${totalTests}`;
+            } else {
+                countsElement.textContent = `Показано: ${count} из ${totalTests}`;
+            }
+        }
+
+        // Обработчик клика по строке таблицы
+        document.addEventListener('DOMContentLoaded', function() {
+            const testRows = document.querySelectorAll('.test-row');
+            const searchInput = document.getElementById('searchInput');
+            const clearSearchBtn = document.getElementById('clearSearch');
+            
+            // Добавляем данные для поиска к каждой строке
+            testRows.forEach(row => {
+                // Собираем текст для поиска из всех ячеек
+                const cells = row.querySelectorAll('td');
+                let searchText = '';
+                cells.forEach(cell => {
+                    searchText += ' ' + cell.textContent.toLowerCase();
+                });
+                row.dataset.searchText = searchText;
+
+                // Обработчик клика по строке (переход на детальную страницу)
+                row.addEventListener('click', function(e) {
+                    // Игнорируем клики только по ссылкам и кнопкам
+                    if (e.target.closest('a, button')) {
+                        return;
+                    }
+                    // Получаем ID теста из data-атрибута
+                    const testId = this.dataset.testId;
+                    if (testId) {
+                        window.location.href = `/SpellingTest/Details/${testId}`;
+                    }
+                });
+                
+                // Добавляем курсор pointer
+                row.style.cursor = 'pointer';
+            });
+
+            // Обработчик ввода в поле поиска
+            searchInput.addEventListener('input', function(e) {
+                const query = e.target.value;
+                searchTests(query);
+
+                // Показываем/скрываем кнопку очистки
+                if (query) {
+                    clearSearchBtn.style.display = 'block';
+                } else {
+                    clearSearchBtn.style.display = 'none';
+                }
+            });
+
+            // Обработчик кнопки очистки поиска
+            clearSearchBtn.addEventListener('click', function() {
+                searchInput.value = '';
+                searchTests('');
+                clearSearchBtn.style.display = 'none';
+                searchInput.focus();
+            });
+
+            // Поиск при нажатии Enter
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchTests(searchInput.value);
+                }
+            });
+        });
     </script>
 }
