@@ -88,7 +88,7 @@ namespace OnlineTutor2.Controllers
                     Title = model.Title,
                     Description = model.Description,
                     TeacherId = currentUser.Id,
-                    TestCategoryId = 5,
+                    TestCategoryId = 2,
                     ClassId = model.ClassId,
                     TimeLimit = model.TimeLimit,
                     MaxAttempts = model.MaxAttempts,
