@@ -274,3 +274,29 @@
         });
     </script>
 }
+
+@section Styles {
+    <style>
+        #confirmationText.is-valid {
+            border-color: #28a745;
+        }
+        
+        #confirmationText.is-invalid {
+            border-color: #dc3545;
+        }
+        
+        #deleteButton:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        #deleteButton:not(:disabled) {
+            animation: pulse 1s infinite;
+        }
+        
+        @@keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    </style>
+}
