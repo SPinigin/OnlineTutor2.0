@@ -4,34 +4,77 @@
     var testType = ViewBag.TestType as string;
 }
 
+
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-history text-primary"></i> История прохождения тестов</h2>
-    <a asp-action="Index" class="btn btn-outline-primary">
-        <i class="fas fa-arrow-left"></i> К доступным тестам
-    </a>
+    <div>
+        <h2 class="mb-1"><i class="fas fa-history text-primary"></i> История прохождения</h2>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i>
+            <span class="d-none d-md-inline">К доступным тестам</span>
+            <span class="d-md-none">Назад</span>
+        </a>
+    </div>
 </div>
+
 
 <div class="card mb-4">
     <div class="card-body">
-        <div class="btn-group w-100" role="group">
-            <a asp-action="History" class="btn btn-@(string.IsNullOrEmpty(testType) ? "primary" : "outline-primary")">
-                <i class="fas fa-list"></i> Все тесты
-            </a>
-            <a asp-action="History" asp-route-testType="spelling" class="btn btn-@(testType == "spelling" ? "primary" : "outline-success")">
-                <i class="fas fa-spell-check"></i> Орфография
-            </a>
-            <a asp-action="History" asp-route-testType="punctuation" class="btn btn-@(testType == "punctuation" ? "warning" : "outline-success")">
-                <i class="fas fa-quote-right"></i> Пунктуация
-            </a>
-            <a asp-action="History" asp-route-testType="orthoepy" class="btn btn-@(testType == "orthoepy" ? "success" : "outline-success")">
-                <i class="fas fa-volume-up"></i> Орфоэпия
-            </a>
-            <a asp-action="History" asp-route-testType="regular" class="btn btn-@(testType == "regular" ? "success" : "outline-success")">
-                <i class="fas fa-list-ul"></i> Классические
-            </a>
+
+        <div class="d-none d-md-block">
+            <div class="btn-group w-100" role="group">
+                <a asp-action="History"
+                   class="btn btn-@(string.IsNullOrEmpty(testType) ? "primary" : "outline-primary")">
+                    <i class="fas fa-list"></i> Все тесты
+                </a>
+                <a asp-action="History" asp-route-testType="spelling"
+                   class="btn btn-@(testType == "spelling" ? "primary" : "outline-primary")">
+                    <i class="fas fa-spell-check"></i> Орфография
+                </a>
+                <a asp-action="History" asp-route-testType="punctuation"
+                   class="btn btn-@(testType == "punctuation" ? "warning" : "outline-warning")">
+                    <i class="fas fa-quote-right"></i> Пунктуация
+                </a>
+                <a asp-action="History" asp-route-testType="orthoepy"
+                   class="btn btn-@(testType == "orthoepy" ? "success" : "outline-success")">
+                    <i class="fas fa-volume-up"></i> Орфоэпия
+                </a>
+                <a asp-action="History" asp-route-testType="regular"
+                   class="btn btn-@(testType == "regular" ? "info" : "outline-info")">
+                    <i class="fas fa-list-ul"></i> Классические
+                </a>
+            </div>
+        </div>
+
+
+        <div class="d-md-none">
+            <div class="d-grid gap-2">
+                <a asp-action="History"
+                   class="btn btn-@(string.IsNullOrEmpty(testType) ? "primary" : "outline-primary")">
+                    <i class="fas fa-list"></i> Все тесты
+                </a>
+                <a asp-action="History" asp-route-testType="spelling"
+                   class="btn btn-@(testType == "spelling" ? "primary" : "outline-primary")">
+                    <i class="fas fa-spell-check"></i> Орфография
+                </a>
+                <a asp-action="History" asp-route-testType="punctuation"
+                   class="btn btn-@(testType == "punctuation" ? "warning" : "outline-warning")">
+                    <i class="fas fa-quote-right"></i> Пунктуация
+                </a>
+                <a asp-action="History" asp-route-testType="orthoepy"
+                   class="btn btn-@(testType == "orthoepy" ? "success" : "outline-success")">
+                    <i class="fas fa-volume-up"></i> Орфоэпия
+                </a>
+                <a asp-action="History" asp-route-testType="regular"
+                   class="btn btn-@(testType == "regular" ? "info" : "outline-info")">
+                    <i class="fas fa-list-ul"></i> Классические
+                </a>
+            </div>
         </div>
     </div>
 </div>
+
 
 @if (!Model.SpellingResults.Any() && !Model.PunctuationResults.Any() && !Model.OrthoeopyResults.Any() && !Model.RegularResults.Any())
 {
@@ -46,386 +89,655 @@
 }
 else
 {
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card text-center">
+
+    <div class="row mb-4 g-3">
+        <div class="col-6 col-md-3">
+            <div class="card text-center h-100 shadow-sm">
                 <div class="card-body">
-                    <h4 class="text-primary">@(Model.SpellingResults.Count() + Model.PunctuationResults.Count() + Model.OrthoeopyResults.Count() + Model.RegularResults.Count())</h4>
+                    <h4 class="text-primary mb-1">@(Model.SpellingResults.Count() + Model.PunctuationResults.Count() + Model.OrthoeopyResults.Count() + Model.RegularResults.Count())</h4>
                     <small class="text-muted">Тестов пройдено</small>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-center">
+        <div class="col-6 col-md-3">
+            <div class="card text-center h-100 shadow-sm">
                 <div class="card-body">
                     @{
                         var avgPercentage = 0.0;
-    
                         var allPercentages = new List<double>();
                         allPercentages.AddRange(Model.SpellingResults.Select(r => r.Percentage));
                         allPercentages.AddRange(Model.PunctuationResults.Select(r => r.Percentage));
                         allPercentages.AddRange(Model.OrthoeopyResults.Select(r => r.Percentage));
                         allPercentages.AddRange(Model.RegularResults.Select(r => r.Percentage));
-    
+
                         if (allPercentages.Any())
                         {
                             avgPercentage = allPercentages.Average();
                         }
                     }
-                    <h4 class="text-success">@avgPercentage.ToString("F1")%</h4>
+                    <h4 class="text-success mb-1">@avgPercentage.ToString("F1")%</h4>
                     <small class="text-muted">Средний результат</small>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-center">
+        <div class="col-6 col-md-3">
+            <div class="card text-center h-100 shadow-sm">
                 <div class="card-body">
                     @{
                         var maxPercentage = 0.0;
-                    
                         if (allPercentages?.Any() == true)
                         {
                             maxPercentage = allPercentages.Max();
                         }
                     }
-                    <h4 class="text-info">@maxPercentage.ToString("F1")%</h4>
+                    <h4 class="text-info mb-1">@maxPercentage.ToString("F1")%</h4>
                     <small class="text-muted">Лучший результат</small>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-center">
+        <div class="col-6 col-md-3">
+            <div class="card text-center h-100 shadow-sm">
                 <div class="card-body">
-                    <h4 class="text-warning">@(Model.SpellingResults.Sum(r => r.Score) + Model.PunctuationResults.Sum(r => r.Score) + Model.OrthoeopyResults.Sum(r => r.Score) + Model.RegularResults.Sum(r => r.Score))</h4>
+                    <h4 class="text-warning mb-1">@(Model.SpellingResults.Sum(r => r.Score) + Model.PunctuationResults.Sum(r => r.Score) + Model.OrthoeopyResults.Sum(r => r.Score) + Model.RegularResults.Sum(r => r.Score))</h4>
                     <small class="text-muted">Всего баллов</small>
                 </div>
             </div>
         </div>
     </div>
 
+
     @if (Model.SpellingResults.Any() && (string.IsNullOrEmpty(testType) || testType == "spelling"))
     {
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-spell-check text-primary"></i> Тесты по орфографии
-                </h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Тест</th>
-                                <th>Дата прохождения</th>
-                                <th>Попытка</th>
-                                <th>Результат</th>
-                                <th>Время</th>
-                                <th>Действия</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var result in Model.SpellingResults)
-                            {
-                                var duration = result.CompletedAt.HasValue
-                                ? (result.CompletedAt.Value - result.StartedAt).ToString(@"mm\:ss")
-                                : "-";
+        <div class="mb-5">
+            <h4 class="mb-3">
+                <i class="fas fa-spell-check text-primary"></i> Тесты по орфографии
+            </h4>
 
-                                <tr>
-                                    <td>
-                                        <div>
-                                            <strong>@result.SpellingTest.Title</strong>
-                                            <br>
-                                            <small class="text-muted">
-                                                Вопросов: @result.SpellingTest.SpellingQuestions.Count
-                                            </small>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div>
-                                            @result.CompletedAt?.ToString("dd.MM.yyyy")
-                                            <br>
-                                            <small class="text-muted">
-                                                @result.CompletedAt?.ToString("HH:mm")
-                                            </small>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-info">
-                                            @result.AttemptNumber
+
+            <div class="d-none d-md-block">
+                <div class="card shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Тест</th>
+                                        <th>Дата прохождения</th>
+                                        <th>Попытка</th>
+                                        <th>Результат</th>
+                                        <th>Время</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var result in Model.SpellingResults)
+                                    {
+                                        var duration = result.CompletedAt.HasValue
+                                        ? (result.CompletedAt.Value - result.StartedAt).ToString(@"mm\:ss")
+                                        : "-";
+
+                                        <tr>
+                                            <td>
+                                                <div>
+                                                    <strong>@result.SpellingTest.Title</strong>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        Вопросов: @result.SpellingTest.SpellingQuestions.Count
+                                                    </small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    @result.CompletedAt?.ToString("dd.MM.yyyy")
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        @result.CompletedAt?.ToString("HH:mm")
+                                                    </small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">
+                                                    @result.AttemptNumber
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="badge bg-@(result.Percentage >= 80 ? "success" : result.Percentage >= 60 ? "warning" : "danger") me-2">
+                                                        @result.Percentage.ToString("F1")%
+                                                    </span>
+                                                    <small class="text-muted">
+                                                        @result.Score/@result.MaxScore
+                                                    </small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="small">@duration</span>
+                                            </td>
+                                            <td>
+                                                <a asp-action="SpellingResult" asp-route-id="@result.Id"
+                                                   class="btn btn-outline-info btn-sm">
+                                                    <i class="fas fa-eye"></i> Подробно
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="d-md-none">
+                <div class="row g-3">
+                    @foreach (var result in Model.SpellingResults)
+                    {
+                        var duration = result.CompletedAt.HasValue
+                        ? (result.CompletedAt.Value - result.StartedAt).ToString(@"mm\:ss")
+                        : "-";
+
+                        <div class="col-12">
+                            <div class="card shadow-sm hover-card">
+                                <div class="card-header bg-primary bg-opacity-10">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0 text-truncate me-2"><i class="fas fa-spell-check text-primary"></i> @result.SpellingTest.Title</h6>
+                                        <span class="badge bg-@(result.Percentage >= 80 ? "success" : result.Percentage >= 60 ? "warning" : "danger")">
+                                            @result.Percentage.ToString("F1")%
                                         </span>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <span class="badge bg-@(result.Percentage >= 80 ? "success" : result.Percentage >= 60 ? "warning" : "danger") me-2">
-                                                @result.Percentage.ToString("F1")%
-                                            </span>
-                                            <small class="text-muted">
-                                                @result.Score/@result.MaxScore
-                                            </small>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-6">
+                                            <div class="d-flex flex-column p-2 bg-light rounded">
+                                                <small class="text-muted">Дата:</small>
+                                                <span class="small">@result.CompletedAt?.ToString("dd.MM.yyyy HH:mm")</span>
+                                            </div>
                                         </div>
-                                    </td>
-                                    <td>
-                                        <span class="small">@duration</span>
-                                    </td>
-                                    <td>
-                                        <a asp-action="SpellingResult" asp-route-id="@result.Id"
-                                           class="btn btn-outline-info btn-sm">
-                                            <i class="fas fa-eye"></i> Подробно
-                                        </a>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                                        <div class="col-6">
+                                            <div class="d-flex flex-column p-2 bg-light rounded">
+                                                <small class="text-muted">Попытка:</small>
+                                                <span class="badge bg-info">@result.AttemptNumber</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="d-flex flex-column p-2 bg-light rounded">
+                                                <small class="text-muted">Время:</small>
+                                                <span class="small">@duration</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="d-flex flex-column p-2 bg-light rounded">
+                                                <small class="text-muted">Баллы:</small>
+                                                <span class="small">@result.Score/@result.MaxScore</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <a asp-action="SpellingResult" asp-route-id="@result.Id"
+                                       class="btn btn-outline-info btn-sm w-100">
+                                        <i class="fas fa-eye"></i> Подробно
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
     }
+
 
     @if (Model.PunctuationResults.Any() && (string.IsNullOrEmpty(testType) || testType == "punctuation"))
     {
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-exclamation text-warning"></i> Тесты по пунктуации
-                </h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Тест</th>
-                                <th>Дата прохождения</th>
-                                <th>Попытка</th>
-                                <th>Результат</th>
-                                <th>Время</th>
-                                <th>Действия</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var result in Model.PunctuationResults)
-                            {
-                                var duration = result.CompletedAt.HasValue
-                                ? (result.CompletedAt.Value - result.StartedAt).ToString(@"mm\:ss")
-                                : "-";
+        <div class="mb-5">
+            <h4 class="mb-3">
+                <i class="fas fa-quote-right text-warning"></i> Тесты по пунктуации
+            </h4>
 
-                                <tr>
-                                    <td>
-                                        <div>
-                                            <strong>@result.PunctuationTest.Title</strong>
-                                            <br>
-                                            <small class="text-muted">
-                                                Вопросов: @result.PunctuationTest.PunctuationQuestions.Count
-                                            </small>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div>
-                                            @result.CompletedAt?.ToString("dd.MM.yyyy")
-                                            <br>
-                                            <small class="text-muted">
-                                                @result.CompletedAt?.ToString("HH:mm")
-                                            </small>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-info">
-                                            @result.AttemptNumber
+
+            <div class="d-none d-md-block">
+                <div class="card shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Тест</th>
+                                        <th>Дата прохождения</th>
+                                        <th>Попытка</th>
+                                        <th>Результат</th>
+                                        <th>Время</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var result in Model.PunctuationResults)
+                                    {
+                                        var duration = result.CompletedAt.HasValue
+                                        ? (result.CompletedAt.Value - result.StartedAt).ToString(@"mm\:ss")
+                                        : "-";
+
+                                        <tr>
+                                            <td>
+                                                <div>
+                                                    <strong>@result.PunctuationTest.Title</strong>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        Вопросов: @result.PunctuationTest.PunctuationQuestions.Count
+                                                    </small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    @result.CompletedAt?.ToString("dd.MM.yyyy")
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        @result.CompletedAt?.ToString("HH:mm")
+                                                    </small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">
+                                                    @result.AttemptNumber
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="badge bg-@(result.Percentage >= 80 ? "success" : result.Percentage >= 60 ? "warning" : "danger") me-2">
+                                                        @result.Percentage.ToString("F1")%
+                                                    </span>
+                                                    <small class="text-muted">
+                                                        @result.Score/@result.MaxScore
+                                                    </small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="small">@duration</span>
+                                            </td>
+                                            <td>
+                                                <a asp-action="PunctuationResult" asp-route-id="@result.Id"
+                                                   class="btn btn-outline-info btn-sm">
+                                                    <i class="fas fa-eye"></i> Подробно
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="d-md-none">
+                <div class="row g-3">
+                    @foreach (var result in Model.PunctuationResults)
+                    {
+                        var duration = result.CompletedAt.HasValue
+                        ? (result.CompletedAt.Value - result.StartedAt).ToString(@"mm\:ss")
+                        : "-";
+
+                        <div class="col-12">
+                            <div class="card shadow-sm hover-card">
+                                <div class="card-header bg-warning bg-opacity-10">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0 text-truncate me-2"><i class="fas fa-quote-right text-warning"></i> @result.PunctuationTest.Title</h6>
+                                        <span class="badge bg-@(result.Percentage >= 80 ? "success" : result.Percentage >= 60 ? "warning" : "danger")">
+                                            @result.Percentage.ToString("F1")%
                                         </span>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <span class="badge bg-@(result.Percentage >= 80 ? "success" : result.Percentage >= 60 ? "warning" : "danger") me-2">
-                                                @result.Percentage.ToString("F1")%
-                                            </span>
-                                            <small class="text-muted">
-                                                @result.Score/@result.MaxScore
-                                            </small>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-6">
+                                            <div class="d-flex flex-column p-2 bg-light rounded">
+                                                <small class="text-muted">Дата:</small>
+                                                <span class="small">@result.CompletedAt?.ToString("dd.MM.yyyy HH:mm")</span>
+                                            </div>
                                         </div>
-                                    </td>
-                                    <td>
-                                        <span class="small">@duration</span>
-                                    </td>
-                                    <td>
-                                        <a asp-action="PunctuationResult" asp-route-id="@result.Id"
-                                           class="btn btn-outline-info btn-sm">
-                                            <i class="fas fa-eye"></i> Подробно
-                                        </a>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                                        <div class="col-6">
+                                            <div class="d-flex flex-column p-2 bg-light rounded">
+                                                <small class="text-muted">Попытка:</small>
+                                                <span class="badge bg-info">@result.AttemptNumber</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="d-flex flex-column p-2 bg-light rounded">
+                                                <small class="text-muted">Время:</small>
+                                                <span class="small">@duration</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="d-flex flex-column p-2 bg-light rounded">
+                                                <small class="text-muted">Баллы:</small>
+                                                <span class="small">@result.Score/@result.MaxScore</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <a asp-action="PunctuationResult" asp-route-id="@result.Id"
+                                       class="btn btn-outline-info btn-sm w-100">
+                                        <i class="fas fa-eye"></i> Подробно
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
     }
+
 
     @if (Model.OrthoeopyResults.Any() && (string.IsNullOrEmpty(testType) || testType == "orthoepy"))
     {
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-volume-up text-success"></i> Тесты по орфоэпии
-                </h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Тест</th>
-                                <th>Дата прохождения</th>
-                                <th>Попытка</th>
-                                <th>Результат</th>
-                                <th>Время</th>
-                                <th>Действия</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var result in Model.OrthoeopyResults)
-                            {
-                                var duration = result.CompletedAt.HasValue
-                                ? (result.CompletedAt.Value - result.StartedAt).ToString(@"mm\:ss")
-                                : "-";
+        <div class="mb-5">
+            <h4 class="mb-3">
+                <i class="fas fa-volume-up text-success"></i> Тесты по орфоэпии
+            </h4>
 
-                                <tr>
-                                    <td>
-                                        <div>
-                                            <strong>@result.OrthoeopyTest.Title</strong>
-                                            <br>
-                                            <small class="text-muted">
-                                                Вопросов: @result.OrthoeopyTest.OrthoeopyQuestions.Count
-                                            </small>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div>
-                                            @result.CompletedAt?.ToString("dd.MM.yyyy")
-                                            <br>
-                                            <small class="text-muted">
-                                                @result.CompletedAt?.ToString("HH:mm")
-                                            </small>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-info">
-                                            @result.AttemptNumber
+
+            <div class="d-none d-md-block">
+                <div class="card shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Тест</th>
+                                        <th>Дата прохождения</th>
+                                        <th>Попытка</th>
+                                        <th>Результат</th>
+                                        <th>Время</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var result in Model.OrthoeopyResults)
+                                    {
+                                        var duration = result.CompletedAt.HasValue
+                                        ? (result.CompletedAt.Value - result.StartedAt).ToString(@"mm\:ss")
+                                        : "-";
+
+                                        <tr>
+                                            <td>
+                                                <div>
+                                                    <strong>@result.OrthoeopyTest.Title</strong>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        Вопросов: @result.OrthoeopyTest.OrthoeopyQuestions.Count
+                                                    </small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    @result.CompletedAt?.ToString("dd.MM.yyyy")
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        @result.CompletedAt?.ToString("HH:mm")
+                                                    </small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">
+                                                    @result.AttemptNumber
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="badge bg-@(result.Percentage >= 80 ? "success" : result.Percentage >= 60 ? "warning" : "danger") me-2">
+                                                        @result.Percentage.ToString("F1")%
+                                                    </span>
+                                                    <small class="text-muted">
+                                                        @result.Score/@result.MaxScore
+                                                    </small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="small">@duration</span>
+                                            </td>
+                                            <td>
+                                                <a asp-action="OrthoeopyResult" asp-route-id="@result.Id"
+                                                   class="btn btn-outline-info btn-sm">
+                                                    <i class="fas fa-eye"></i> Подробно
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="d-md-none">
+                <div class="row g-3">
+                    @foreach (var result in Model.OrthoeopyResults)
+                    {
+                        var duration = result.CompletedAt.HasValue
+                        ? (result.CompletedAt.Value - result.StartedAt).ToString(@"mm\:ss")
+                        : "-";
+
+                        <div class="col-12">
+                            <div class="card shadow-sm hover-card">
+                                <div class="card-header bg-success bg-opacity-10">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0 text-truncate me-2"><i class="fas fa-volume-up text-success"></i> @result.OrthoeopyTest.Title</h6>
+                                        <span class="badge bg-@(result.Percentage >= 80 ? "success" : result.Percentage >= 60 ? "warning" : "danger")">
+                                            @result.Percentage.ToString("F1")%
                                         </span>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <span class="badge bg-@(result.Percentage >= 80 ? "success" : result.Percentage >= 60 ? "warning" : "danger") me-2">
-                                                @result.Percentage.ToString("F1")%
-                                            </span>
-                                            <small class="text-muted">
-                                                @result.Score/@result.MaxScore
-                                            </small>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-6">
+                                            <div class="d-flex flex-column p-2 bg-light rounded">
+                                                <small class="text-muted">Дата:</small>
+                                                <span class="small">@result.CompletedAt?.ToString("dd.MM.yyyy HH:mm")</span>
+                                            </div>
                                         </div>
-                                    </td>
-                                    <td>
-                                        <span class="small">@duration</span>
-                                    </td>
-                                    <td>
-                                        <a asp-action="OrthoeopyResult" asp-route-id="@result.Id"
-                                           class="btn btn-outline-info btn-sm">
-                                            <i class="fas fa-eye"></i> Подробно
-                                        </a>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                                        <div class="col-6">
+                                            <div class="d-flex flex-column p-2 bg-light rounded">
+                                                <small class="text-muted">Попытка:</small>
+                                                <span class="badge bg-info">@result.AttemptNumber</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="d-flex flex-column p-2 bg-light rounded">
+                                                <small class="text-muted">Время:</small>
+                                                <span class="small">@duration</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="d-flex flex-column p-2 bg-light rounded">
+                                                <small class="text-muted">Баллы:</small>
+                                                <span class="small">@result.Score/@result.MaxScore</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <a asp-action="OrthoeopyResult" asp-route-id="@result.Id"
+                                       class="btn btn-outline-info btn-sm w-100">
+                                        <i class="fas fa-eye"></i> Подробно
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
     }
 
-    @if (ViewBag.TestType == null || ViewBag.TestType == "regular")
-    {
-        @if (Model.RegularResults.Any())
-        {
-            <div class="mb-5">
-                <h4 class="mb-3">
-                    <i class="fas fa-list-ul text-success"></i> Классические тесты
-                </h4>
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Тест</th>
-                                <th>Тип</th>
-                                <th>Попытка</th>
-                                <th>Результат</th>
-                                <th>Баллы</th>
-                                <th>Дата</th>
-                                <th>Время</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var result in Model.RegularResults)
-                            {
-                                var duration = result.CompletedAt.HasValue 
-                                    ? result.CompletedAt.Value - result.StartedAt 
-                                    : TimeSpan.Zero;
 
-                                <tr>
-                                    <td>
-                                        <strong>@result.RegularTest.Title</strong>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-primary">
+    @if (Model.RegularResults.Any() && (string.IsNullOrEmpty(testType) || testType == "regular"))
+    {
+        <div class="mb-5">
+            <h4 class="mb-3">
+                <i class="fas fa-list-ul text-info"></i> Классические тесты
+            </h4>
+
+
+            <div class="d-none d-md-block">
+                <div class="card shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Тест</th>
+                                        <th>Тип</th>
+                                        <th>Попытка</th>
+                                        <th>Результат</th>
+                                        <th>Баллы</th>
+                                        <th>Дата</th>
+                                        <th>Время</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var result in Model.RegularResults)
+                                    {
+                                        var duration = result.CompletedAt.HasValue
+                                        ? result.CompletedAt.Value - result.StartedAt
+                                        : TimeSpan.Zero;
+
+                                        <tr>
+                                            <td>
+                                                <strong>@result.RegularTest.Title</strong>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark">
+                                                    @switch (result.RegularTest.Type)
+                                                    {
+                                                        case TestType.Practice:
+                                                            <i class="fas fa-dumbbell" title="Практика"></i>
+                                                            break;
+                                                        case TestType.Quiz:
+                                                            <i class="fas fa-question-circle" title="Квиз"></i>
+                                                            break;
+                                                        case TestType.Exam:
+                                                            <i class="fas fa-graduation-cap" title="Экзамен"></i>
+                                                            break;
+                                                        case TestType.Homework:
+                                                            <i class="fas fa-home" title="ДЗ"></i>
+                                                            break;
+                                                    }
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">
+                                                    @result.AttemptNumber
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-@(result.Percentage >= 80 ? "success" : result.Percentage >= 60 ? "warning" : "danger")">
+                                                    @result.Percentage.ToString("F1")%
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <strong>@result.Score/@result.MaxScore</strong>
+                                            </td>
+                                            <td>
+                                                <small>@result.CompletedAt?.ToString("dd.MM.yyyy HH:mm")</small>
+                                            </td>
+                                            <td>
+                                                <small>@($"{duration.Minutes:D2}:{duration.Seconds:D2}")</small>
+                                            </td>
+                                            <td>
+                                                <a asp-action="Result" asp-route-id="@result.Id"
+                                                   class="btn btn-outline-info btn-sm">
+                                                    <i class="fas fa-eye"></i> Просмотр
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="d-md-none">
+                <div class="row g-3">
+                    @foreach (var result in Model.RegularResults)
+                    {
+                        var duration = result.CompletedAt.HasValue
+                        ? result.CompletedAt.Value - result.StartedAt
+                        : TimeSpan.Zero;
+
+                        <div class="col-12">
+                            <div class="card shadow-sm hover-card">
+                                <div class="card-header bg-info bg-opacity-10">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0 text-truncate me-2">
+                                            <i class="fas fa-list-ul text-info"></i> @result.RegularTest.Title
+                                        </h6>
+                                        <span class="badge bg-light text-dark">
                                             @switch (result.RegularTest.Type)
                                             {
                                                 case TestType.Practice:
-                                                    <i class="fas fa-dumbbell"></i> <text>Практика</text>
+                                                    <i class="fas fa-dumbbell"></i>
                                                     break;
                                                 case TestType.Quiz:
-                                                    <i class="fas fa-question-circle"></i> <text>Викторина</text>
+                                                    <i class="fas fa-question-circle"></i>
                                                     break;
                                                 case TestType.Exam:
-                                                    <i class="fas fa-graduation-cap"></i> <text>Экзамен</text>
+                                                    <i class="fas fa-graduation-cap"></i>
                                                     break;
                                                 case TestType.Homework:
-                                                    <i class="fas fa-home"></i> <text>ДЗ</text>
+                                                    <i class="fas fa-home"></i>
                                                     break;
                                             }
                                         </span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-info">
-                                            Попытка @result.AttemptNumber
-                                        </span>
-                                    </td>
-                                    <td>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
                                         <span class="badge bg-@(result.Percentage >= 80 ? "success" : result.Percentage >= 60 ? "warning" : "danger") fs-6">
                                             @result.Percentage.ToString("F1")%
                                         </span>
-                                    </td>
-                                    <td>
-                                        <strong>@result.Score/@result.MaxScore</strong>
-                                    </td>
-                                    <td>
-                                        <small>@result.CompletedAt?.ToString("dd.MM.yyyy HH:mm")</small>
-                                    </td>
-                                    <td>
-                                        <small>@($"{duration.Minutes:D2}:{duration.Seconds:D2}")</small>
-                                    </td>
-                                    <td>
-                                        <a asp-action="Result" asp-route-id="@result.Id" 
-                                           class="btn btn-outline-info btn-sm">
-                                            <i class="fas fa-eye"></i> Просмотр
-                                        </a>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                                    </div>
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-6">
+                                            <div class="d-flex flex-column p-2 bg-light rounded">
+                                                <small class="text-muted">Попытка:</small>
+                                                <span class="badge bg-info">@result.AttemptNumber</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="d-flex flex-column p-2 bg-light rounded">
+                                                <small class="text-muted">Баллы:</small>
+                                                <strong class="small">@result.Score/@result.MaxScore</strong>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="d-flex flex-column p-2 bg-light rounded">
+                                                <small class="text-muted">Дата:</small>
+                                                <span class="small">@result.CompletedAt?.ToString("dd.MM.yyyy HH:mm")</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="d-flex flex-column p-2 bg-light rounded">
+                                                <small class="text-muted">Время:</small>
+                                                <span class="small">@($"{duration.Minutes:D2}:{duration.Seconds:D2}")</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <a asp-action="Result" asp-route-id="@result.Id"
+                                       class="btn btn-outline-info btn-sm w-100">
+                                        <i class="fas fa-eye"></i> Просмотр
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
-        }
+        </div>
     }
 }
