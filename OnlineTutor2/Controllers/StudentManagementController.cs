@@ -32,7 +32,12 @@ namespace OnlineTutor2.Controllers
         }
 
         // GET: StudentManagement
-        public async Task<IActionResult> Index(string? searchString, int? classFilter, string? sortOrder)
+        public async Task<IActionResult> Index(
+            string? searchString,
+            int? classFilter,
+            string? sortOrder,
+            int? pageNumber,
+            int? pageSize)
         {
             var currentUser = await _userManager.GetUserAsync(User);
 
@@ -66,7 +71,16 @@ namespace OnlineTutor2.Controllers
             // Фильтрация по классу
             if (classFilter.HasValue)
             {
-                students = students.Where(s => s.ClassId == classFilter.Value);
+                if (classFilter.Value == 0)
+                {
+                    // Показываем студентов без класса
+                    students = students.Where(s => s.ClassId == null);
+                }
+                else
+                {
+                    // Показываем студентов конкретного класса
+                    students = students.Where(s => s.ClassId == classFilter.Value);
+                }
             }
             else
             {
@@ -92,7 +106,36 @@ namespace OnlineTutor2.Controllers
                     break;
             }
 
-            return View(await students.ToListAsync());
+            // Пагинация
+            int currentPageSize = pageSize ?? 10;
+            int currentPageNumber = pageNumber ?? 1;
+
+            // Подсчитываем общее количество записей ДО применения пагинации
+            var totalCount = await students.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)currentPageSize);
+
+            // Проверяем, что текущая страница не выходит за границы
+            if (currentPageNumber < 1)
+                currentPageNumber = 1;
+            if (currentPageNumber > totalPages && totalPages > 0)
+                currentPageNumber = totalPages;
+
+            // Передаем данные пагинации в ViewBag
+            ViewBag.PageNumber = currentPageNumber;
+            ViewBag.PageSize = currentPageSize;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalCount = totalCount;
+
+            // Применяем пагинацию
+            var paginatedStudents = await students
+                .Skip((currentPageNumber - 1) * currentPageSize)
+                .Take(currentPageSize)
+                .ToListAsync();
+
+            _logger.LogInformation("Учитель {TeacherId} просмотрел список учеников. Страница: {PageNumber}, Размер: {PageSize}, Всего: {TotalCount}",
+                currentUser.Id, currentPageNumber, currentPageSize, totalCount);
+
+            return View(paginatedStudents);
         }
 
         // GET: StudentManagement/Details/5
@@ -389,6 +432,7 @@ namespace OnlineTutor2.Controllers
 
         // POST: StudentManagement/AssignToClass
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AssignToClass(int studentId, int? classId)
         {
             var student = await _context.Students.FindAsync(studentId);
@@ -751,11 +795,14 @@ namespace OnlineTutor2.Controllers
 
         public async Task<IActionResult> DownloadTemplate()
         {
-            var currentUser = _userManager.GetUserAsync(User);
+            var currentUser = await _userManager.GetUserAsync(User);
 
             try
             {
                 var templateBytes = await _importService.GenerateTemplateAsync();
+
+                _logger.LogInformation("Учитель {TeacherId} скачал шаблон импорта учеников", currentUser.Id);
+
                 return File(templateBytes,
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     "Шаблон_импорта_учеников.xlsx");
