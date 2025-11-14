@@ -14,6 +14,18 @@ body {
     background-color: #f8f9fa;
 }
 
+/* Предотвращение переноса по буквам */
+* {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.card-text,
+p {
+    word-break: break-word;
+    hyphens: auto;
+}
+
 /* ===== NAVBAR ===== */
 .navbar-fixed {
     position: fixed;
@@ -198,7 +210,7 @@ body {
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
-/* ===== БАЗОВЫЕ СТИЛИ КАРТОЧЕК ===== */
+/* ===== CARDS ===== */
 .card {
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
@@ -219,37 +231,7 @@ body {
         max-width: none;
     }
 
-/* Адаптация breadcrumb для мобильных */
-    @media (max-width: 767.98px) {
-        .breadcrumb-compact {
-            font-size: 0.75rem;
-        }
-
-            .breadcrumb-compact .breadcrumb-item.active {
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                max-width: 200px;
-            }
-    }
-
-    @media (max-width: 575.98px) {
-        .breadcrumb-compact {
-            font-size: 0.7rem;
-        }
-
-            .breadcrumb-compact .breadcrumb-item.active {
-                max-width: 150px;
-            }
-    }
-
-    @media (max-width: 374.98px) {
-        .breadcrumb-compact .breadcrumb-item.active {
-            max-width: 120px;
-        }
-    }
-
-/* ===== КОМПАКТНЫЕ СТАТИСТИЧЕСКИЕ КАРТОЧКИ ===== */
+/* ===== СТАТИСТИЧЕСКИЕ КАРТОЧКИ ===== */
 .stats-card-compact {
     transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -276,7 +258,7 @@ body {
         font-size: 0.75rem;
     }
 
-/* ===== КОМПАКТНЫЕ НАСТРОЙКИ ===== */
+/* ===== НАСТРОЙКИ ===== */
 .settings-compact {
     display: flex;
     flex-direction: column;
@@ -296,7 +278,19 @@ body {
     font-weight: 500;
 }
 
-/* ===== КОМПАКТНАЯ ТАБЛИЦА ===== */
+.settings-bar {
+    background-color: #f8f9fa;
+    border-left: 3px solid #007bff;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+}
+
+.setting-label-main {
+    color: #495057;
+    font-size: 0.875rem;
+}
+
+/* ===== ТАБЛИЦЫ ===== */
 .table-compact {
     font-size: 0.875rem;
 }
@@ -314,7 +308,55 @@ body {
         vertical-align: middle;
     }
 
-/* ===== BADGE СТИЛИ ===== */
+.table-responsive {
+    border-radius: 0.5rem;
+    overflow-x: auto;
+}
+
+.table {
+    margin-bottom: 0;
+    background-color: white;
+}
+
+    .table thead th {
+        font-weight: 600;
+        font-size: 0.875rem;
+        border-bottom: 2px solid #dee2e6;
+        padding: 0.75rem;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .table tbody td {
+        padding: 0.75rem;
+        vertical-align: middle;
+        font-size: 0.875rem;
+    }
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* ===== КЛИКАБЕЛЬНЫЕ СТРОКИ ===== */
+.clickable-row {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+    .clickable-row:hover {
+        background-color: rgba(0, 123, 255, 0.08) !important;
+    }
+
+    .clickable-row:active {
+        background-color: rgba(0, 123, 255, 0.12) !important;
+        transform: scale(0.995);
+    }
+
+.question-row {
+    user-select: none;
+}
+
+/* ===== BADGES ===== */
 .badge-sm {
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;
@@ -325,21 +367,6 @@ body {
     padding: 0.25rem 0.4rem;
 }
 
-/* ===== КНОПКА-ИКОНКА ===== */
-.btn-icon {
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-    .btn-icon i {
-        margin: 0;
-    }
-
-/* ===== GRADE BADGES ===== */
 .grade-badge-compact {
     display: inline-flex;
     align-items: center;
@@ -369,6 +396,30 @@ body {
     background-color: #dc3545;
 }
 
+/* ===== КНОПКИ ===== */
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .btn-icon i {
+        margin: 0;
+    }
+
+.btn-group-separated {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+    .btn-group-separated .btn {
+        border-radius: 0.25rem !important;
+    }
+
 /* ===== ALERTS ===== */
 .alert {
     border-radius: 0.5rem;
@@ -383,6 +434,21 @@ body {
     .nav-link:hover {
         color: #007bff !important;
     }
+
+/* ===== DROPDOWN ===== */
+.dropdown-menu {
+    max-width: calc(100vw - 2rem);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* ===== МОДАЛЬНЫЕ ОКНА ===== */
+.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out;
+}
+
+.modal.show .modal-dialog {
+    transform: none;
+}
 
 /* ===== КАТЕГОРИИ ТЕСТОВ ===== */
 .test-category-card {
@@ -441,54 +507,7 @@ body {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
-/* ===== ТАБЛИЦА ТЕСТОВ ===== */
-.table-responsive {
-    border-radius: 0.5rem;
-    overflow-x: auto;
-}
-
-.table {
-    margin-bottom: 0;
-    background-color: white;
-}
-
-    .table thead th {
-        font-weight: 600;
-        font-size: 0.875rem;
-        border-bottom: 2px solid #dee2e6;
-        padding: 0.75rem;
-        vertical-align: middle;
-        white-space: nowrap;
-    }
-
-    .table tbody td {
-        padding: 0.75rem;
-        vertical-align: middle;
-        font-size: 0.875rem;
-    }
-
-.table-hover tbody tr:hover {
-    background-color: rgba(0, 123, 255, 0.05);
-}
-
-/* ===== DROPDOWN ===== */
-.dropdown-menu {
-    max-width: calc(100vw - 2rem);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-}
-
-/* ===== BUTTON GROUPS ===== */
-.btn-group-separated {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-    .btn-group-separated .btn {
-        border-radius: 0.25rem !important;
-    }
-
-/* ===== ПОИСК ТЕСТОВ ===== */
+/* ===== ПОИСК ===== */
 .input-group-text {
     border-right: none;
 }
@@ -535,7 +554,83 @@ body {
     }
 }
 
-/* ===== АДАПТИВНЫЕ СТИЛИ ===== */
+/* ===== ФОРМА УДАЛЕНИЯ СТУДЕНТА ===== */
+.delete-form-title {
+    font-size: 1.1rem;
+}
+
+.delete-form-body {
+    padding: 0.75rem;
+}
+
+.delete-form-alert {
+    padding: 0.5rem;
+}
+
+.delete-form-alert-text {
+    font-size: 0.875rem;
+}
+
+.delete-form-student-info {
+    padding: 0.75rem;
+}
+
+.delete-form-avatar {
+    width: 45px;
+    height: 45px;
+}
+
+.delete-form-avatar-icon {
+    font-size: 1.2rem;
+}
+
+.delete-form-name {
+    font-size: 1rem;
+}
+
+.delete-form-info-text {
+    font-size: 0.875rem;
+}
+
+.delete-form-stat {
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+}
+
+.delete-form-stat-number {
+    font-size: 1.25rem;
+}
+
+.delete-form-stat-label {
+    font-size: 0.75rem;
+}
+
+.delete-form-warning-text {
+    font-size: 0.875rem;
+}
+
+.delete-form-label {
+    font-size: 0.875rem;
+}
+
+.delete-form-hint {
+    font-size: 0.75rem;
+}
+
+.delete-form-footer {
+    padding: 0.5rem 0.75rem;
+}
+
+.delete-form-buttons {
+    gap: 0.5rem;
+}
+
+.delete-form-btn {
+    font-size: 0.875rem;
+}
+
+/* ===== MEDIA QUERIES ===== */
 
 /* Десктоп (≥ 992px) */
 @media (min-width: 992px) {
@@ -569,10 +664,31 @@ body {
         height: 28px;
         font-size: 0.8rem;
     }
+
+    .delete-form-body {
+        padding: 1rem;
+    }
+
+    .delete-form-footer {
+        padding: 0.75rem 1rem;
+    }
 }
 
 /* Мобильные (< 768px) */
 @media (max-width: 767.98px) {
+    /* Breadcrumb */
+    .breadcrumb-compact {
+        font-size: 0.75rem;
+    }
+
+        .breadcrumb-compact .breadcrumb-item.active {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 200px;
+        }
+
+    /* Статистические карточки */
     .stats-card-compact .card-body {
         padding: 0.5rem 0.25rem !important;
     }
@@ -589,6 +705,7 @@ body {
         font-size: 0.7rem;
     }
 
+    /* Настройки */
     .setting-item {
         font-size: 0.8rem;
         flex-direction: column;
@@ -596,6 +713,15 @@ body {
         gap: 0.25rem;
     }
 
+    .settings-bar {
+        padding: 0.4rem 0.75rem;
+    }
+
+    .setting-label-main {
+        font-size: 0.8rem;
+    }
+
+    /* Таблицы */
     .table-compact thead th {
         font-size: 0.7rem;
         padding: 0.35rem 0.25rem;
@@ -606,6 +732,17 @@ body {
         padding: 0.35rem 0.25rem;
     }
 
+    .table-compact .btn-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 0.75rem;
+    }
+
+    .actions-cell .d-flex {
+        gap: 0.25rem !important;
+    }
+
+    /* Кнопки и badges */
     .btn-icon {
         width: 28px;
         height: 28px;
@@ -617,13 +754,99 @@ body {
         padding: 0.2rem 0.4rem;
     }
 
-    .breadcrumb-compact {
-        font-size: 0.75rem;
+    /* Форма удаления */
+    .delete-form-title {
+        font-size: 1rem;
+    }
+
+    .delete-form-body {
+        padding: 0.5rem;
+    }
+
+    .delete-form-alert {
+        padding: 0.4rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .delete-form-alert-text {
+        font-size: 0.8rem;
+    }
+
+    .delete-form-student-info {
+        padding: 0.5rem;
+    }
+
+    .delete-form-avatar {
+        width: 38px;
+        height: 38px;
+    }
+
+    .delete-form-avatar-icon {
+        font-size: 1rem;
+    }
+
+    .delete-form-name {
+        font-size: 0.9rem;
+    }
+
+    .delete-form-info-text {
+        font-size: 0.8rem;
+    }
+
+    .delete-form-email {
+        word-break: break-all;
+    }
+
+    .delete-form-stat {
+        padding: 0.4rem;
+    }
+
+    .delete-form-stat-number {
+        font-size: 1.1rem;
+    }
+
+    .delete-form-stat-label {
+        font-size: 0.7rem;
+    }
+
+    .delete-form-warning-text {
+        font-size: 0.8rem;
+    }
+
+    .delete-form-label {
+        font-size: 0.8rem;
+    }
+
+    .delete-form-hint {
+        font-size: 0.7rem;
+    }
+
+    .delete-form-footer {
+        padding: 0.4rem 0.5rem;
+    }
+
+    .delete-form-buttons {
+        gap: 0.35rem;
+    }
+
+    .delete-form-btn {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
     }
 }
 
 /* Мелкие мобильные (< 576px) */
 @media (max-width: 575.98px) {
+    /* Breadcrumb */
+    .breadcrumb-compact {
+        font-size: 0.7rem;
+    }
+
+        .breadcrumb-compact .breadcrumb-item.active {
+            max-width: 150px;
+        }
+
+    /* Статистические карточки */
     .stats-card-compact h5 {
         font-size: 1.1rem;
     }
@@ -632,6 +855,7 @@ body {
         font-size: 0.9rem;
     }
 
+    /* Таблицы */
     .table-compact thead th {
         font-size: 0.65rem;
         padding: 0.3rem 0.2rem;
@@ -642,15 +866,103 @@ body {
         padding: 0.3rem 0.2rem;
     }
 
+    .table-compact .btn-icon {
+        width: 26px;
+        height: 26px;
+        font-size: 0.7rem;
+    }
+
+    /* Кнопки */
     .btn-icon {
         width: 26px;
         height: 26px;
         font-size: 0.7rem;
     }
+
+    /* Форма удаления */
+    .delete-form-title {
+        font-size: 0.95rem;
+    }
+
+    .delete-form-body {
+        padding: 0.4rem;
+    }
+
+    .delete-form-alert {
+        padding: 0.35rem;
+    }
+
+    .delete-form-alert-text {
+        font-size: 0.75rem;
+    }
+
+    .delete-form-student-info {
+        padding: 0.4rem;
+    }
+
+    .delete-form-avatar {
+        width: 35px;
+        height: 35px;
+    }
+
+    .delete-form-avatar-icon {
+        font-size: 0.95rem;
+    }
+
+    .delete-form-name {
+        font-size: 0.85rem;
+    }
+
+    .delete-form-info-text {
+        font-size: 0.75rem;
+    }
+
+    .delete-form-stat {
+        padding: 0.35rem;
+    }
+
+    .delete-form-stat-number {
+        font-size: 1rem;
+    }
+
+    .delete-form-stat-label {
+        font-size: 0.65rem;
+    }
+
+    .delete-form-warning-text {
+        font-size: 0.75rem;
+    }
+
+    .delete-form-label {
+        font-size: 0.75rem;
+    }
+
+    .delete-form-hint {
+        font-size: 0.65rem;
+    }
+
+    .delete-form-footer {
+        padding: 0.35rem 0.4rem;
+    }
+
+    .delete-form-buttons {
+        gap: 0.3rem;
+    }
+
+    .delete-form-btn {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.4rem;
+    }
 }
 
 /* Очень узкие экраны (< 375px) */
 @media (max-width: 374.98px) {
+    /* Breadcrumb */
+    .breadcrumb-compact .breadcrumb-item.active {
+        max-width: 120px;
+    }
+
+    /* Статистические карточки */
     .stats-card-compact .card-body {
         padding: 0.4rem 0.2rem !important;
     }
@@ -667,105 +979,87 @@ body {
         font-size: 0.65rem;
     }
 
+    /* Таблицы и кнопки */
+    .table-compact .btn-icon,
     .btn-icon {
         width: 24px;
         height: 24px;
         font-size: 0.65rem;
     }
-}
 
-/* Предотвращение переноса по буквам */
-* {
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-}
-
-.card-text,
-p {
-    word-break: break-word;
-    hyphens: auto;
-}
-
-/* ===== КЛИКАБЕЛЬНЫЕ СТРОКИ ===== */
-.clickable-row {
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-    .clickable-row:hover {
-        background-color: rgba(0, 123, 255, 0.08) !important;
+    /* Форма удаления */
+    .delete-form-title {
+        font-size: 0.9rem;
     }
 
-    .clickable-row:active {
-        background-color: rgba(0, 123, 255, 0.12) !important;
-        transform: scale(0.995);
+    .delete-form-body {
+        padding: 0.35rem;
     }
 
-.question-row {
-    user-select: none;
-}
-
-/* Анимация для модального окна */
-.modal.fade .modal-dialog {
-    transition: transform 0.3s ease-out;
-}
-
-.modal.show .modal-dialog {
-    transform: none;
-}
-
-/* ===== АДАПТИВНЫЕ КНОПКИ ДЕЙСТВИЙ ===== */
-@media (max-width: 767.98px) {
-    /* На мобильных уменьшаем размер кнопок */
-    .table-compact .btn-icon {
-        width: 28px;
-        height: 28px;
-        font-size: 0.75rem;
+    .delete-form-alert {
+        padding: 0.3rem;
     }
 
-    /* Уменьшаем gap между кнопками на мобильных */
-    .actions-cell .d-flex {
-        gap: 0.25rem !important;
-    }
-}
-
-@media (max-width: 575.98px) {
-    /* На очень маленьких экранах еще меньше кнопки */
-    .table-compact .btn-icon {
-        width: 26px;
-        height: 26px;
+    .delete-form-alert-text {
         font-size: 0.7rem;
     }
-}
 
-@media (max-width: 374.98px) {
-    /* На очень узких экранах минимальный размер */
-    .table-compact .btn-icon {
-        width: 24px;
-        height: 24px;
-        font-size: 0.65rem;
-    }
-}
-
-/* ===== НАСТРОЙКИ БЕЗ КАРТОЧКИ ===== */
-.settings-bar {
-    background-color: #f8f9fa;
-    border-left: 3px solid #007bff;
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
-}
-
-.setting-label-main {
-    color: #495057;
-    font-size: 0.875rem;
-}
-
-@media (max-width: 767.98px) {
-    .settings-bar {
-        padding: 0.4rem 0.75rem;
+    .delete-form-student-info {
+        padding: 0.35rem;
     }
 
-    .setting-label-main {
+    .delete-form-avatar {
+        width: 32px;
+        height: 32px;
+    }
+
+    .delete-form-avatar-icon {
+        font-size: 0.85rem;
+    }
+
+    .delete-form-name {
         font-size: 0.8rem;
+    }
+
+    .delete-form-info-text {
+        font-size: 0.7rem;
+    }
+
+    .delete-form-stat {
+        padding: 0.3rem 0.2rem;
+    }
+
+    .delete-form-stat-number {
+        font-size: 0.95rem;
+    }
+
+    .delete-form-stat-label {
+        font-size: 0.6rem;
+    }
+
+    .delete-form-warning-text {
+        font-size: 0.7rem;
+    }
+
+    .delete-form-label {
+        font-size: 0.7rem;
+    }
+
+    .delete-form-hint {
+        font-size: 0.6rem;
+    }
+
+    .delete-form-footer {
+        padding: 0.3rem 0.35rem;
+    }
+
+    .delete-form-buttons {
+        gap: 0.25rem;
+        justify-content: center !important;
+    }
+
+    .delete-form-btn {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.35rem;
     }
 }
