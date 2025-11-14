@@ -1,7 +1,7 @@
 ﻿/* ===== БАЗОВЫЕ СТИЛИ - CSS GRID ===== */
 html {
     font-size: 14px;
-    height: -webkit-fill-available;
+    height: 100%;
 }
 
 body {
@@ -10,7 +10,7 @@ body {
     display: grid;
     grid-template-rows: auto 1fr auto;
     min-height: 100vh;
-    min-height: -webkit-fill-available;
+    min-height: 100%;
     background-color: #f8f9fa;
 }
 
@@ -58,10 +58,13 @@ p {
 .main-content {
     padding-top: 65px;
     grid-row: 2;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
     .main-content main {
         padding-bottom: 1rem;
+        max-height: 100%;
     }
 
 /* ===== FOOTER ===== */
@@ -70,6 +73,7 @@ p {
     background-color: #f8f9fa;
     border-top: 1px solid #dee2e6;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
 }
 
 .footer-compact {
