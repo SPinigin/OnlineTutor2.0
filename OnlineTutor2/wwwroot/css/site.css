@@ -1093,3 +1093,36 @@ p {
 .class-row {
     user-select: none;
 }
+
+.hover-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+
+.card-header {
+    border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+.breadcrumb {
+    background: none;
+    padding: 0;
+    margin: 0;
+}
+
+@media (max-width: 767.98px) {
+    .card-body {
+        padding: 1rem;
+    }
+
+    .row.g-2 {
+        margin: 0 -0.25rem;
+    }
+
+        .row.g-2 > * {
+            padding: 0 0.25rem;
+        }
+}
