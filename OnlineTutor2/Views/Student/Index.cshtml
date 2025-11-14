@@ -1,53 +1,53 @@
 ﻿@{
-    ViewData["Title"] = "Кабинет ученика";
+    ViewData["Title"] = "Класс";
 }
 
-<div class="row">
-    <div class="col-md-4 mb-4">
-        <div class="card card-fixed-height">
+<div class="section-header">
+    <h3><i class="fas fa-graduation-cap"></i> Мой класс</h3>
+</div>
+
+<div class="row g-2 g-md-3">
+    <div class="col-4 col-md-4 mb-3 mb-md-4">
+        <div class="card teacher-card h-100">
             <div class="card-header">
-                <h5 class="card-title">
-                    <i class="fas fa-tasks text-primary"></i> Тесты
-                </h5>
+                <h5 class="card-title mb-0">Тесты</h5>
             </div>
             <div class="card-body d-flex flex-column">
-                <p class="card-text">Проходите тесты по орфографии, пунктуацию, орфоэпию и проверяйте свои знания</p>
+                <p class="card-text d-none d-md-block">Проходите тесты и проверяйте свои знания</p>
                 <a asp-controller="StudentTest" asp-action="Index" class="btn btn-primary mt-auto w-100">
-                    <i class="fas fa-play"></i> Доступные тесты
+                    <i class="fas fa-play"></i> <span class="d-none d-sm-inline">Доступные тесты</span>
                 </a>
             </div>
         </div>
     </div>
 
-    <div class="col-md-4 mb-4">
-        <div class="card card-fixed-height">
+    <div class="col-4 col-md-4 mb-3 mb-md-4">
+        <div class="card teacher-card h-100">
             <div class="card-header">
-                <h5 class="card-title">
-                    <i class="fas fa-history text-info"></i> Мой прогресс
-                </h5>
+                <h5 class="card-title mb-0">Мой прогресс</h5>
             </div>
             <div class="card-body d-flex flex-column">
-                <p class="card-text">Отслеживайте свой прогресс и результаты тестов</p>
-                <a asp-controller="StudentTest" asp-action="History" class="btn btn-info mt-auto w-100">
-                    <i class="fas fa-chart-line"></i> История результатов
+                <p class="card-text d-none d-md-block">Отслеживайте свой прогресс и результаты тестов</p>
+                <a asp-controller="StudentTest" asp-action="History" class="btn btn-primary mt-auto w-100">
+                    <i class="fas fa-chart-line"></i> <span class="d-none d-sm-inline">История результатов</span>
                 </a>
             </div>
         </div>
     </div>
 
-    <div class="col-md-4 mb-4">
-        <div class="card card-fixed-height">
+    <div class="col-4 col-md-4 mb-3 mb-md-4">
+        <div class="card teacher-card h-100">
             <div class="card-header">
-                <h5 class="card-title">
-                    <i class="fas fa-book text-success"></i> Материалы
-                </h5>
+                <h5 class="card-title mb-0">Материалы</h5>
             </div>
             <div class="card-body d-flex flex-column">
-                <p class="card-text">Изучайте учебные материалы и дополнительные ресурсы</p>
-                <a asp-controller="Material" asp-action="Index" class="btn btn-info mt-auto w-100">
-                    <i class="fas fa-book-open"></i> Учебные материалы
+                <p class="card-text d-none d-md-block">Изучайте учебные материалы и дополнительные ресурсы</p>
+                <a asp-controller="Material" asp-action="Index" class="btn btn-primary mt-auto w-100">
+                    <i class="fas fa-book-open"></i> <span class="d-none d-sm-inline">Учебные материалы</span>
                 </a>
             </div>
         </div>
     </div>
 </div>
+
+<script src="~/js/layout.js" asp-append-version="true"></script>
