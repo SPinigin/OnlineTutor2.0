@@ -1,13 +1,24 @@
 ﻿@model IEnumerable<OnlineTutor2.Models.Class>
 @{
     ViewData["Title"] = "Управление классами";
+    var activeClasses = Model.Count(c => c.IsActive);
+    var inactiveClasses = Model.Count(c => !c.IsActive);
+    var totalTestsCounts = ViewBag.TotalTestsCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-users text-primary"></i> Онлайн-классы</h2>
-    <a asp-action="Create" class="btn btn-success">
-        <i class="fas fa-plus"></i> Создать класс
-    </a>
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item active">Управление классами</li>
+            </ol>
+        </nav>
+    </div>
+    <div>
+        <a asp-action="Create" class="btn btn-success">
+            <i class="fas fa-plus"></i> Создать класс
+        </a>
+    </div>
 </div>
 
 @if (!Model.Any())
@@ -23,106 +34,370 @@
 }
 else
 {
-    <div class="row">
-        @foreach (var item in Model)
-        {
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2-4 col-xxl-5th mb-3">
-            <div class="card @(item.IsActive ? "" : "opacity-75")">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-graduation-cap"></i> @item.Name
-                    </h5>
-                    <span class="badge bg-@(item.IsActive ? "success" : "secondary") flex-shrink-0 status-badge"
-                            title="@(item.IsActive ? "Активный" : "Неактивный")">
-                            <i class="fas fa-@(item.IsActive ? "check-circle" : "times-circle")"></i>
-                    </span>
-                </div>
-                <div class="card-body d-flex flex-column">
-                    @if (!string.IsNullOrEmpty(item.Description))
-                    {
-                        <p class="card-text text-muted">@item.Description</p>
-                    }
-                    else
-                    {
-                        <p class="card-text text-muted fst-italic">Описание не указано</p>
-                    }
+    
+    <div class="row mb-3 align-items-center">
+        
+        <div class="col-12 col-md-4 mb-2 mb-md-0">
+            <h6 class="mb-0">
+                <i class="fas fa-users"></i> 
+                <span id="classesCount">Всего классов: @Model.Count()</span>
+            </h6>
+        </div>
 
-                    <div class="mt-auto">
-                            <div class="row text-center mb-2 g-1">
-                            <div class="col">
-                                <div class="d-flex flex-column">
-                                    <span class="h5 text-primary mb-0">@item.Students.Count</span>
-                                    <small class="text-muted">учеников</small>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="d-flex flex-column">
-                                    @{
-                                        var totalTestsCounts = ViewBag.TotalTestsCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
-                                        var totalTestsCount = totalTestsCounts.ContainsKey(item.Id) ? totalTestsCounts[item.Id] : 0;
-                                    }
-                                    <span class="h5 text-info mb-0">@totalTestsCount</span>
-                                    <small class="text-muted">тестов</small>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="d-flex flex-column">
-                                    <span class="h5 text-warning mb-0">@item.Materials.Count</span>
-                                    <small class="text-muted">материалов</small>
-                                </div>
-                            </div>
-                        </div>
-
-                        <small class="text-muted d-block mb-2">
-                            <i class="fas fa-calendar"></i> Создан: @item.CreatedAt.ToString("dd.MM.yyyy")
-                        </small>
-                    </div>
-                </div>
-                    <div class="card-footer">
-                        <div class="d-flex gap-2 w-100" role="group">
-                            <a asp-action="Details"
-                               asp-route-id="@item.Id"
-                               class="btn btn-outline-info btn-sm flex-fill"
-                               title="Детали">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a asp-action="Edit"
-                               asp-route-id="@item.Id"
-                               class="btn btn-outline-primary btn-sm flex-fill"
-                               title="Изменить">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <form asp-action="ToggleStatus"
-                                  asp-route-id="@item.Id"
-                                  method="post"
-                                  class="flex-fill">
-                                <button type="submit"
-                                        class="btn btn-outline-@(item.IsActive ? "warning" : "success") btn-sm w-100 flex-fill"
-                                        title="@(item.IsActive ? "Деактивировать" : "Активировать")">
-                                    <i class="fas fa-@(item.IsActive ? "pause" : "play")"></i>
-                                </button>
-                            </form>
-                            <a asp-action="Delete"
-                               asp-route-id="@item.Id"
-                               class="btn btn-outline-danger btn-sm flex-fill"
-                               title="Удалить"
-                               onclick="return confirm('Вы уверены, что хотите удалить этот класс?');">
-                                <i class="fas fa-trash"></i>
-                            </a>
-                        </div>
-                    </div>
-
+        
+        <div class="col-12 col-md-4 mb-2 mb-md-0">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white">
+                    <i class="fas fa-search text-muted"></i>
+                </span>
+                <input type="text" 
+                       id="searchInput" 
+                       class="form-control" 
+                       placeholder="Поиск по названию или описанию..."
+                       autocomplete="off">
+                <button class="btn btn-outline-secondary" 
+                        type="button" 
+                        id="clearSearch"
+                        style="display: none;">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
         </div>
-        }
-    </div>
-}
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+        
+        <div class="col-12 col-md-4">
+            <div class="btn-group btn-group-sm w-100" role="group">
+                <button type="button" 
+                        class="btn btn-outline-primary active" 
+                        data-filter="all"
+                        onclick="filterClassesByStatus('all')">
+                    Все (@Model.Count())
+                </button>
+                <button type="button" 
+                        class="btn btn-outline-success" 
+                        data-filter="active"
+                        onclick="filterClassesByStatus('active')">
+                    Активные (@activeClasses)
+                </button>
+                <button type="button" 
+                        class="btn btn-outline-secondary" 
+                        data-filter="inactive"
+                        onclick="filterClassesByStatus('inactive')">
+                    Неактивные (@inactiveClasses)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="noResultsMessage" class="alert alert-info" style="display: none;">
+        <i class="fas fa-info-circle"></i> 
+        По вашему запросу ничего не найдено. Попробуйте изменить критерии поиска.
+    </div>
+
+    
+    <div class="table-responsive">
+        <table class="table table-hover table-striped align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th class="mobile-visible text-center" style="width: 5%;">
+                        <i class="fas fa-check-circle"></i>
+                    </th>
+                    <th class="mobile-visible" style="width: 25%;">Название</th>
+                    <th class="mobile-visible" style="width: 25%;">Описание</th>
+                    <th class="mobile-visible text-center" style="width: 8%;">
+                        <i class="fas fa-user-graduate d-none d-md-inline"></i>
+                        <span class="d-md-none">Ученики</span>
+                        <span class="d-none d-md-inline">Ученики</span>
+                    </th>
+                    <th class="d-none d-md-table-cell text-center" style="width: 8%;">
+                        <i class="fas fa-tasks"></i> Тесты
+                    </th>
+                    <th class="d-none d-md-table-cell text-center" style="width: 8%;">
+                        <i class="fas fa-book"></i> Материалы
+                    </th>
+                    <th class="d-none d-md-table-cell" style="width: 10%;">Создан</th>
+                    <th class="mobile-visible text-center" style="width: 15%;">Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr class="class-row @(item.IsActive ? "" : "table-secondary")" 
+                        data-status="@(item.IsActive ? "active" : "inactive")"
+                        data-class-id="@item.Id">
+                        
+                        
+                        <td class="text-center mobile-visible">
+                            <span class="badge bg-@(item.IsActive ? "success" : "secondary")" 
+                                  title="@(item.IsActive ? "Активный" : "Неактивный")">
+                                <i class="fas fa-@(item.IsActive ? "check-circle" : "times-circle")"></i>
+                            </span>
+                        </td>
+
+                        
+                        <td class="mobile-visible">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-graduation-cap text-primary me-2 d-none d-md-inline"></i>
+                                <div>
+                                    <strong class="d-block">@item.Name</strong>
+                                    <small class="text-muted d-block">
+                                        <i class="fas fa-calendar"></i> @item.CreatedAt.ToString("dd.MM.yyyy")
+                                    </small>
+                                </div>
+                            </div>
+                        </td>
+
+                        
+                        <td class="mobile-visible">
+                            @if (!string.IsNullOrEmpty(item.Description))
+                            {
+                                <small class="text-muted">@item.Description</small>
+                            }
+                            else
+                            {
+                                <span class="text-muted fst-italic">Описание не указано</span>
+                            }
+                        </td>
+
+                        
+                        <td class="text-center mobile-visible">
+                            <span class="badge bg-primary rounded-pill">
+                                @item.Students.Count
+                            </span>
+                        </td>
+
+                        
+                        <td class="text-center d-none d-md-table-cell">
+                            @{
+                                var totalTestsCount = totalTestsCounts.ContainsKey(item.Id) ? totalTestsCounts[item.Id] : 0;
+                            }
+                            <span class="badge bg-info rounded-pill">
+                                @totalTestsCount
+                            </span>
+                        </td>
+
+                        
+                        <td class="text-center d-none d-md-table-cell">
+                            <span class="badge bg-warning text-dark rounded-pill">
+                                @item.Materials.Count
+                            </span>
+                        </td>
+
+                        
+                        <td class="d-none d-md-table-cell">
+                            <small>
+                                <i class="fas fa-calendar text-muted"></i>
+                                @item.CreatedAt.ToString("dd.MM.yyyy")
+                            </small>
+                        </td>
+
+                        
+                        <td class="text-center mobile-visible">
+                            
+                            <div class="btn-group btn-group-sm gap-1 d-none d-md-flex" role="group">
+                                <a asp-action="Details"
+                                   asp-route-id="@item.Id"
+                                   class="btn btn-outline-info rounded"
+                                   title="Просмотр">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a asp-action="Edit"
+                                   asp-route-id="@item.Id"
+                                   class="btn btn-outline-primary rounded"
+                                   title="Редактировать">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form asp-action="ToggleStatus"
+                                      asp-route-id="@item.Id"
+                                      method="post"
+                                      class="d-inline"
+                                      onclick="event.stopPropagation();">
+                                    <button type="submit"
+                                            class="btn btn-outline-@(item.IsActive ? "warning" : "success") btn-sm rounded"
+                                            title="@(item.IsActive ? "Деактивировать" : "Активировать")">
+                                        <i class="fas fa-@(item.IsActive ? "pause" : "play")"></i>
+                                    </button>
+                                </form>
+                                <a asp-action="Delete"
+                                   asp-route-id="@item.Id"
+                                   class="btn btn-outline-danger rounded"
+                                   title="Удалить">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+
+                            
+                            <div class="d-flex d-md-none gap-1 justify-content-center">
+                                <a asp-action="Edit"
+                                   asp-route-id="@item.Id"
+                                   class="btn btn-outline-primary mobile-actions-btn"
+                                   title="Редактировать">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form asp-action="ToggleStatus"
+                                      asp-route-id="@item.Id"
+                                      method="post"
+                                      class="d-inline"
+                                      onclick="event.stopPropagation();">
+                                    <button type="submit"
+                                            class="btn btn-outline-@(item.IsActive ? "warning" : "success") mobile-actions-btn"
+                                            title="@(item.IsActive ? "Деактивировать" : "Активировать")">
+                                        <i class="fas fa-@(item.IsActive ? "pause" : "play")"></i>
+                                    </button>
+                                </form>
+                                <a asp-action="Delete"
+                                   asp-route-id="@item.Id"
+                                   class="btn btn-outline-danger mobile-actions-btn"
+                                   title="Удалить">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/layout.js" asp-append-version="true"></script>
+    <script>
+        let currentStatusFilter = 'all';
+        let currentSearchQuery = '';
+
+        // Фильтрация по статусу
+        function filterClassesByStatus(status) {
+            currentStatusFilter = status;
+            const buttons = document.querySelectorAll('.btn-group .btn');
+
+            // Обновляем активную кнопку
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.filter === status) {
+                    btn.classList.add('active');
+                }
+            });
+
+            applyFilters();
+        }
+
+        // Поиск по классам
+        function searchClasses(query) {
+            currentSearchQuery = query.toLowerCase().trim();
+            applyFilters();
+        }
+
+        // Применение всех фильтров
+        function applyFilters() {
+            const rows = document.querySelectorAll('.class-row');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const matchesStatus = currentStatusFilter === 'all' || 
+                                    row.dataset.status === currentStatusFilter;
+                
+                let matchesSearch = true;
+                if (currentSearchQuery) {
+                    const classData = row.dataset.searchText || '';
+                    matchesSearch = classData.includes(currentSearchQuery);
+                }
+
+                if (matchesStatus && matchesSearch) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Показываем сообщение если ничего не найдено
+            const noResultsMessage = document.getElementById('noResultsMessage');
+            if (visibleCount === 0) {
+                noResultsMessage.style.display = 'block';
+            } else {
+                noResultsMessage.style.display = 'none';
+            }
+
+            // Обновляем счетчик
+            updateClassesCount(visibleCount);
+        }
+
+        // Обновление счетчика классов
+        function updateClassesCount(count) {
+            const countsElement = document.getElementById('classesCount');
+            const totalClasses = document.querySelectorAll('.class-row').length;
+            
+            if (count === totalClasses) {
+                countsElement.textContent = `Всего классов: ${totalClasses}`;
+            } else {
+                countsElement.textContent = `Показано: ${count} из ${totalClasses}`;
+            }
+        }
+
+        // Обработчик клика по строке таблицы
+        document.addEventListener('DOMContentLoaded', function() {
+            const classRows = document.querySelectorAll('.class-row');
+            const searchInput = document.getElementById('searchInput');
+            const clearSearchBtn = document.getElementById('clearSearch');
+            
+            // Добавляем данные для поиска к каждой строке
+            classRows.forEach(row => {
+                // Собираем текст для поиска из всех ячеек
+                const cells = row.querySelectorAll('td');
+                let searchText = '';
+                cells.forEach(cell => {
+                    searchText += ' ' + cell.textContent.toLowerCase();
+                });
+                row.dataset.searchText = searchText;
+
+                // Обработчик клика по строке (переход на детальную страницу)
+                row.addEventListener('click', function(e) {
+                    // Игнорируем клики по ссылкам, кнопкам и формам
+                    if (e.target.closest('a, button, form')) {
+                        return;
+                    }
+                    // Получаем ID класса из data-атрибута
+                    const classId = this.dataset.classId;
+                    if (classId) {
+                        window.location.href = `/Class/Details/${classId}`;
+                    }
+                });
+                
+                // Добавляем курсор pointer
+                row.style.cursor = 'pointer';
+            });
+
+            // Обработчик ввода в поле поиска
+            searchInput.addEventListener('input', function(e) {
+                const query = e.target.value;
+                searchClasses(query);
+
+                // Показываем/скрываем кнопку очистки
+                if (query) {
+                    clearSearchBtn.style.display = 'block';
+                } else {
+                    clearSearchBtn.style.display = 'none';
+                }
+            });
+
+            // Обработчик кнопки очистки поиска
+            clearSearchBtn.addEventListener('click', function() {
+                searchInput.value = '';
+                searchClasses('');
+                clearSearchBtn.style.display = 'none';
+                searchInput.focus();
+            });
+
+            // Поиск при нажатии Enter
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchClasses(searchInput.value);
+                }
+            });
+        });
+    </script>
 }

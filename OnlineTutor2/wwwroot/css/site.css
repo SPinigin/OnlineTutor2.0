@@ -1067,3 +1067,29 @@ p {
         padding: 0.2rem 0.35rem;
     }
 }
+
+/* Стили для кнопок действий на мобильных */
+.mobile-actions-btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Курсор pointer для кликабельных строк */
+.class-row {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+    .class-row:hover {
+        background-color: rgba(0, 123, 255, 0.08) !important;
+    }
+
+    .class-row:active {
+        background-color: rgba(0, 123, 255, 0.12) !important;
+        transform: scale(0.995);
+    }
+
+/* Предотвращение выделения текста при клике */
+.class-row {
+    user-select: none;
+}
