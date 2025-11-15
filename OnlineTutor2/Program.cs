@@ -5,6 +5,7 @@ using NLog;
 using NLog.Web;
 using OfficeOpenXml;
 using OnlineTutor2.Data;
+using OnlineTutor2.Hubs;
 using OnlineTutor2.Models;
 using OnlineTutor2.Services;
 
@@ -102,6 +103,7 @@ try
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<IExportService, ExportService>();
     builder.Services.AddTransient<IEmailSender, EmailSender>();
+    builder.Services.AddSignalR();
 
     builder.Services.AddSession(options =>
     {
@@ -134,6 +136,7 @@ try
     app.UseAuthentication();
     app.UseSession();
     app.UseAuthorization();
+    app.MapHub<TestAnalyticsHub>("/hubs/testAnalytics");
 
     app.MapControllerRoute(
         name: "default",
