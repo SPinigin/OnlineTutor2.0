@@ -3,38 +3,65 @@
     ViewData["Title"] = $"Прохождение теста: {Model.TestResult.SpellingTest.Title}";
 }
 
+
+<div class="mb-3">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb breadcrumb-compact">
+            <li class="breadcrumb-item">
+                <a asp-controller="Student" asp-action="Tests">Мои тесты</a>
+            </li>
+            <li class="breadcrumb-item active">@Model.TestResult.SpellingTest.Title</li>
+        </ol>
+    </nav>
+</div>
+
 <div class="test-container">
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <h5 class="mb-0">
-                        <i class="fas fa-spell-check"></i> @Model.TestResult.SpellingTest.Title
-                    </h5>
+    
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-primary text-white py-2">
+            <div class="d-flex justify-content-between align-items-center gap-2">
+                <div class="flex-grow-1 min-w-0">
+                    <h6 class="mb-0 d-flex align-items-center">
+                        <i class="fas fa-spell-check me-2 flex-shrink-0"></i>
+                        <span class="text-truncate">@Model.TestResult.SpellingTest.Title</span>
+                    </h6>
                 </div>
-                <div class="col-md-6 text-end">
-                    <div id="timer" class="h5 mb-0">
-                        <i class="fas fa-clock"></i>
-                        <span id="timeRemaining">@($"{Model.TimeRemaining.Minutes:D2}:{Model.TimeRemaining.Seconds:D2}")</span>
+                <div class="flex-shrink-0">
+                    <div id="timer" class="d-flex align-items-center">
+                        <i class="fas fa-clock me-2"></i>
+                        <span id="timeRemaining" class="h6 mb-0 font-monospace">
+                            @($"{Model.TimeRemaining.Minutes:D2}:{Model.TimeRemaining.Seconds:D2}")
+                        </span>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="card-body">
-            <div class="progress mb-2">
-                <div class="progress-bar" role="progressbar" style="width: 0%" id="progressBar"></div>
+        
+        <div class="card-body p-2 p-md-3">
+            
+            <div class="progress mb-2" style="height: 8px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: 0%" id="progressBar"></div>
             </div>
-            <div class="d-flex justify-content-between">
-                <span class="small text-muted">
+            
+            
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <small class="text-muted mb-0">
+                    <i class="fas fa-redo-alt"></i>
                     Попытка @Model.TestResult.AttemptNumber из @Model.TestResult.SpellingTest.MaxAttempts
-                </span>
-                <span class="small text-muted">
-                    Вопрос <span id="currentQuestion">1</span> из @Model.TestResult.SpellingTest.SpellingQuestions.Count
-                </span>
+                </small>
+                <small class="text-muted mb-0">
+                    <i class="fas fa-question-circle"></i>
+                    Вопрос <span id="currentQuestion" class="fw-bold">1</span> из @Model.TestResult.SpellingTest.SpellingQuestions.Count
+                </small>
+                <small class="text-muted mb-0" id="answeredInfo">
+                    <i class="fas fa-check-circle text-success"></i>
+                    Отвечено: <span id="answeredCount">0</span>
+                </small>
             </div>
         </div>
     </div>
 
+    
     <div id="questionsContainer">
         @for (int i = 0; i < Model.TestResult.SpellingTest.SpellingQuestions.Count; i++)
         {
@@ -42,78 +69,112 @@
             var existingAnswer = Model.TestResult.SpellingAnswers.FirstOrDefault(a => a.SpellingQuestionId == question.Id);
 
             <div class="question-card @(i == 0 ? "active" : "d-none")" data-question-index="@i" data-question-id="@question.Id">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="question-header mb-4">
-                            <h6 class="text-primary">
-                                <i class="fas fa-question-circle"></i> Вопрос @(i + 1)
-                                <span class="badge bg-info ms-2">@question.Points баллов</span>
-                            </h6>
-                        </div>
-
-                        <div class="question-content mb-4">
-                            <p class="h5 mb-3">
-                                Вставьте пропущенную букву в слове:
-                            </p>
-                            <div class="word-container text-center mb-4">
-                                <span class="word-with-gap">@question.WordWithGap</span>
+                <div class="card shadow-sm">
+                    <div class="card-body p-3 p-md-4">
+                        
+                        <div class="question-header mb-3">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <h6 class="text-primary mb-0">
+                                    <i class="fas fa-question-circle"></i>
+                                    Вопрос @(i + 1)
+                                </h6>
+                                <span class="badge bg-info badge-sm">
+                                    <i class="fas fa-star"></i> Балл: @question.Points
+                                </span>
                             </div>
                         </div>
 
-                        <div class="answer-input mb-4">
-                            <label class="form-label">Ваш ответ:</label>
+                        
+                        <div class="question-content mb-3">
+                            <p class="mb-3 text-muted">
+                                <i class="fas fa-pencil-alt"></i>
+                                Вставьте пропущенную букву в слове:
+                            </p>
+                            
+                            
+                            <div class="word-container text-center mb-3">
+                                <div class="word-with-gap">@question.WordWithGap</div>
+                            </div>
+                        </div>
+
+                        
+                        <div class="answer-input-section mb-4">
+                            <label class="form-label small fw-semibold">
+                                <i class="fas fa-keyboard"></i> Ваш ответ:
+                            </label>
                             <div class="input-group">
                                 <input type="text" class="form-control answer-input"
                                        maxlength="10"
-                                       placeholder="Введите букву или буквы"
+                                       placeholder="Введите букву"
                                        value="@(existingAnswer?.StudentAnswer ?? "")"
                                        data-question-id="@question.Id" />
-                                <button class="btn btn-outline-secondary" type="button" onclick="clearAnswer(@question.Id)">
+                                <button class="btn btn-outline-secondary" type="button" onclick="clearAnswer(@question.Id)"
+                                        title="Очистить ответ">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
-                            <div class="form-text">
-                                <i class="fas fa-info-circle"></i> Введите одну или несколько букв (например: е или а,о)
-                            </div>
+                            <small class="form-text text-muted d-block mt-1">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="d-none d-sm-inline">Введите одну или несколько букв (например: е или а,о)</span>
+                                <span class="d-sm-none">Одна или несколько букв (е или а,о)</span>
+                            </small>
                         </div>
 
+                        
                         @if (Model.TestResult.SpellingTest.ShowHints && !string.IsNullOrEmpty(question.Hint))
                         {
-                            <div class="hint-container mb-4" style="display: none;">
-                                <div class="alert alert-info">
-                                    <h6><i class="fas fa-lightbulb"></i> Подсказка:</h6>
-                                    <p class="mb-0">@question.Hint</p>
-                                </div>
-                            </div>
-                            <div class="mb-4">
+                            <div class="mb-3">
                                 <button type="button" class="btn btn-outline-info btn-sm" onclick="toggleHint(@i)">
-                                    <i class="fas fa-lightbulb"></i> Показать подсказку
+                                    <i class="fas fa-lightbulb"></i>
+                                    <span class="hint-button-text">Показать подсказку</span>
                                 </button>
                             </div>
+                            
+                            <div class="hint-container" style="display: none;">
+                                <div class="alert alert-info alert-sm py-2 mb-0">
+                                    <div class="d-flex align-items-start">
+                                        <i class="fas fa-lightbulb mt-1 me-2"></i>
+                                        <div>
+                                            <strong class="small">Подсказка:</strong>
+                                            <p class="mb-0 small">@question.Hint</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         }
-
-                        <div class="question-feedback" style="display: none;">
-                        </div>
                     </div>
                 </div>
             </div>
         }
     </div>
 
-    <div class="card mt-4">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <button type="button" class="btn btn-outline-secondary" id="prevButton" onclick="previousQuestion()" disabled>
-                        <i class="fas fa-arrow-left"></i> Предыдущий
+    
+    <div class="card shadow-sm mt-3 navigation-card">
+        <div class="card-body p-2 p-md-3">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <button type="button" 
+                        class="btn btn-outline-secondary btn-sm" 
+                        id="prevButton" 
+                        onclick="previousQuestion()" 
+                        disabled>
+                    <i class="fas fa-arrow-left"></i>
+                    <span class="d-none d-sm-inline ms-1">Предыдущий</span>
+                </button>
+                
+                <div class="d-flex gap-2">
+                    <button type="button" 
+                            class="btn btn-primary btn-sm" 
+                            id="nextButton" 
+                            onclick="nextQuestion()">
+                        <span class="d-none d-sm-inline me-1">Следующий</span>
+                        <i class="fas fa-arrow-right"></i>
                     </button>
-                </div>
-                <div class="col-md-6 text-end">
-                    <button type="button" class="btn btn-primary" id="nextButton" onclick="nextQuestion()">
-                        Следующий <i class="fas fa-arrow-right"></i>
-                    </button>
-                    <button type="button" class="btn btn-success d-none" id="finishButton" onclick="showFinishModal()">
-                        <i class="fas fa-check"></i> Завершить тест
+                    <button type="button" 
+                            class="btn btn-success btn-sm d-none" 
+                            id="finishButton" 
+                            onclick="showFinishModal()">
+                        <i class="fas fa-check"></i>
+                        <span class="d-none d-sm-inline ms-1">Завершить</span>
                     </button>
                 </div>
             </div>
@@ -121,105 +182,50 @@
     </div>
 </div>
 
+
 <div class="modal fade" id="finishTestModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-check text-success"></i> Завершить тест
-                </h5>
+            <div class="modal-header py-2 bg-light">
+                <h6 class="modal-title mb-0">
+                    <i class="fas fa-check-circle text-success"></i> Завершить тест
+                </h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <strong>Внимание!</strong> После завершения теста вы не сможете изменить ответы.
+            <div class="modal-body p-3">
+                <div class="alert alert-warning alert-sm py-2 mb-3">
+                    <div class="d-flex align-items-start">
+                        <i class="fas fa-exclamation-triangle mt-1 me-2"></i>
+                        <div>
+                            <strong class="small">Внимание!</strong>
+                            <p class="mb-0 small">После завершения теста вы не сможете изменить ответы.</p>
+                        </div>
+                    </div>
                 </div>
-                <p>Вы ответили на <span id="answeredCount">0</span> из @Model.TestResult.SpellingTest.SpellingQuestions.Count вопросов.</p>
-                <p>Вы уверены, что хотите завершить тест?</p>
+                
+                <div class="mb-2">
+                    <p class="mb-2 small">
+                        <i class="fas fa-clipboard-check text-primary"></i>
+                        Вы ответили на <strong><span id="answeredCountModal">0</span></strong> 
+                        из <strong>@Model.TestResult.SpellingTest.SpellingQuestions.Count</strong> вопросов.
+                    </p>
+                    <p class="mb-0 small text-muted">Вы уверены, что хотите завершить тест?</p>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times"></i> Продолжить тест
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Продолжить
                 </button>
                 <form asp-action="CompleteSpelling" method="post" class="d-inline">
                     <input type="hidden" name="testResultId" value="@Model.TestResult.Id" />
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-check"></i> Завершить тест
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="fas fa-check"></i> Завершить
                     </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
-
-@section Styles {
-    <style>
-        .test-container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .word-with-gap {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #0d6efd;
-            background: #f8f9fa;
-            padding: 15px 30px;
-            border-radius: 10px;
-            border: 2px dashed #0d6efd;
-        }
-
-        .answer-input {
-            font-size: 1.2rem;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        .question-card {
-            transition: all 0.3s ease;
-        }
-
-            .question-card.active {
-                animation: fadeIn 0.3s ease;
-            }
-
-        @@keyframes fadeIn {
-            from
-            {
-                opacity: 0;
-                transform: translateX(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        #timer {
-            font-family: 'Courier New', monospace;
-        }
-
-        .timer-warning {
-            color: #ffc107 !important;
-        }
-
-        .timer-danger {
-            color: #dc3545 !important;
-            animation: blink 1s infinite;
-        }
-
-        @@keyframes blink {
-            0%, 50%
-            {
-                opacity: 1;
-            }
-            51%, 100% {
-                opacity: 0.5;
-            }
-        }
-    </style>
-}
 
 @section Scripts {
     <script>
@@ -228,14 +234,14 @@
         let timeRemaining = @((int)Model.TimeRemaining.TotalSeconds);
         let answers = {};
         let timerInterval;
-        let testCompleting = false; // Флаг завершения теста
+        let testCompleting = false;
 
         $(document).ready(function() {
             initializeTest();
             startTimer();
             loadExistingAnswers();
 
-            // Обработчик отправки ТОЛЬКО формы завершения теста (не всех форм)
+            // Обработчик завершения теста
             $('form[action*="Complete"]').on('submit', function() {
                 testCompleting = true;
             });
@@ -245,20 +251,20 @@
             updateProgress();
             updateNavigation();
 
-            // Обработчик ввода ответов
+            // Автосохранение ответов
             $('.answer-input').on('input', function() {
                 const questionId = $(this).data('question-id');
                 const answer = $(this).val().trim();
 
-                // Автосохранение ответа
                 if (answer) {
                     saveAnswer(questionId, answer);
                 }
             });
 
-            // Обработчик Enter для перехода к следующему вопросу
+            // Enter для перехода к следующему вопросу
             $('.answer-input').on('keypress', function(e) {
                 if (e.which === 13) {
+                    e.preventDefault();
                     nextQuestion();
                 }
             });
@@ -267,13 +273,15 @@
         function loadExistingAnswers() {
             @foreach (var answer in Model.TestResult.SpellingAnswers)
             {
-                    <text>
-                    answers[@answer.SpellingQuestionId] = '@answer.StudentAnswer';
-                    </text>
+                <text>
+                answers[@answer.SpellingQuestionId] = '@answer.StudentAnswer';
+                </text>
             }
         }
 
         function startTimer() {
+            updateTimerDisplay();
+            
             timerInterval = setInterval(function() {
                 timeRemaining--;
                 updateTimerDisplay();
@@ -292,8 +300,10 @@
 
             $('#timeRemaining').text(display);
 
-            // Изменение цвета при малом времени
+            // Изменение цвета таймера
             const timerElement = $('#timer');
+            timerElement.removeClass('timer-warning timer-danger');
+            
             if (timeRemaining <= 60) {
                 timerElement.addClass('timer-danger');
             } else if (timeRemaining <= 300) {
@@ -317,13 +327,10 @@
                         updateProgress();
                     } else {
                         console.error('Ошибка сохранения:', response.message);
-                        // Можно показать уведомление пользователю
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Ошибка AJAX-запроса:', error);
-                    console.error('Статус:', xhr.status);
-                    console.error('Ответ сервера:', xhr.responseText);
+                    console.error('Ошибка AJAX:', error);
                 }
             });
         }
@@ -349,7 +356,16 @@
             updateNavigation();
 
             // Фокус на поле ввода
-            $(`.question-card[data-question-index="${index}"] .answer-input`).focus();
+            setTimeout(function() {
+                $(`.question-card[data-question-index="${index}"] .answer-input`).focus();
+            }, 100);
+
+            // Прокрутка вверх на мобильных
+            if ($(window).width() < 768) {
+                $('html, body').animate({
+                    scrollTop: $('.question-card.active').offset().top - 100
+                }, 300);
+            }
         }
 
         function updateProgress() {
@@ -358,7 +374,7 @@
 
             $('#progressBar').css('width', percentage + '%');
             $('#currentQuestion').text(currentQuestionIndex + 1);
-            $('#answeredCount').text(answeredCount);
+            $('#answeredCount, #answeredCountModal').text(answeredCount);
         }
 
         function updateNavigation() {
@@ -375,14 +391,14 @@
 
         function toggleHint(questionIndex) {
             const hintContainer = $(`.question-card[data-question-index="${questionIndex}"] .hint-container`);
-            const button = $(`.question-card[data-question-index="${questionIndex}"] .btn-outline-info`);
+            const buttonText = $(`.question-card[data-question-index="${questionIndex}"] .hint-button-text`);
 
             if (hintContainer.is(':visible')) {
-                hintContainer.slideUp();
-                button.html('<i class="fas fa-lightbulb"></i> Показать подсказку');
+                hintContainer.slideUp(300);
+                buttonText.text('Показать подсказку');
             } else {
-                hintContainer.slideDown();
-                button.html('<i class="fas fa-lightbulb"></i> Скрыть подсказку');
+                hintContainer.slideDown(300);
+                buttonText.text('Скрыть подсказку');
             }
         }
 
@@ -399,13 +415,14 @@
 
         function autoSubmitTest() {
             testCompleting = true;
-            alert('Время вышло! Тест будет автоматически завершен.');
-            $('form[action*="CompletePunctuation"]').submit();
+            
+            if (confirm('Время вышло! Тест будет автоматически завершен.')) {
+                $('form[action*="CompleteSpelling"]').submit();
+            }
         }
 
         // Предотвращение случайного закрытия страницы
         window.addEventListener('beforeunload', function(e) {
-            // Не показываем предупреждение если тест завершается
             if (testCompleting) {
                 return;
             }
@@ -414,7 +431,7 @@
             e.returnValue = '';
         });
 
-        // Добавляем токен для AJAX запросов
+        // Токен для AJAX
         $.ajaxSetup({
             beforeSend: function(xhr, settings) {
                 if (settings.type === 'POST') {
