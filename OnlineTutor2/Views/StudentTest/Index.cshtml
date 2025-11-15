@@ -141,108 +141,134 @@ else
             <h4 class="mb-3">
                 <i class="fas fa-spell-check text-primary"></i> Тесты по орфографии
             </h4>
-            <div class="row" id="spellingTestsContainer">
-                @foreach (var test in Model.SpellingTests)
-                {
-                    var studentResults = test.SpellingTestResults.Where(tr => tr.StudentId == Model.Student.Id).ToList();
-                    var completedResults = studentResults.Where(tr => tr.IsCompleted).ToList();
-                    var ongoingResult = studentResults.FirstOrDefault(tr => !tr.IsCompleted);
-                    var attemptsUsed = studentResults.Count;
-                    var canStart = attemptsUsed < test.MaxAttempts && ongoingResult == null;
-                    var bestResult = completedResults.OrderByDescending(tr => tr.Percentage).FirstOrDefault();
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="mobile-visible" style="width: 30%;">Название</th>
+                            <th class="d-none d-md-table-cell" style="width: 25%;">Описание</th>
+                            <th class="mobile-visible text-center" style="width: 10%;">
+                                <i class="fas fa-question-circle d-none d-md-inline"></i>
+                                <span class="d-md-none">Вопросов</span>
+                                <span class="d-none d-md-inline">Вопросы</span>
+                            </th>
+                            <th class="d-none d-md-table-cell text-center" style="width: 8%;">
+                                <i class="fas fa-clock"></i> Время
+                            </th>
+                            <th class="mobile-visible text-center" style="width: 12%;">
+                                <span class="d-none d-md-inline">Попыток</span>
+                                <span class="d-md-none">Попыток</span>
+                            </th>
+                            <th class="d-none d-md-table-cell text-center" style="width: 10%;">Лучший результат</th>
+                            <th class="mobile-visible text-center" style="width: 15%;">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var test in Model.SpellingTests)
+                        {
+                            var studentResults = test.SpellingTestResults.Where(tr => tr.StudentId == Model.Student.Id).ToList();
+                            var completedResults = studentResults.Where(tr => tr.IsCompleted).ToList();
+                            var ongoingResult = studentResults.FirstOrDefault(tr => !tr.IsCompleted);
+                            var attemptsUsed = studentResults.Count;
+                            var canStart = attemptsUsed < test.MaxAttempts && ongoingResult == null;
+                            var bestResult = completedResults.OrderByDescending(tr => tr.Percentage).FirstOrDefault();
 
-                    <div class="col-12 col-sm-6 col-lg-4 mb-4 test-card" data-test-title="@test.Title.ToLower()">
-                        <div class="card h-100 shadow-sm hover-card">
-                            <div class="card-header bg-primary bg-opacity-10">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <h6 class="card-title mb-0 text-truncate" title="@test.Title">
-                                        <i class="fas fa-spell-check text-primary"></i> 
-                                        <span class="fw-bold">@test.Title</span>
-                                    </h6>
-                                    @if (bestResult != null)
-                                    {
-                                        <span class="badge bg-@(bestResult.Percentage >= 80 ? "success" : bestResult.Percentage >= 60 ? "warning" : "danger") ms-2">
-                                            @bestResult.Percentage.ToString("F1")%
-                                        </span>
-                                    }
-                                </div>
-                            </div>
-                            <div class="card-body d-flex flex-column">
-                                @if (!string.IsNullOrEmpty(test.Description))
-                                {
-                                    <p class="card-text text-muted small mb-3">@test.Description</p>
-                                }
-
-                                <div class="row text-center mb-3 g-2">
-                                    <div class="col-4">
-                                        <div class="d-flex flex-column p-2 bg-light rounded">
-                                            <span class="h6 text-primary mb-0">@test.SpellingQuestions.Count</span>
-                                            <small class="text-muted">вопросов</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="d-flex flex-column p-2 bg-light rounded">
-                                            <span class="h6 text-info mb-0">@test.TimeLimit</span>
-                                            <small class="text-muted">минут</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="d-flex flex-column p-2 bg-light rounded">
-                                            <span class="h6 text-warning mb-0">@attemptsUsed/@test.MaxAttempts</span>
-                                            <small class="text-muted">попыток</small>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                @if (completedResults.Any())
-                                {
-                                    <div class="mb-3 mt-auto">
-                                        <h6 class="small mb-2"><i class="fas fa-chart-line"></i> Результаты:</h6>
-                                        <div class="d-flex flex-column gap-1">
-                                            @foreach (var result in completedResults.OrderByDescending(r => r.CompletedAt).Take(3))
+                            <tr class="test-row" data-test-title="@test.Title.ToLower()">
+                                
+                                <td class="mobile-visible">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-spell-check text-primary me-2 d-none d-md-inline"></i>
+                                        <div>
+                                            <strong class="d-block">@test.Title</strong>
+                                            @if (bestResult != null)
                                             {
-                                                <div class="d-flex justify-content-between align-items-center small">
-                                                    <span class="text-muted">Попытка @result.AttemptNumber:</span>
-                                                    <span class="badge bg-@(result.Percentage >= 80 ? "success" : result.Percentage >= 60 ? "warning" : "danger")">
-                                                        @result.Percentage.ToString("F1")%
+                                                <small class="d-md-none">
+                                                    <span class="badge bg-@(bestResult.Percentage >= 80 ? "success" : bestResult.Percentage >= 60 ? "warning" : "danger")">
+                                                        @bestResult.Percentage.ToString("F1")%
                                                     </span>
-                                                </div>
+                                                </small>
                                             }
                                         </div>
                                     </div>
-                                }
-                            </div>
-                            <div class="card-footer bg-transparent">
-                                @if (ongoingResult != null)
-                                {
-                                    <a asp-action="TakeSpelling" asp-route-id="@ongoingResult.Id" 
-                                       class="btn btn-warning w-100">
-                                        <i class="fas fa-play"></i> Продолжить тест
-                                    </a>
-                                }
-                                else if (canStart)
-                                {
-                                    <button type="button" class="btn btn-success w-100"
-                                            onclick="confirmStartTest(@test.Id, '@test.Title', @test.TimeLimit, 'spelling')">
-                                        <i class="fas fa-play"></i> Начать тест
-                                    </button>
-                                }
-                                else if (attemptsUsed >= test.MaxAttempts)
-                                {
-                                    <button type="button" class="btn btn-secondary w-100" disabled>
-                                        <i class="fas fa-ban"></i> Попытки исчерпаны
-                                    </button>
-                                }
-                                else
-                                {
-                                    <button type="button" class="btn btn-outline-secondary w-100" disabled>
-                                        <i class="fas fa-clock"></i> Недоступен
-                                    </button>
-                                }
-                            </div>
-                        </div>
-                    </div>
-                }
+                                </td>
+
+                                
+                                <td class="d-none d-md-table-cell">
+                                    @if (!string.IsNullOrEmpty(test.Description))
+                                    {
+                                        <small class="text-muted">@test.Description</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+
+                                
+                                <td class="text-center mobile-visible">
+                                    <span class="badge bg-primary rounded-pill">
+                                        @test.SpellingQuestions.Count
+                                    </span>
+                                </td>
+
+                                
+                                <td class="text-center d-none d-md-table-cell">
+                                    <span class="badge bg-info rounded-pill">
+                                        @test.TimeLimit
+                                    </span>
+                                </td>
+
+                                
+                                <td class="text-center mobile-visible">
+                                    <span class="badge bg-@(attemptsUsed >= test.MaxAttempts ? "danger" : "warning") rounded-pill">
+                                        @attemptsUsed/@test.MaxAttempts
+                                    </span>
+                                </td>
+
+                                
+                                <td class="text-center d-none d-md-table-cell">
+                                    @if (bestResult != null)
+                                    {
+                                        <span class="badge bg-@(bestResult.Percentage >= 80 ? "success" : bestResult.Percentage >= 60 ? "warning" : "danger") rounded-pill">
+                                            @bestResult.Percentage.ToString("F1")%
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+
+                                
+                                <td class="text-center mobile-visible">
+                                    @if (ongoingResult != null)
+                                    {
+                                        <a asp-action="TakeSpelling" asp-route-id="@ongoingResult.Id" 
+                                           class="btn btn-warning btn-sm">
+                                            <i class="fas fa-play"></i>
+                                            <span class="d-none d-md-inline">Продолжить</span>
+                                        </a>
+                                    }
+                                    else if (canStart)
+                                    {
+                                        <button type="button" class="btn btn-success btn-sm"
+                                                onclick="confirmStartTest(@test.Id, '@test.Title', @test.TimeLimit, 'spelling')">
+                                            <i class="fas fa-play"></i>
+                                            <span class="d-none d-md-inline">Начать</span>
+                                        </button>
+                                    }
+                                    else if (attemptsUsed >= test.MaxAttempts)
+                                    {
+                                        <button type="button" class="btn btn-secondary btn-sm" disabled>
+                                            <i class="fas fa-ban"></i>
+                                            <span class="d-none d-md-inline">Исчерпано</span>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     }
@@ -254,108 +280,127 @@ else
             <h4 class="mb-3">
                 <i class="fas fa-quote-right text-warning"></i> Тесты по пунктуации
             </h4>
-            <div class="row" id="punctuationTestsContainer">
-                @foreach (var test in Model.PunctuationTests)
-                {
-                    var studentResults = test.PunctuationTestResults.Where(tr => tr.StudentId == Model.Student.Id).ToList();
-                    var completedResults = studentResults.Where(tr => tr.IsCompleted).ToList();
-                    var ongoingResult = studentResults.FirstOrDefault(tr => !tr.IsCompleted);
-                    var attemptsUsed = studentResults.Count;
-                    var canStart = attemptsUsed < test.MaxAttempts && ongoingResult == null;
-                    var bestResult = completedResults.OrderByDescending(tr => tr.Percentage).FirstOrDefault();
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="mobile-visible" style="width: 30%;">Название</th>
+                            <th class="d-none d-md-table-cell" style="width: 25%;">Описание</th>
+                            <th class="mobile-visible text-center" style="width: 10%;">
+                                <i class="fas fa-question-circle d-none d-md-inline"></i>
+                                <span class="d-md-none">Вопр.</span>
+                                <span class="d-none d-md-inline">Вопросы</span>
+                            </th>
+                            <th class="d-none d-md-table-cell text-center" style="width: 8%;">
+                                <i class="fas fa-clock"></i> Время
+                            </th>
+                            <th class="mobile-visible text-center" style="width: 12%;">
+                                <span class="d-none d-md-inline">Попытки</span>
+                                <span class="d-md-none">Поп.</span>
+                            </th>
+                            <th class="d-none d-md-table-cell text-center" style="width: 10%;">Лучший результат</th>
+                            <th class="mobile-visible text-center" style="width: 15%;">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var test in Model.PunctuationTests)
+                        {
+                            var studentResults = test.PunctuationTestResults.Where(tr => tr.StudentId == Model.Student.Id).ToList();
+                            var completedResults = studentResults.Where(tr => tr.IsCompleted).ToList();
+                            var ongoingResult = studentResults.FirstOrDefault(tr => !tr.IsCompleted);
+                            var attemptsUsed = studentResults.Count;
+                            var canStart = attemptsUsed < test.MaxAttempts && ongoingResult == null;
+                            var bestResult = completedResults.OrderByDescending(tr => tr.Percentage).FirstOrDefault();
 
-                    <div class="col-12 col-sm-6 col-lg-4 mb-4 test-card" data-test-title="@test.Title.ToLower()">
-                        <div class="card h-100 shadow-sm hover-card">
-                            <div class="card-header bg-warning bg-opacity-10">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <h6 class="card-title mb-0 text-truncate" title="@test.Title">
-                                        <i class="fas fa-quote-right text-warning"></i> 
-                                        <span class="fw-bold">@test.Title</span>
-                                    </h6>
-                                    @if (bestResult != null)
-                                    {
-                                        <span class="badge bg-@(bestResult.Percentage >= 80 ? "success" : bestResult.Percentage >= 60 ? "warning" : "danger") ms-2">
-                                            @bestResult.Percentage.ToString("F1")%
-                                        </span>
-                                    }
-                                </div>
-                            </div>
-                            <div class="card-body d-flex flex-column">
-                                @if (!string.IsNullOrEmpty(test.Description))
-                                {
-                                    <p class="card-text text-muted small mb-3">@test.Description</p>
-                                }
-
-                                <div class="row text-center mb-3 g-2">
-                                    <div class="col-4">
-                                        <div class="d-flex flex-column p-2 bg-light rounded">
-                                            <span class="h6 text-warning mb-0">@test.PunctuationQuestions.Count</span>
-                                            <small class="text-muted">вопросов</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="d-flex flex-column p-2 bg-light rounded">
-                                            <span class="h6 text-info mb-0">@test.TimeLimit</span>
-                                            <small class="text-muted">минут</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="d-flex flex-column p-2 bg-light rounded">
-                                            <span class="h6 text-primary mb-0">@attemptsUsed/@test.MaxAttempts</span>
-                                            <small class="text-muted">попыток</small>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                @if (completedResults.Any())
-                                {
-                                    <div class="mb-3 mt-auto">
-                                        <h6 class="small mb-2"><i class="fas fa-chart-line"></i> Результаты:</h6>
-                                        <div class="d-flex flex-column gap-1">
-                                            @foreach (var result in completedResults.OrderByDescending(r => r.CompletedAt).Take(3))
+                            <tr class="test-row" data-test-title="@test.Title.ToLower()">
+                                <td class="mobile-visible">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-quote-right text-warning me-2 d-none d-md-inline"></i>
+                                        <div>
+                                            <strong class="d-block">@test.Title</strong>
+                                            @if (bestResult != null)
                                             {
-                                                <div class="d-flex justify-content-between align-items-center small">
-                                                    <span class="text-muted">Попытка @result.AttemptNumber:</span>
-                                                    <span class="badge bg-@(result.Percentage >= 80 ? "success" : result.Percentage >= 60 ? "warning" : "danger")">
-                                                        @result.Percentage.ToString("F1")%
+                                                <small class="d-md-none">
+                                                    <span class="badge bg-@(bestResult.Percentage >= 80 ? "success" : bestResult.Percentage >= 60 ? "warning" : "danger")">
+                                                        @bestResult.Percentage.ToString("F1")%
                                                     </span>
-                                                </div>
+                                                </small>
                                             }
                                         </div>
                                     </div>
-                                }
-                            </div>
-                            <div class="card-footer bg-transparent">
-                                @if (ongoingResult != null)
-                                {
-                                    <a asp-action="TakePunctuation" asp-route-id="@ongoingResult.Id" 
-                                       class="btn btn-warning w-100">
-                                        <i class="fas fa-play"></i> Продолжить тест
-                                    </a>
-                                }
-                                else if (canStart)
-                                {
-                                    <button type="button" class="btn btn-success w-100"
-                                            onclick="confirmStartTest(@test.Id, '@test.Title', @test.TimeLimit, 'punctuation')">
-                                        <i class="fas fa-play"></i> Начать тест
-                                    </button>
-                                }
-                                else if (attemptsUsed >= test.MaxAttempts)
-                                {
-                                    <button type="button" class="btn btn-secondary w-100" disabled>
-                                        <i class="fas fa-ban"></i> Попытки исчерпаны
-                                    </button>
-                                }
-                                else
-                                {
-                                    <button type="button" class="btn btn-outline-secondary w-100" disabled>
-                                        <i class="fas fa-clock"></i> Недоступен
-                                    </button>
-                                }
-                            </div>
-                        </div>
-                    </div>
-                }
+                                </td>
+
+                                <td class="d-none d-md-table-cell">
+                                    @if (!string.IsNullOrEmpty(test.Description))
+                                    {
+                                        <small class="text-muted">@test.Description</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+
+                                <td class="text-center mobile-visible">
+                                    <span class="badge bg-warning rounded-pill">
+                                        @test.PunctuationQuestions.Count
+                                    </span>
+                                </td>
+
+                                <td class="text-center d-none d-md-table-cell">
+                                    <span class="badge bg-info rounded-pill">
+                                        @test.TimeLimit мин
+                                    </span>
+                                </td>
+
+                                <td class="text-center mobile-visible">
+                                    <span class="badge bg-@(attemptsUsed >= test.MaxAttempts ? "danger" : "warning") rounded-pill">
+                                        @attemptsUsed/@test.MaxAttempts
+                                    </span>
+                                </td>
+
+                                <td class="text-center d-none d-md-table-cell">
+                                    @if (bestResult != null)
+                                    {
+                                        <span class="badge bg-@(bestResult.Percentage >= 80 ? "success" : bestResult.Percentage >= 60 ? "warning" : "danger") rounded-pill">
+                                            @bestResult.Percentage.ToString("F1")%
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+
+                                <td class="text-center mobile-visible">
+                                    @if (ongoingResult != null)
+                                    {
+                                        <a asp-action="TakePunctuation" asp-route-id="@ongoingResult.Id" 
+                                           class="btn btn-warning btn-sm">
+                                            <i class="fas fa-play"></i>
+                                            <span class="d-none d-md-inline">Продолжить</span>
+                                        </a>
+                                    }
+                                    else if (canStart)
+                                    {
+                                        <button type="button" class="btn btn-success btn-sm"
+                                                onclick="confirmStartTest(@test.Id, '@test.Title', @test.TimeLimit, 'punctuation')">
+                                            <i class="fas fa-play"></i>
+                                            <span class="d-none d-md-inline">Начать</span>
+                                        </button>
+                                    }
+                                    else if (attemptsUsed >= test.MaxAttempts)
+                                    {
+                                        <button type="button" class="btn btn-secondary btn-sm" disabled>
+                                            <i class="fas fa-ban"></i>
+                                            <span class="d-none d-md-inline">Исчерпано</span>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     }
@@ -367,108 +412,127 @@ else
             <h4 class="mb-3">
                 <i class="fas fa-volume-up text-success"></i> Тесты по орфоэпии
             </h4>
-            <div class="row" id="orthoeopyTestsContainer">
-                @foreach (var test in Model.OrthoeopyTests)
-                {
-                    var studentResults = test.OrthoeopyTestResults.Where(tr => tr.StudentId == Model.Student.Id).ToList();
-                    var completedResults = studentResults.Where(tr => tr.IsCompleted).ToList();
-                    var ongoingResult = studentResults.FirstOrDefault(tr => !tr.IsCompleted);
-                    var attemptsUsed = studentResults.Count;
-                    var canStart = attemptsUsed < test.MaxAttempts && ongoingResult == null;
-                    var bestResult = completedResults.OrderByDescending(tr => tr.Percentage).FirstOrDefault();
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="mobile-visible" style="width: 30%;">Название</th>
+                            <th class="d-none d-md-table-cell" style="width: 25%;">Описание</th>
+                            <th class="mobile-visible text-center" style="width: 10%;">
+                                <i class="fas fa-question-circle d-none d-md-inline"></i>
+                                <span class="d-md-none">Вопр.</span>
+                                <span class="d-none d-md-inline">Вопросы</span>
+                            </th>
+                            <th class="d-none d-md-table-cell text-center" style="width: 8%;">
+                                <i class="fas fa-clock"></i> Время
+                            </th>
+                            <th class="mobile-visible text-center" style="width: 12%;">
+                                <span class="d-none d-md-inline">Попытки</span>
+                                <span class="d-md-none">Поп.</span>
+                            </th>
+                            <th class="d-none d-md-table-cell text-center" style="width: 10%;">Лучший результат</th>
+                            <th class="mobile-visible text-center" style="width: 15%;">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var test in Model.OrthoeopyTests)
+                        {
+                            var studentResults = test.OrthoeopyTestResults.Where(tr => tr.StudentId == Model.Student.Id).ToList();
+                            var completedResults = studentResults.Where(tr => tr.IsCompleted).ToList();
+                            var ongoingResult = studentResults.FirstOrDefault(tr => !tr.IsCompleted);
+                            var attemptsUsed = studentResults.Count;
+                            var canStart = attemptsUsed < test.MaxAttempts && ongoingResult == null;
+                            var bestResult = completedResults.OrderByDescending(tr => tr.Percentage).FirstOrDefault();
 
-                    <div class="col-12 col-sm-6 col-lg-4 mb-4 test-card" data-test-title="@test.Title.ToLower()">
-                        <div class="card h-100 shadow-sm hover-card">
-                            <div class="card-header bg-success bg-opacity-10">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <h6 class="card-title mb-0 text-truncate" title="@test.Title">
-                                        <i class="fas fa-volume-up text-success"></i> 
-                                        <span class="fw-bold">@test.Title</span>
-                                    </h6>
-                                    @if (bestResult != null)
-                                    {
-                                        <span class="badge bg-@(bestResult.Percentage >= 80 ? "success" : bestResult.Percentage >= 60 ? "warning" : "danger") ms-2">
-                                            @bestResult.Percentage.ToString("F1")%
-                                        </span>
-                                    }
-                                </div>
-                            </div>
-                            <div class="card-body d-flex flex-column">
-                                @if (!string.IsNullOrEmpty(test.Description))
-                                {
-                                    <p class="card-text text-muted small mb-3">@test.Description</p>
-                                }
-
-                                <div class="row text-center mb-3 g-2">
-                                    <div class="col-4">
-                                        <div class="d-flex flex-column p-2 bg-light rounded">
-                                            <span class="h6 text-success mb-0">@test.OrthoeopyQuestions.Count</span>
-                                            <small class="text-muted">вопросов</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="d-flex flex-column p-2 bg-light rounded">
-                                            <span class="h6 text-info mb-0">@test.TimeLimit</span>
-                                            <small class="text-muted">минут</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="d-flex flex-column p-2 bg-light rounded">
-                                            <span class="h6 text-primary mb-0">@attemptsUsed/@test.MaxAttempts</span>
-                                            <small class="text-muted">попыток</small>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                @if (completedResults.Any())
-                                {
-                                    <div class="mb-3 mt-auto">
-                                        <h6 class="small mb-2"><i class="fas fa-chart-line"></i> Результаты:</h6>
-                                        <div class="d-flex flex-column gap-1">
-                                            @foreach (var result in completedResults.OrderByDescending(r => r.CompletedAt).Take(3))
+                            <tr class="test-row" data-test-title="@test.Title.ToLower()">
+                                <td class="mobile-visible">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-volume-up text-success me-2 d-none d-md-inline"></i>
+                                        <div>
+                                            <strong class="d-block">@test.Title</strong>
+                                            @if (bestResult != null)
                                             {
-                                                <div class="d-flex justify-content-between align-items-center small">
-                                                    <span class="text-muted">Попытка @result.AttemptNumber:</span>
-                                                    <span class="badge bg-@(result.Percentage >= 80 ? "success" : result.Percentage >= 60 ? "warning" : "danger")">
-                                                        @result.Percentage.ToString("F1")%
+                                                <small class="d-md-none">
+                                                    <span class="badge bg-@(bestResult.Percentage >= 80 ? "success" : bestResult.Percentage >= 60 ? "warning" : "danger")">
+                                                        @bestResult.Percentage.ToString("F1")%
                                                     </span>
-                                                </div>
+                                                </small>
                                             }
                                         </div>
                                     </div>
-                                }
-                            </div>
-                            <div class="card-footer bg-transparent">
-                                @if (ongoingResult != null)
-                                {
-                                    <a asp-action="TakeOrthoepy" asp-route-id="@ongoingResult.Id" 
-                                       class="btn btn-warning w-100">
-                                        <i class="fas fa-play"></i> Продолжить тест
-                                    </a>
-                                }
-                                else if (canStart)
-                                {
-                                    <button type="button" class="btn btn-success w-100"
-                                            onclick="confirmStartTest(@test.Id, '@test.Title', @test.TimeLimit, 'orthoepy')">
-                                        <i class="fas fa-play"></i> Начать тест
-                                    </button>
-                                }
-                                else if (attemptsUsed >= test.MaxAttempts)
-                                {
-                                    <button type="button" class="btn btn-secondary w-100" disabled>
-                                        <i class="fas fa-ban"></i> Попытки исчерпаны
-                                    </button>
-                                }
-                                else
-                                {
-                                    <button type="button" class="btn btn-outline-secondary w-100" disabled>
-                                        <i class="fas fa-clock"></i> Недоступен
-                                    </button>
-                                }
-                            </div>
-                        </div>
-                    </div>
-                }
+                                </td>
+
+                                <td class="d-none d-md-table-cell">
+                                    @if (!string.IsNullOrEmpty(test.Description))
+                                    {
+                                        <small class="text-muted">@test.Description</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+
+                                <td class="text-center mobile-visible">
+                                    <span class="badge bg-success rounded-pill">
+                                        @test.OrthoeopyQuestions.Count
+                                    </span>
+                                </td>
+
+                                <td class="text-center d-none d-md-table-cell">
+                                    <span class="badge bg-info rounded-pill">
+                                        @test.TimeLimit мин
+                                    </span>
+                                </td>
+
+                                <td class="text-center mobile-visible">
+                                    <span class="badge bg-@(attemptsUsed >= test.MaxAttempts ? "danger" : "warning") rounded-pill">
+                                        @attemptsUsed/@test.MaxAttempts
+                                    </span>
+                                </td>
+
+                                <td class="text-center d-none d-md-table-cell">
+                                    @if (bestResult != null)
+                                    {
+                                        <span class="badge bg-@(bestResult.Percentage >= 80 ? "success" : bestResult.Percentage >= 60 ? "warning" : "danger") rounded-pill">
+                                            @bestResult.Percentage.ToString("F1")%
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+
+                                <td class="text-center mobile-visible">
+                                    @if (ongoingResult != null)
+                                    {
+                                        <a asp-action="TakeOrthoepy" asp-route-id="@ongoingResult.Id" 
+                                           class="btn btn-warning btn-sm">
+                                            <i class="fas fa-play"></i>
+                                            <span class="d-none d-md-inline">Продолжить</span>
+                                        </a>
+                                    }
+                                    else if (canStart)
+                                    {
+                                        <button type="button" class="btn btn-success btn-sm"
+                                                onclick="confirmStartTest(@test.Id, '@test.Title', @test.TimeLimit, 'orthoepy')">
+                                            <i class="fas fa-play"></i>
+                                            <span class="d-none d-md-inline">Начать</span>
+                                        </button>
+                                    }
+                                    else if (attemptsUsed >= test.MaxAttempts)
+                                    {
+                                        <button type="button" class="btn btn-secondary btn-sm" disabled>
+                                            <i class="fas fa-ban"></i>
+                                            <span class="d-none d-md-inline">Исчерпано</span>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     }
@@ -480,98 +544,136 @@ else
             <h4 class="mb-3">
                 <i class="fas fa-list-ul text-info"></i> Классические тесты
             </h4>
-            <div class="row" id="regularTestsContainer">
-                @foreach (var test in Model.RegularTests)
-                {
-                    var attemptsUsed = test.RegularTestResults.Count(r => r.StudentId == Model.Student.Id);
-                    var canTakeTest = attemptsUsed < test.MaxAttempts;
-                    var bestResult = test.RegularTestResults
-                        .Where(r => r.StudentId == Model.Student.Id && r.IsCompleted)
-                        .OrderByDescending(r => r.Percentage)
-                        .FirstOrDefault();
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="mobile-visible" style="width: 30%;">Название</th>
+                            <th class="d-none d-md-table-cell" style="width: 25%;">Описание</th>
+                            <th class="mobile-visible text-center" style="width: 10%;">
+                                <i class="fas fa-question-circle d-none d-md-inline"></i>
+                                <span class="d-md-none">Вопр.</span>
+                                <span class="d-none d-md-inline">Вопросы</span>
+                            </th>
+                            <th class="d-none d-md-table-cell text-center" style="width: 8%;">
+                                <i class="fas fa-clock"></i> Время
+                            </th>
+                            <th class="mobile-visible text-center" style="width: 12%;">
+                                <span class="d-none d-md-inline">Попытки</span>
+                                <span class="d-md-none">Поп.</span>
+                            </th>
+                            <th class="d-none d-md-table-cell text-center" style="width: 10%;">Лучший результат</th>
+                            <th class="mobile-visible text-center" style="width: 15%;">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var test in Model.RegularTests)
+                        {
+                            var attemptsUsed = test.RegularTestResults.Count(r => r.StudentId == Model.Student.Id);
+                            var canTakeTest = attemptsUsed < test.MaxAttempts;
+                            var bestResult = test.RegularTestResults
+                                .Where(r => r.StudentId == Model.Student.Id && r.IsCompleted)
+                                .OrderByDescending(r => r.Percentage)
+                                .FirstOrDefault();
 
-                    <div class="col-12 col-sm-6 col-lg-4 mb-4 test-card" data-test-title="@test.Title.ToLower()">
-                        <div class="card h-100 shadow-sm hover-card">
-                            <div class="card-header bg-info bg-opacity-10">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0 text-truncate" title="@test.Title">
-                                        <i class="fas fa-list-ul text-info"></i> 
-                                        <span class="fw-bold">@test.Title</span>
-                                    </h6>
-                                    <span class="badge bg-light text-dark ms-2">
-                                        @switch (test.Type)
-                                        {
-                                            case TestType.Practice:
-                                                <i class="fas fa-dumbbell" title="Практика"></i>
-                                                break;
-                                            case TestType.Quiz:
-                                                <i class="fas fa-question-circle" title="Квиз"></i>
-                                                break;
-                                            case TestType.Exam:
-                                                <i class="fas fa-graduation-cap" title="Экзамен"></i>
-                                                break;
-                                            case TestType.Homework:
-                                                <i class="fas fa-home" title="Домашнее задание"></i>
-                                                break;
-                                        }
+                            <tr class="test-row" data-test-title="@test.Title.ToLower()">
+                                <td class="mobile-visible">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-list-ul text-info me-2 d-none d-md-inline"></i>
+                                        <div>
+                                            <strong class="d-block">@test.Title</strong>
+                                            <small class="d-md-none text-muted">
+                                                @switch (test.Type)
+                                                {
+                                                    case TestType.Practice:
+                                                        <i class="fas fa-dumbbell" title="Практика"></i>
+                                                        break;
+                                                    case TestType.Quiz:
+                                                        <i class="fas fa-question-circle" title="Квиз"></i>
+                                                        break;
+                                                    case TestType.Exam:
+                                                        <i class="fas fa-graduation-cap" title="Экзамен"></i>
+                                                        break;
+                                                    case TestType.Homework:
+                                                        <i class="fas fa-home" title="Домашнее задание"></i>
+                                                        break;
+                                                }
+                                            </small>
+                                            @if (bestResult != null)
+                                            {
+                                                <small class="d-md-none">
+                                                    <span class="badge bg-@(bestResult.Percentage >= 80 ? "success" : bestResult.Percentage >= 60 ? "warning" : "danger")">
+                                                        @bestResult.Percentage.ToString("F1")%
+                                                    </span>
+                                                </small>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="d-none d-md-table-cell">
+                                    @if (!string.IsNullOrEmpty(test.Description))
+                                    {
+                                        <small class="text-muted">@test.Description</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+
+                                <td class="text-center mobile-visible">
+                                    <span class="badge bg-info rounded-pill">
+                                        @test.RegularQuestions.Count
                                     </span>
-                                </div>
-                            </div>
-                            <div class="card-body d-flex flex-column">
-                                @if (!string.IsNullOrEmpty(test.Description))
-                                {
-                                    <p class="text-muted small mb-3">@test.Description</p>
-                                }
+                                </td>
 
-                                <div class="row text-center mb-3 g-2">
-                                    <div class="col-4">
-                                        <div class="d-flex flex-column p-2 bg-light rounded">
-                                            <span class="h6 text-info mb-0">@test.RegularQuestions.Count</span>
-                                            <small class="text-muted">вопросов</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="d-flex flex-column p-2 bg-light rounded">
-                                            <span class="h6 text-primary mb-0">@test.TimeLimit</span>
-                                            <small class="text-muted">минут</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="d-flex flex-column p-2 bg-light rounded">
-                                            <span class="h6 text-warning mb-0">@attemptsUsed/@test.MaxAttempts</span>
-                                            <small class="text-muted">попыток</small>
-                                        </div>
-                                    </div>
-                                </div>
+                                <td class="text-center d-none d-md-table-cell">
+                                    <span class="badge bg-info rounded-pill">
+                                        @test.TimeLimit мин
+                                    </span>
+                                </td>
 
-                                @if (bestResult != null)
-                                {
-                                    <div class="alert alert-success mb-0 mt-auto py-2">
-                                        <small>
-                                            <i class="fas fa-trophy"></i> Лучший результат:
-                                            <strong>@bestResult.Percentage.ToString("F1")%</strong>
-                                        </small>
-                                    </div>
-                                }
-                            </div>
-                            <div class="card-footer bg-transparent">
-                                @if (canTakeTest)
-                                {
-                                    <a asp-action="StartRegular" asp-route-id="@test.Id"
-                                       class="btn btn-info w-100 text-white">
-                                        <i class="fas fa-play"></i> Начать тест
-                                    </a>
-                                }
-                                else
-                                {
-                                    <button class="btn btn-secondary w-100" disabled>
-                                        <i class="fas fa-lock"></i> Попытки исчерпаны
-                                    </button>
-                                }
-                            </div>
-                        </div>
-                    </div>
-                }
+                                <td class="text-center mobile-visible">
+                                    <span class="badge bg-@(attemptsUsed >= test.MaxAttempts ? "danger" : "warning") rounded-pill">
+                                        @attemptsUsed/@test.MaxAttempts
+                                    </span>
+                                </td>
+
+                                <td class="text-center d-none d-md-table-cell">
+                                    @if (bestResult != null)
+                                    {
+                                        <span class="badge bg-@(bestResult.Percentage >= 80 ? "success" : bestResult.Percentage >= 60 ? "warning" : "danger") rounded-pill">
+                                            @bestResult.Percentage.ToString("F1")%
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+
+                                <td class="text-center mobile-visible">
+                                    @if (canTakeTest)
+                                    {
+                                        <a asp-action="StartRegular" asp-route-id="@test.Id"
+                                           class="btn btn-info btn-sm text-white">
+                                            <i class="fas fa-play"></i>
+                                            <span class="d-none d-md-inline">Начать</span>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-secondary btn-sm" disabled>
+                                            <i class="fas fa-lock"></i>
+                                            <span class="d-none d-md-inline">Исчерпано</span>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     }
@@ -670,16 +772,16 @@ else
             if (searchInput) {
                 searchInput.addEventListener('input', function(e) {
                     const query = e.target.value.toLowerCase().trim();
-                    const testCards = document.querySelectorAll('.test-card');
+                    const testRows = document.querySelectorAll('.test-row');
                     let visibleCount = 0;
 
-                    testCards.forEach(card => {
-                        const title = card.dataset.testTitle || '';
+                    testRows.forEach(row => {
+                        const title = row.dataset.testTitle || '';
                         if (title.includes(query)) {
-                            card.style.display = '';
+                            row.style.display = '';
                             visibleCount++;
                         } else {
-                            card.style.display = 'none';
+                            row.style.display = 'none';
                         }
                     });
 
@@ -691,7 +793,7 @@ else
                     }
 
                     // Обновляем счетчик
-                    const totalTests = testCards.length;
+                    const totalTests = testRows.length;
                     if (visibleCount === totalTests) {
                         testsCount.textContent = `Всего тестов: ${totalTests}`;
                         noResultsMessage.style.display = 'none';
