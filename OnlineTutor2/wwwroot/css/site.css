@@ -1384,3 +1384,81 @@ p {
             margin-right: 0.25rem !important;
         }
 }
+
+/* ===== РЕЗУЛЬТАТЫ ТЕСТА ===== */
+.result-circle {
+    position: relative;
+}
+
+    .result-circle svg {
+        transform: rotate(0deg);
+    }
+
+.question-result {
+    background-color: #fff;
+    transition: all 0.2s ease;
+}
+
+/* Адаптивность для результатов */
+@media (max-width: 767.98px) {
+    .result-circle {
+        width: 100px !important;
+        height: 100px !important;
+    }
+
+    .question-result {
+        font-size: 0.875rem;
+    }
+
+        .question-result .fa-2x {
+            font-size: 1.5rem !important;
+        }
+
+    .word-with-gap {
+        font-size: 1rem !important;
+        padding: 5px 10px !important;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .result-circle {
+        width: 90px !important;
+        height: 90px !important;
+    }
+
+        .result-circle text {
+            font-size: 18px !important;
+        }
+
+    .question-result {
+        font-size: 0.8rem;
+    }
+
+        .question-result .fa-2x {
+            font-size: 1.3rem !important;
+        }
+
+    .word-with-gap {
+        font-size: 0.9rem !important;
+        padding: 4px 8px !important;
+    }
+}
+
+@media (max-width: 374.98px) {
+    .result-circle {
+        width: 80px !important;
+        height: 80px !important;
+    }
+
+        .result-circle text {
+            font-size: 16px !important;
+        }
+
+    .question-result {
+        font-size: 0.75rem;
+    }
+
+        .question-result .fa-2x {
+            font-size: 1.2rem !important;
+        }
+}

@@ -92,106 +92,141 @@
                 percentage >= 61 ? 3 : 2;
 }
 
-<div class="result-container">
 
-    <div class="mb-4 text-center">
-        <h2>
-            <i class="fas @testIcon text-@testColor"></i> @testTitle
-        </h2>
+<div class="mb-3">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb breadcrumb-compact">
+            <li class="breadcrumb-item">
+                <a asp-action="Index">Мои тесты</a>
+            </li>
+            <li class="breadcrumb-item active text-truncate">@testTitle</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="test-container">
+    
+    
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-@testColor text-white py-2">
+            <div class="d-flex justify-content-between align-items-center gap-2">
+                <div class="flex-grow-1 min-w-0">
+                    <h6 class="mb-0 d-flex align-items-center">
+                        <i class="fas @testIcon me-2 flex-shrink-0"></i>
+                        <span class="text-truncate">@testTitle</span>
+                    </h6>
+                </div>
+                <div class="flex-shrink-0">
+                    <span class="badge bg-@gradeColor fs-6">
+                        Оценка: @grade
+                    </span>
+                </div>
+            </div>
+        </div>
     </div>
 
-
-    <div class="card mb-4 shadow-lg">
-        <div class="card-body text-center p-5">
-            <div class="mb-4">
-                <i class="fas fa-flag-checkered text-@gradeColor" style="font-size: 4rem;"></i>
-            </div>
-            <h2 class="mb-3">Тест завершен!</h2>
-
-            <div class="result-score mb-4">
-                <div class="display-4 text-@gradeColor mb-2">@score / @maxScore</div>
-                <div class="h5 text-muted">баллов</div>
-            </div>
-
-            <div class="result-circle mx-auto mb-4" style="width: 200px; height: 200px;">
-                <svg viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="45" fill="none" stroke="#e9ecef" stroke-width="8" />
-                    <circle cx="50" cy="50" r="45" fill="none"
-                            stroke="@(percentage >= 80 ? "#28a745" : percentage >= 60 ? "#ffc107" : percentage >= 40 ? "#17a2b8" : "#dc3545")"
-                            stroke-width="8"
-                            stroke-dasharray="@(percentage * 2.827), 282.7"
-                            transform="rotate(-90 50 50)" />
-                    <text x="50" y="50" text-anchor="middle" dy="7"
-                          font-size="20" font-weight="bold"
-                          fill="@(percentage >= 80 ? "#28a745" : percentage >= 60 ? "#ffc107" : percentage >= 40 ? "#17a2b8" : "#dc3545")">
-                        @percentage.ToString("F1")%
-                    </text>
-                </svg>
+    
+    <div class="card shadow-sm mb-3">
+        <div class="card-body p-3">
+            
+            <div class="text-center mb-3">
+                <div class="result-circle mx-auto" style="width: 120px; height: 120px;">
+                    <svg viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="#e9ecef" stroke-width="8" />
+                        <circle cx="50" cy="50" r="45" fill="none"
+                                stroke="@(percentage >= 80 ? "#28a745" : percentage >= 60 ? "#ffc107" : percentage >= 40 ? "#17a2b8" : "#dc3545")"
+                                stroke-width="8"
+                                stroke-dasharray="@(percentage * 2.827), 282.7"
+                                transform="rotate(-90 50 50)" />
+                        <text x="50" y="50" text-anchor="middle" dy="7"
+                              font-size="20" font-weight="bold"
+                              fill="@(percentage >= 80 ? "#28a745" : percentage >= 60 ? "#ffc107" : percentage >= 40 ? "#17a2b8" : "#dc3545")">
+                            @percentage.ToString("F1")%
+                        </text>
+                    </svg>
+                </div>
+                <div class="mt-2">
+                    <h5 class="mb-0 text-@gradeColor">@score / @maxScore баллов</h5>
+                </div>
             </div>
 
-            <div class="grade-display mb-4">
-                <span class="badge bg-@gradeColor fs-3 px-4 py-2">
-                    Оценка: @grade
-                </span>
-            </div>
-
-            <div class="row text-center mt-4">
-                <div class="col-md-4">
-                    <i class="fas fa-user-graduate text-muted fa-2x"></i>
-                    <div class="mt-2">
-                        <small class="text-muted">Ученик</small>
-                        <div><strong>@studentName</strong></div>
+            
+            <div class="row text-center g-2">
+                <div class="col-4">
+                    <div class="p-2 bg-light rounded">
+                        <i class="fas fa-user-graduate text-muted"></i>
+                        <div class="mt-1">
+                            <small class="fw-bold d-block text-truncate" style="font-size: 0.75rem;">@studentName</small>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <i class="fas fa-calendar text-muted fa-2x"></i>
-                    <div class="mt-2">
-                        <small class="text-muted">Дата и время</small>
-                        <div><strong>@completedAt?.ToString("dd.MM.yyyy HH:mm")</strong></div>
+                <div class="col-4">
+                    <div class="p-2 bg-light rounded">
+                        <i class="fas fa-calendar text-muted"></i>
+                        <div class="mt-1">
+                            <small class="fw-bold d-block" style="font-size: 0.75rem;">@completedAt?.ToString("dd.MM.yyyy HH:mm")</small>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <i class="fas fa-stopwatch text-muted fa-2x"></i>
-                    <div class="mt-2">
-                        <small class="text-muted">Время выполнения</small>
-                        <div><strong>@($"{duration.Minutes:D2}:{duration.Seconds:D2}")</strong></div>
+                <div class="col-4">
+                    <div class="p-2 bg-light rounded">
+                        <i class="fas fa-stopwatch text-muted"></i>
+                        <div class="mt-1">
+                            <small class="fw-bold d-block" style="font-size: 0.75rem;">@($"{duration.Minutes:D2}:{duration.Seconds:D2}")</small>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-
+    
     @if (showCorrectAnswers)
     {
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-list-alt"></i> Детальные результаты
-                </h5>
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-light py-2">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h6 class="mb-0">
+                        <i class="fas fa-list-alt"></i> Детальные результаты
+                    </h6>
+                    
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" id="showErrorsOnly" checked>
+                        <label class="form-check-label small" for="showErrorsOnly">
+                            Только ошибки
+                        </label>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
+            <div class="card-body p-2 p-md-3">
                 @if (isSpellingResult)
                 {
-
                     @foreach (var question in spellingResult.SpellingTest.SpellingQuestions.OrderBy(q => q.OrderIndex))
                     {
                         var answer = spellingResult.SpellingAnswers.FirstOrDefault(a => a.SpellingQuestionId == question.Id);
                         var isCorrect = answer?.IsCorrect ?? false;
                         var questionIndex = spellingResult.SpellingTest.SpellingQuestions.OrderBy(q => q.OrderIndex).ToList().IndexOf(question) + 1;
 
-                        <div class="question-result mb-4 p-3 border rounded border-@(isCorrect ? "success" : "danger")">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <span class="badge bg-@(isCorrect ? "success" : "danger") me-2">@questionIndex</span>
-                                        <h6 class="mb-0">@question.WordWithGap</h6>
+                        <div class="question-result mb-2 p-2 border rounded @(isCorrect ? "border-success" : "border-danger")" 
+                             data-correct="@isCorrect.ToString().ToLower()">
+                            <div class="d-flex align-items-start gap-2">
+                                
+                                <div class="flex-shrink-0">
+                                    <span class="badge bg-@(isCorrect ? "success" : "danger")">@questionIndex</span>
+                                </div>
+                                
+                                
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="mb-2">
+                                        <span class="word-with-gap" style="font-size: 1.1rem; padding: 6px 12px;">
+                                            @question.WordWithGap
+                                        </span>
                                     </div>
-
-                                    <div class="row mt-3">
-                                        <div class="col-md-6">
-                                            <small class="text-muted">Ваш ответ:</small>
-                                            <div class="fw-bold text-@(isCorrect ? "success" : "danger")">
+                                    
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <small class="text-muted d-block">Ваш ответ:</small>
+                                            <div class="fw-bold text-@(isCorrect ? "success" : "danger") small">
                                                 @if (!string.IsNullOrEmpty(answer?.StudentAnswer))
                                                 {
                                                     <span>"@answer.StudentAnswer"</span>
@@ -202,39 +237,41 @@
                                                 }
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <small class="text-muted">Правильный ответ:</small>
-                                            <div class="fw-bold text-success">
-                                                "@question.CorrectLetter" → @question.FullWord
+                                        <div class="col-6">
+                                            <small class="text-muted d-block">Правильный:</small>
+                                            <div class="fw-bold text-success small">
+                                                "@question.CorrectLetter"
                                             </div>
                                         </div>
                                     </div>
 
                                     @if (!string.IsNullOrEmpty(question.Hint))
                                     {
-                                        <div class="mt-3 p-2 bg-info bg-opacity-10 rounded">
-                                            <small class="text-muted"><i class="fas fa-lightbulb"></i> Подсказка:</small>
-                                            <div class="small">@question.Hint</div>
+                                        <div class="mt-2 p-2 bg-info bg-opacity-10 rounded">
+                                            <small class="d-block">
+                                                <i class="fas fa-lightbulb text-info"></i>
+                                                <span class="text-muted">@question.Hint</span>
+                                            </small>
                                         </div>
                                     }
                                 </div>
-                                <div class="col-md-4 text-end">
-                                    <div class="result-icon">
-                                        @if (isCorrect)
-                                        {
-                                            <i class="fas fa-check-circle text-success fa-3x"></i>
-                                            <div class="mt-2">
-                                                <span class="badge bg-success fs-6">+@question.Points баллов</span>
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <i class="fas fa-times-circle text-danger fa-3x"></i>
-                                            <div class="mt-2">
-                                                <span class="badge bg-danger fs-6">0 баллов</span>
-                                            </div>
-                                        }
-                                    </div>
+                                
+                                
+                                <div class="flex-shrink-0 text-center">
+                                    @if (isCorrect)
+                                    {
+                                        <i class="fas fa-check-circle text-success fa-2x"></i>
+                                        <div class="mt-1">
+                                            <small class="badge bg-success">+@question.Points</small>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-times-circle text-danger fa-2x"></i>
+                                        <div class="mt-1">
+                                            <small class="badge bg-danger">0</small>
+                                        </div>
+                                    }
                                 </div>
                             </div>
                         </div>
@@ -242,35 +279,31 @@
                 }
                 else if (isPunctuationResult)
                 {
-
                     @foreach (var question in punctuationResult.PunctuationTest.PunctuationQuestions.OrderBy(q => q.OrderIndex))
                     {
                         var answer = punctuationResult.PunctuationAnswers.FirstOrDefault(a => a.PunctuationQuestionId == question.Id);
                         var isCorrect = answer?.IsCorrect ?? false;
                         var questionIndex = punctuationResult.PunctuationTest.PunctuationQuestions.OrderBy(q => q.OrderIndex).ToList().IndexOf(question) + 1;
 
-                        <div class="question-result mb-4 p-3 border rounded border-@(isCorrect ? "success" : "danger")">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <span class="badge bg-@(isCorrect ? "success" : "danger") me-2">@questionIndex</span>
-                                        <h6 class="mb-0">Расставьте знаки препинания</h6>
+                        <div class="question-result mb-2 p-2 border rounded @(isCorrect ? "border-success" : "border-danger")"
+                             data-correct="@isCorrect.ToString().ToLower()">
+                            <div class="d-flex align-items-start gap-2">
+                                <div class="flex-shrink-0">
+                                    <span class="badge bg-@(isCorrect ? "success" : "danger")">@questionIndex</span>
+                                </div>
+                                
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="mb-2 p-2 bg-light rounded">
+                                        <small class="d-block">@question.SentenceWithNumbers</small>
                                     </div>
-
-                                    <div class="mb-3">
-                                        <small class="text-muted">Предложение:</small>
-                                        <div class="p-3 bg-light rounded">
-                                            @question.SentenceWithNumbers
-                                        </div>
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <small class="text-muted">Ваш ответ:</small>
-                                            <div class="fw-bold text-@(isCorrect ? "success" : "danger")">
+                                    
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <small class="text-muted d-block">Ваш ответ:</small>
+                                            <div class="fw-bold text-@(isCorrect ? "success" : "danger") small">
                                                 @if (!string.IsNullOrEmpty(answer?.StudentAnswer))
                                                 {
-                                                    <span>Позиции: @answer.StudentAnswer</span>
+                                                    <span>@answer.StudentAnswer</span>
                                                 }
                                                 else
                                                 {
@@ -278,12 +311,12 @@
                                                 }
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <small class="text-muted">Правильный ответ:</small>
-                                            <div class="fw-bold text-success">
+                                        <div class="col-6">
+                                            <small class="text-muted d-block">Правильный:</small>
+                                            <div class="fw-bold text-success small">
                                                 @if (!string.IsNullOrEmpty(question.CorrectPositions))
                                                 {
-                                                    <span>Позиции: @question.CorrectPositions</span>
+                                                    <span>@question.CorrectPositions</span>
                                                 }
                                                 else
                                                 {
@@ -295,37 +328,38 @@
 
                                     @if (!string.IsNullOrEmpty(question.PlainSentence))
                                     {
-                                        <div class="mt-3 p-3 bg-success bg-opacity-10 rounded border-start border-success border-3">
-                                            <small class="text-muted">Правильный вариант:</small>
-                                            <div class="fw-bold">@question.PlainSentence</div>
+                                        <div class="mt-2 p-2 bg-success bg-opacity-10 rounded border-start border-success border-2">
+                                            <small class="d-block text-muted">Правильный вариант:</small>
+                                            <small class="fw-bold d-block">@question.PlainSentence</small>
                                         </div>
                                     }
 
                                     @if (!string.IsNullOrEmpty(question.Hint))
                                     {
                                         <div class="mt-2 p-2 bg-info bg-opacity-10 rounded">
-                                            <small class="text-muted"><i class="fas fa-lightbulb"></i> Подсказка:</small>
-                                            <div class="small">@question.Hint</div>
+                                            <small class="d-block">
+                                                <i class="fas fa-lightbulb text-info"></i>
+                                                <span class="text-muted">@question.Hint</span>
+                                            </small>
                                         </div>
                                     }
                                 </div>
-                                <div class="col-md-4 text-end">
-                                    <div class="result-icon">
-                                        @if (isCorrect)
-                                        {
-                                            <i class="fas fa-check-circle text-success fa-3x"></i>
-                                            <div class="mt-2">
-                                                <span class="badge bg-success fs-6">+@question.Points баллов</span>
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <i class="fas fa-times-circle text-danger fa-3x"></i>
-                                            <div class="mt-2">
-                                                <span class="badge bg-danger fs-6">0 баллов</span>
-                                            </div>
-                                        }
-                                    </div>
+                                
+                                <div class="flex-shrink-0 text-center">
+                                    @if (isCorrect)
+                                    {
+                                        <i class="fas fa-check-circle text-success fa-2x"></i>
+                                        <div class="mt-1">
+                                            <small class="badge bg-success">+@question.Points</small>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-times-circle text-danger fa-2x"></i>
+                                        <div class="mt-1">
+                                            <small class="badge bg-danger">0</small>
+                                        </div>
+                                    }
                                 </div>
                             </div>
                         </div>
@@ -333,35 +367,32 @@
                 }
                 else if (isOrthoeopyResult)
                 {
-
                     @foreach (var question in orthoeopyResult.OrthoeopyTest.OrthoeopyQuestions.OrderBy(q => q.OrderIndex))
                     {
                         var answer = orthoeopyResult.OrthoeopyAnswers.FirstOrDefault(a => a.OrthoeopyQuestionId == question.Id);
                         var isCorrect = answer?.IsCorrect ?? false;
                         var questionIndex = orthoeopyResult.OrthoeopyTest.OrthoeopyQuestions.OrderBy(q => q.OrderIndex).ToList().IndexOf(question) + 1;
 
-                        <div class="question-result mb-4 p-3 border rounded border-@(isCorrect ? "success" : "danger")">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <span class="badge bg-@(isCorrect ? "success" : "danger") me-2">@questionIndex</span>
-                                        <h6 class="mb-0">Выберите правильное ударение</h6>
+                        <div class="question-result mb-2 p-2 border rounded @(isCorrect ? "border-success" : "border-danger")"
+                             data-correct="@isCorrect.ToString().ToLower()">
+                            <div class="d-flex align-items-start gap-2">
+                                <div class="flex-shrink-0">
+                                    <span class="badge bg-@(isCorrect ? "success" : "danger")">@questionIndex</span>
+                                </div>
+                                
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Слово:</small>
+                                        <span class="h6 mb-0">@question.Word</span>
                                     </div>
-
-                                    <div class="mb-3">
-                                        <small class="text-muted">Слово:</small>
-                                        <div class="p-2 bg-light rounded">
-                                            <span class="h5">@question.Word</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <small class="text-muted">Ваш ответ:</small>
-                                            <div class="fw-bold text-@(isCorrect ? "success" : "danger")">
+                                    
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <small class="text-muted d-block">Ваш ответ:</small>
+                                            <div class="fw-bold text-@(isCorrect ? "success" : "danger") small">
                                                 @if (answer?.SelectedStressPosition.HasValue == true)
                                                 {
-                                                    <span>Ударение на @answer.SelectedStressPosition слог</span>
+                                                    <span>@answer.SelectedStressPosition слог</span>
                                                 }
                                                 else
                                                 {
@@ -369,12 +400,11 @@
                                                 }
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <small class="text-muted">Правильный ответ:</small>
+                                        <div class="col-6">
+                                            <small class="text-muted d-block">Правильный:</small>
                                             <div class="fw-bold text-success">
-                                                <span class="h5">@question.WordWithStress</span>
-                                                <br>
-                                                <small>(ударение на @question.StressPosition слог)</small>
+                                                <span class="h6 mb-0">@question.WordWithStress</span>
+                                                <small class="d-block text-muted">(@question.StressPosition слог)</small>
                                             </div>
                                         </div>
                                     </div>
@@ -382,28 +412,29 @@
                                     @if (!string.IsNullOrEmpty(question.Hint))
                                     {
                                         <div class="mt-2 p-2 bg-info bg-opacity-10 rounded">
-                                            <small class="text-muted"><i class="fas fa-lightbulb"></i> Подсказка:</small>
-                                            <div class="small">@question.Hint</div>
+                                            <small class="d-block">
+                                                <i class="fas fa-lightbulb text-info"></i>
+                                                <span class="text-muted">@question.Hint</span>
+                                            </small>
                                         </div>
                                     }
                                 </div>
-                                <div class="col-md-4 text-end">
-                                    <div class="result-icon">
-                                        @if (isCorrect)
-                                        {
-                                            <i class="fas fa-check-circle text-success fa-3x"></i>
-                                            <div class="mt-2">
-                                                <span class="badge bg-success fs-6">+@question.Points баллов</span>
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <i class="fas fa-times-circle text-danger fa-3x"></i>
-                                            <div class="mt-2">
-                                                <span class="badge bg-danger fs-6">0 баллов</span>
-                                            </div>
-                                        }
-                                    </div>
+                                
+                                <div class="flex-shrink-0 text-center">
+                                    @if (isCorrect)
+                                    {
+                                        <i class="fas fa-check-circle text-success fa-2x"></i>
+                                        <div class="mt-1">
+                                            <small class="badge bg-success">+@question.Points</small>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-times-circle text-danger fa-2x"></i>
+                                        <div class="mt-1">
+                                            <small class="badge bg-danger">0</small>
+                                        </div>
+                                    }
                                 </div>
                             </div>
                         </div>
@@ -411,242 +442,234 @@
                 }
                 else if (isRegularResult)
                 {
+                    @for (int i = 0; i < regularResult.RegularTest.RegularQuestions.Count; i++)
+                    {
+                        var question = regularResult.RegularTest.RegularQuestions.OrderBy(q => q.OrderIndex).ElementAt(i);
+                        var answer = regularResult.RegularAnswers.FirstOrDefault(a => a.QuestionId == question.Id);
+                        var isAnswered = answer != null;
+                        var isCorrect = answer?.IsCorrect ?? false;
 
-                    <div class="accordion" id="questionsAccordion">
-                        @for (int i = 0; i < regularResult.RegularTest.RegularQuestions.Count; i++)
+                        var selectedIds = new List<int>();
+                        if (!string.IsNullOrEmpty(answer?.SelectedOptionIds))
                         {
-                            var question = regularResult.RegularTest.RegularQuestions.OrderBy(q => q.OrderIndex).ElementAt(i);
-                            var answer = regularResult.RegularAnswers.FirstOrDefault(a => a.QuestionId == question.Id);
-                            var isAnswered = answer != null;
-                            var isCorrect = answer?.IsCorrect ?? false;
+                            selectedIds = answer.SelectedOptionIds.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                            .Select(id => int.Parse(id.Trim())).ToList();
+                        }
 
-                            var selectedIds = new List<int>();
-                            if (!string.IsNullOrEmpty(answer?.SelectedOptionIds))
-                            {
-                                selectedIds = answer.SelectedOptionIds.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                                .Select(id => int.Parse(id.Trim())).ToList();
-                            }
-
-                            <div class="accordion-item border-@(isAnswered ? (isCorrect ? "success" : "danger") : "secondary") mb-2">
-                                <h2 class="accordion-header" id="heading@i">
-                                    <button class="accordion-button @(i > 0 ? "collapsed" : "")" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#collapse@i">
-                                        <div class="w-100 d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <span class="badge bg-secondary me-2">Вопрос @(i + 1)</span>
-                                                <span class="badge bg-@(question.Type == QuestionType.SingleChoice ? "primary" : question.Type == QuestionType.MultipleChoice ? "success" : "warning") me-2">
-                                                    <i class="fas @question.Type.GetIcon()"></i> @question.Type.GetDisplayName()
-                                                </span>
-                                                <span>@question.Text</span>
-                                            </div>
-                                            <div class="ms-3">
-                                                @if (isAnswered)
-                                                {
-                                                    @if (isCorrect)
+                        <div class="question-result mb-2 border rounded @(isAnswered ? (isCorrect ? "border-success" : "border-danger") : "border-secondary")"
+                             data-correct="@isCorrect.ToString().ToLower()">
+                            <div class="accordion" id="accordion@i">
+                                <div class="accordion-item border-0">
+                                    <h2 class="accordion-header" id="heading@i">
+                                        <button class="accordion-button @(i > 0 ? "collapsed" : "") p-2" type="button"
+                                                data-bs-toggle="collapse" data-bs-target="#collapse@i">
+                                            <div class="w-100 d-flex justify-content-between align-items-center gap-2">
+                                                <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
+                                                    <span class="badge bg-@(isAnswered ? (isCorrect ? "success" : "danger") : "secondary")">@(i + 1)</span>
+                                                    <span class="badge bg-@(question.Type == QuestionType.SingleChoice ? "primary" : question.Type == QuestionType.MultipleChoice ? "success" : "warning") badge-sm">
+                                                        <i class="fas @question.Type.GetIcon()"></i>
+                                                    </span>
+                                                    <span class="small text-truncate">@question.Text</span>
+                                                </div>
+                                                <div class="flex-shrink-0">
+                                                    @if (isAnswered)
                                                     {
-                                                        <span class="badge bg-success">
-                                                            <i class="fas fa-check"></i> +@answer.Points б.
-                                                        </span>
+                                                        @if (isCorrect)
+                                                        {
+                                                            <span class="badge bg-success badge-sm">
+                                                                <i class="fas fa-check"></i> +@answer.Points
+                                                            </span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-danger badge-sm">
+                                                                <i class="fas fa-times"></i> 0
+                                                            </span>
+                                                        }
                                                     }
                                                     else
                                                     {
-                                                        <span class="badge bg-danger">
-                                                            <i class="fas fa-times"></i> 0 б.
-                                                        </span>
+                                                        <span class="badge bg-secondary badge-sm">—</span>
                                                     }
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-secondary">Не отвечено</span>
-                                                }
+                                                </div>
                                             </div>
-                                        </div>
-                                    </button>
-                                </h2>
-                                <div id="collapse@i" class="accordion-collapse collapse @(i == 0 ? "show" : "")"
-                                     data-bs-parent="#questionsAccordion">
-                                    <div class="accordion-body">
-                                        @if (!string.IsNullOrEmpty(question.Hint))
-                                        {
-                                            <div class="alert alert-info mb-3">
-                                                <i class="fas fa-lightbulb"></i>
-                                                <strong>Подсказка:</strong> @question.Hint
-                                            </div>
-                                        }
-
-
-                                        <div class="mb-3">
-                                            @foreach (var option in question.Options.OrderBy(o => o.OrderIndex))
+                                        </button>
+                                    </h2>
+                                    <div id="collapse@i" class="accordion-collapse collapse @(i == 0 ? "show" : "")"
+                                         data-bs-parent="#accordion@i">
+                                        <div class="accordion-body p-2">
+                                            @if (!string.IsNullOrEmpty(question.Hint))
                                             {
-                                                var isSelected = selectedIds.Contains(option.Id);
-                                                var cardClass = "";
-                                                var borderClass = "";
+                                                <div class="alert alert-info alert-sm py-2 mb-2">
+                                                    <small>
+                                                        <i class="fas fa-lightbulb"></i>
+                                                        <strong>Подсказка:</strong> @question.Hint
+                                                    </small>
+                                                </div>
+                                            }
 
-                                                if (option.IsCorrect)
+                                            <div class="mb-2">
+                                                @foreach (var option in question.Options.OrderBy(o => o.OrderIndex))
                                                 {
-                                                    cardClass = "bg-success bg-opacity-10";
-                                                    borderClass = "border-success border-2";
-                                                }
-                                                else if (isSelected)
-                                                {
-                                                    cardClass = "bg-danger bg-opacity-10";
-                                                    borderClass = "border-danger border-2";
-                                                }
+                                                    var isSelected = selectedIds.Contains(option.Id);
+                                                    var cardClass = "";
+                                                    var borderClass = "";
 
-                                                <div class="card mb-2 @cardClass @borderClass">
-                                                    <div class="card-body">
-                                                        <div class="d-flex justify-content-between align-items-start">
-                                                            <div class="flex-grow-1">
-                                                                @if (question.Type == QuestionType.MultipleChoice)
-                                                                {
-                                                                    @if (isSelected)
+                                                    if (option.IsCorrect)
+                                                    {
+                                                        cardClass = "bg-success bg-opacity-10";
+                                                        borderClass = "border-success";
+                                                    }
+                                                    else if (isSelected)
+                                                    {
+                                                        cardClass = "bg-danger bg-opacity-10";
+                                                        borderClass = "border-danger";
+                                                    }
+
+                                                    <div class="card mb-1 @cardClass @borderClass border">
+                                                        <div class="card-body p-2">
+                                                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                                                <div class="flex-grow-1">
+                                                                    <small>
+                                                                        @if (question.Type == QuestionType.MultipleChoice)
+                                                                        {
+                                                                            @if (isSelected)
+                                                                            {
+                                                                                <i class="fas fa-check-square text-primary me-1"></i>
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                <i class="far fa-square text-muted me-1"></i>
+                                                                            }
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            @if (isSelected)
+                                                                            {
+                                                                                <i class="fas fa-dot-circle text-primary me-1"></i>
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                <i class="far fa-circle text-muted me-1"></i>
+                                                                            }
+                                                                        }
+                                                                        @option.Text
+                                                                    </small>
+                                                                </div>
+                                                                <div class="flex-shrink-0">
+                                                                    @if (option.IsCorrect)
                                                                     {
-                                                                        <i class="fas fa-check-square text-primary me-2"></i>
+                                                                        <span class="badge bg-success badge-sm">
+                                                                            <i class="fas fa-check"></i>
+                                                                        </span>
                                                                     }
-                                                                    else
+                                                                    @if (isSelected && !option.IsCorrect)
                                                                     {
-                                                                        <i class="far fa-square text-muted me-2"></i>
+                                                                        <span class="badge bg-danger badge-sm">
+                                                                            <i class="fas fa-times"></i>
+                                                                        </span>
                                                                     }
-                                                                }
-                                                                else
-                                                                {
-                                                                    @if (isSelected)
-                                                                    {
-                                                                        <i class="fas fa-dot-circle text-primary me-2"></i>
-                                                                    }
-                                                                    else
-                                                                    {
-                                                                        <i class="far fa-circle text-muted me-2"></i>
-                                                                    }
-                                                                }
-                                                                <strong>@option.Text</strong>
+                                                                </div>
                                                             </div>
-                                                            <div>
-                                                                @if (option.IsCorrect)
-                                                                {
-                                                                    <span class="badge bg-success">
-                                                                        <i class="fas fa-check"></i> Правильно
-                                                                    </span>
-                                                                }
-                                                                @if (isSelected && !option.IsCorrect)
-                                                                {
-                                                                    <span class="badge bg-danger">
-                                                                        <i class="fas fa-times"></i> Ваш выбор
-                                                                    </span>
-                                                                }
-                                                            </div>
+
+                                                            @if (!string.IsNullOrEmpty(option.Explanation))
+                                                            {
+                                                                <small class="text-muted d-block mt-1">
+                                                                    <i class="fas fa-info-circle"></i> @option.Explanation
+                                                                </small>
+                                                            }
                                                         </div>
-
-                                                        @if (!string.IsNullOrEmpty(option.Explanation))
-                                                        {
-                                                            <small class="text-muted d-block mt-2">
-                                                                <i class="fas fa-info-circle"></i> @option.Explanation
-                                                            </small>
-                                                        }
                                                     </div>
+                                                }
+                                            </div>
+
+                                            @if (!string.IsNullOrEmpty(question.Explanation))
+                                            {
+                                                <div class="alert alert-success alert-sm py-2 mb-0">
+                                                    <small>
+                                                        <i class="fas fa-graduation-cap"></i>
+                                                        <strong>Объяснение:</strong> @question.Explanation
+                                                    </small>
                                                 </div>
                                             }
                                         </div>
-
-                                        @if (!string.IsNullOrEmpty(question.Explanation))
-                                        {
-                                            <div class="alert alert-success">
-                                                <i class="fas fa-graduation-cap"></i>
-                                                <strong>Объяснение:</strong> @question.Explanation
-                                            </div>
-                                        }
                                     </div>
                                 </div>
                             </div>
-                        }
-                    </div>
+                        </div>
+                    }
                 }
             </div>
         </div>
     }
     else
     {
-        <div class="alert alert-info text-center">
-            <i class="fas fa-eye-slash fa-2x mb-3"></i>
-            <h5>Детальные результаты скрыты</h5>
-            <p class="mb-0">Учитель отключил показ правильных ответов для этого теста</p>
+        <div class="card shadow-sm mb-3">
+            <div class="card-body p-3 text-center">
+                <i class="fas fa-eye-slash fa-2x text-muted mb-2"></i>
+                <h6 class="mb-1">Детальные результаты скрыты</h6>
+                <small class="text-muted">Учитель отключил показ правильных ответов для этого теста</small>
+            </div>
         </div>
     }
 
-
-    <div class="d-flex justify-content-between">
-        <a asp-action="Index" class="btn btn-outline-primary">
-            <i class="fas fa-arrow-left"></i> К списку тестов
-        </a>
-        <a asp-action="History" class="btn btn-outline-info">
-            <i class="fas fa-history"></i> История прохождений
-        </a>
+    
+    <div class="card shadow-sm navigation-card">
+        <div class="card-body p-2">
+            <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                <a asp-action="Index" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-arrow-left"></i>
+                    <span class="d-none d-sm-inline ms-1">К списку тестов</span>
+                </a>
+                <a asp-action="History" class="btn btn-outline-info btn-sm">
+                    <i class="fas fa-history"></i>
+                    <span class="d-none d-sm-inline ms-1">История</span>
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
-@section Styles {
-    <style>
-        .result-container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .result-circle {
-            position: relative;
-        }
-
-            .result-circle svg {
-                transform: rotate(0deg);
-            }
-
-        .question-result {
-            background-color: #fff;
-            transition: all 0.3s ease;
-        }
-
-            .question-result:hover {
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            }
-
-        .result-icon {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-        }
-
-        .grade-display {
-            animation: scaleIn 0.5s ease;
-        }
-
-        @@keyframes scaleIn {
-            from {
-                transform: scale(0.5);
-                opacity: 0;
-            }
-
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        .accordion-button:not(.collapsed) {
-            background-color: #f8f9fa;
-        }
-    </style>
-}
-
 @section Scripts {
     <script>
-        // Анимация круговой диаграммы при загрузке
+        // Анимация круговой диаграммы
         document.addEventListener('DOMContentLoaded', function() {
             const circle = document.querySelector('.result-circle circle:nth-child(2)');
             if (circle) {
                 circle.style.transition = 'stroke-dasharray 1s ease';
             }
+
+            // Фильтр "Только ошибки"
+            const filterCheckbox = document.getElementById('showErrorsOnly');
+            if (filterCheckbox) {
+                // Функция фильтрации
+                function applyFilter() {
+                    const questions = document.querySelectorAll('.question-result');
+                    
+                    questions.forEach(function(question) {
+                        const isCorrect = question.getAttribute('data-correct') === 'true';
+                        
+                        if (filterCheckbox.checked) {
+                            // Показывать только неправильные
+                            if (isCorrect) {
+                                question.style.display = 'none';
+                            } else {
+                                question.style.display = 'block';
+                            }
+                        } else {
+                            // Показывать все
+                            question.style.display = 'block';
+                        }
+                    });
+                }
+
+                // Обработчик изменения чекбокса
+                filterCheckbox.addEventListener('change', applyFilter);
+
+                // Применить фильтр сразу при загрузке (если чекбокс включен)
+                applyFilter();
+            }
         });
     </script>
 }
+
