@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using OnlineTutor2.Data;
 using OnlineTutor2.Models;
 using OnlineTutor2.ViewModels;
-using System.Text.Json;
 
 namespace OnlineTutor2.Controllers
 {
