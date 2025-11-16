@@ -1,0 +1,87 @@
+﻿/* Уведомления SignalR */
+.signalr-notification {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 1060;
+    min-width: 300px;
+    max-width: 400px;
+    animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Статус подключения */
+.signalr-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+    .signalr-status.status-connected {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .signalr-status.status-reconnecting {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    .signalr-status.status-disconnected,
+    .signalr-status.status-error {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+/* Индикатор активности */
+#signalr-activity-indicator {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #28a745;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1070;
+}
+
+    #signalr-activity-indicator.active {
+        opacity: 1;
+        animation: pulse 1.5s ease-in-out;
+    }
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+    }
+
+    50% {
+        transform: scale(1.3);
+        box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+    }
+}
+
+/* Контейнер статуса в шапке */
+.analytics-header-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}

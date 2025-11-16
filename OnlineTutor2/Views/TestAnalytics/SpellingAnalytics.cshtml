@@ -18,7 +18,12 @@
                     <li class="breadcrumb-item active">Аналитика</li>
                 </ol>
             </nav>
-            <div class="flex-shrink-0 ms-2">
+            <div class="flex-shrink-0 ms-2 d-flex align-items-center gap-2">
+                <div id="signalr-status" class="signalr-status status-connected" style="display: none;">
+                    <i class="fas fa-circle text-success me-1"></i>
+                    <span>Подключение...</span>
+                </div>
+                <div id="signalr-activity-indicator"></div>
                 <a asp-controller="SpellingTest" asp-action="Details" asp-route-id="@Model.SpellingTest.Id" 
                    class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-arrow-left"></i> <span class="d-none d-sm-inline">Назад</span>
@@ -465,6 +470,8 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/test-analytics.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/test-analytics-realtime.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/test-analytics-signalr.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 }
 
@@ -491,16 +498,24 @@
 }
 
 @section Scripts {
+    
+    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@7.0.0/dist/browser/signalr.min.js"></script>
+    
+    
     <script src="~/js/layout.js" asp-append-version="true"></script>
     <script src="~/js/test-analytics.js" asp-append-version="true"></script>
+    <script src="~/js/test-analytics-realtime.js" asp-append-version="true"></script>
+    <script src="~/js/test-analytics-signalr.js" asp-append-version="true"></script>
 
     <script>
-        // Специфичная функция для правописания
+        // ===== ФУНКЦИИ ДЛЯ МОДАЛЬНОГО ОКНА ДЕТАЛЕЙ СТУДЕНТА =====
+        
+        // Показать детали студента
         function showStudentDetails(studentId, studentName) {
             loadSpellingStudentDetails(studentId, studentName, @Model.SpellingTest.Id);
         }
 
-        // Загрузка данных для правописания
+        // Загрузка данных для орфографии
         function loadSpellingStudentDetails(studentId, studentName, testId) {
             console.log('Loading spelling student details for:', studentId, 'test:', testId);
 
@@ -536,7 +551,7 @@
             });
         }
 
-        // Отображение данных для правописания
+        // Отображение данных для орфографии
         function displaySpellingStudentDetails(data) {
             window.testAnalytics.displayBasicStudentInfo(data);
             displaySpellingMistakesAnalysis(data.mistakes || []);
@@ -547,7 +562,7 @@
             }
         }
 
-        // Анализ ошибок для правописания
+        // Анализ ошибок для орфографии
         function displaySpellingMistakesAnalysis(mistakes) {
             const container = document.getElementById('studentMistakes');
             if (!container) return;
@@ -561,7 +576,7 @@
             mistakes.forEach(mistake => {
                 html += `<div class="col-md-6 mb-2">
                     <div class="p-2 bg-light rounded border-start border-danger border-2">
-                        <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="fw-bold text-danger">"${mistake.incorrectAnswer || 'Пустой ответ'}"</span>
                             <small class="badge bg-danger">${mistake.count}</small>
                         </div>
@@ -590,17 +605,14 @@
                 const hasMistakes = question.dataset.hasMistakes === 'true';
         
                 if (showOnlyMistakes) {
-                    // Показываем только вопросы с ошибками
                     if (hasMistakes) {
                         question.style.display = 'block';
                         visibleCount++;
-                        // Добавляем анимацию появления
                         question.classList.add('fade-in');
                     } else {
                         question.style.display = 'none';
                     }
                 } else {
-                    // Показываем все вопросы
                     question.style.display = 'block';
                     visibleCount++;
                     question.classList.add('fade-in');
@@ -621,7 +633,6 @@
                 noQuestionsMessage.classList.remove('fade-in');
             }, 300);
     
-            // Обновляем счетчик
             updateQuestionsCounter(visibleCount);
         }
 
@@ -642,15 +653,94 @@
             }
         }
 
-        // Инициализация при загрузке страницы
+        // ===== КНОПКА УПРАВЛЕНИЯ АВТООБНОВЛЕНИЕМ =====
+
+        function addRealtimeControls() {
+            const breadcrumbContainer = document.querySelector('.d-flex.justify-content-between.align-items-center.mb-2 .flex-shrink-0');
+            if (breadcrumbContainer) {
+                const controlsHtml = `
+                    <button id="toggleRealtime" class="btn btn-outline-primary btn-sm me-2" onclick="toggleRealtime()">
+                        <i class="fas fa-sync"></i>
+                        <span id="realtimeStatus">Вкл</span>
+                    </button>
+                `;
+                breadcrumbContainer.insertAdjacentHTML('afterbegin', controlsHtml);
+            }
+        }
+
+        function toggleRealtime() {
+            const button = document.getElementById('toggleRealtime');
+            const status = document.getElementById('realtimeStatus');
+            
+            // Переключаем polling
+            if (window.testAnalyticsRealtime.intervalId) {
+                window.testAnalyticsRealtime.stop();
+                button.classList.remove('btn-outline-primary');
+                button.classList.add('btn-outline-secondary');
+                status.textContent = 'Выкл';
+            } else {
+                window.testAnalyticsRealtime.start();
+                button.classList.remove('btn-outline-secondary');
+                button.classList.add('btn-outline-primary');
+                status.textContent = 'Вкл';
+            }
+        }
+
+        // ===== ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ =====
+
         document.addEventListener('DOMContentLoaded', function() {
-            const totalCount = document.querySelectorAll('.question-analytics-card').length;
-    
-            // Обработчик переключения вкладок
+            console.log('🚀 Инициализация аналитики теста орфографии');
+
+            // Показываем статус SignalR
+            const signalrStatus = document.getElementById('signalr-status');
+            if (signalrStatus) {
+                signalrStatus.style.display = 'inline-flex';
+            }
+            
+            // ===== 1. ДОБАВЛЯЕМ DATA-АТРИБУТЫ К СТРОКАМ ТАБЛИЦЫ =====
+            const studentIds = @Html.Raw(Json.Serialize(Model.SpellingResults.Select(r => r.Student.Id).ToList()));
+            const studentRows = document.querySelectorAll('#students table tbody tr');
+            
+            studentRows.forEach((row, index) => {
+                if (studentIds[index]) {
+                    row.setAttribute('data-student-id', studentIds[index]);
+                }
+            });
+
+            console.log('✅ Добавлены data-student-id к', studentRows.length, 'строкам');
+
+            // ===== 2. ДОБАВЛЯЕМ DATA-АТРИБУТЫ К КАРТОЧКАМ ВОПРОСОВ =====
+            const questionIds = @Html.Raw(Json.Serialize(Model.SpellingQuestionAnalytics.Select(q => q.SpellingQuestion.Id).ToList()));
+            const questionCards = document.querySelectorAll('.question-analytics-card');
+            
+            questionCards.forEach((card, index) => {
+                if (questionIds[index]) {
+                    card.setAttribute('data-question-id', questionIds[index]);
+                }
+            });
+
+            console.log('✅ Добавлены data-question-id к', questionCards.length, 'карточкам');
+
+            // ===== 3. ЗАПУСКАЕМ POLLING (резервное обновление каждые 60 секунд) =====
+            window.testAnalyticsRealtime = new TestAnalyticsRealtime(@Model.SpellingTest.Id, 60000);
+            window.testAnalyticsRealtime.start();
+            console.log('✅ Polling запущен (интервал: 60 секунд)');
+
+            // ===== 4. ЗАПУСКАЕМ SIGNALR (обновления в реальном времени) =====
+            window.testAnalyticsSignalR = new TestAnalyticsSignalR(
+                @Model.SpellingTest.Id,  // testId
+                'spelling'                // testType
+            );
+            window.testAnalyticsSignalR.start();
+            console.log('✅ SignalR инициализирован');
+
+            // ===== 5. ДОБАВЛЯЕМ КНОПКУ УПРАВЛЕНИЯ =====
+            addRealtimeControls();
+
+            // ===== 6. НАСТРОЙКА ФИЛЬТРОВ ВОПРОСОВ =====
             const questionsTab = document.getElementById('questions-tab');
             if (questionsTab) {
                 questionsTab.addEventListener('shown.bs.tab', function (e) {
-                    // Автоматически включаем фильтр при первом открытии вкладки
                     const filterCheckbox = document.getElementById('filterMistakesOnly');
                     if (filterCheckbox && !filterCheckbox.dataset.initialized) {
                         filterCheckbox.checked = true;
@@ -668,6 +758,42 @@
                     filterCheckbox.checked = true;
                     filterCheckbox.dataset.initialized = 'true';
                     filterQuestions();
+                }
+            }
+
+            console.log('✅ Инициализация завершена');
+        });
+
+        // ===== ОСТАНОВКА ПРИ УХОДЕ СО СТРАНИЦЫ =====
+
+        window.addEventListener('beforeunload', function() {
+            console.log('🛑 Остановка всех подключений...');
+            
+            if (window.testAnalyticsRealtime) {
+                window.testAnalyticsRealtime.stop();
+                console.log('⏹️ Polling остановлен');
+            }
+            
+            if (window.testAnalyticsSignalR) {
+                window.testAnalyticsSignalR.stop();
+                console.log('⏹️ SignalR отключен');
+            }
+        });
+
+        // ===== ОБРАБОТКА ВИДИМОСТИ СТРАНИЦЫ (опционально) =====
+
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                // Страница скрыта - можно приостановить polling
+                console.log('⏸️ Страница скрыта');
+                if (window.testAnalyticsRealtime && window.testAnalyticsRealtime.intervalId) {
+                    window.testAnalyticsRealtime.stop();
+                }
+            } else {
+                // Страница снова видна - возобновляем polling
+                console.log('▶️ Страница видна');
+                if (window.testAnalyticsRealtime && !window.testAnalyticsRealtime.intervalId) {
+                    window.testAnalyticsRealtime.start();
                 }
             }
         });
