@@ -150,24 +150,32 @@ namespace OnlineTutor2.Controllers
 
             if (ongoingResult != null)
             {
-                _logger.LogInformation("Студент {StudentId} продолжает незавершенный тест по орфографии {TestId}, ResultId: {ResultId}",
-                    student.Id, id, ongoingResult.Id);
+                _logger.LogInformation("Студент {StudentId} продолжает незавершенный тест по орфографии {TestId}", student.Id, id);
 
                 try
                 {
+                    var notificationData = new
+                    {
+                        testId = test.Id,
+                        testTitle = test.Title,
+                        testType = "spelling",
+                        studentId = student.Id,
+                        studentName = student.User.FullName,
+                        timestamp = DateTime.Now,
+                        action = "continued"
+                    };
+
+                    // Группа теста
                     await _hubContext.Clients.Group($"spelling_test_{test.Id}")
-                        .SendAsync("TestContinued", new
-                        {
-                            testId = test.Id,
-                            testType = "spelling",
-                            studentId = student.Id,
-                            studentName = student.User.FullName,
-                            timestamp = DateTime.Now
-                        });
+                        .SendAsync("TestContinued", notificationData);
+
+                    // Dashboard учителя
+                    await _hubContext.Clients.Group($"teacher_{test.TeacherId}")
+                        .SendAsync("StudentTestActivity", notificationData);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Ошибка отправки SignalR уведомления о продолжении теста по орфографии");
+                    _logger.LogError(ex, "Ошибка отправки SignalR уведомления");
                 }
 
                 return RedirectToAction(nameof(TakeSpelling), new { id = ongoingResult.Id });
@@ -186,24 +194,35 @@ namespace OnlineTutor2.Controllers
             _context.SpellingTestResults.Add(testResult);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Студент {StudentId} начал тест по орфографии {TestId}, ResultId: {ResultId}, Попытка: {AttemptNumber}",
-                student.Id, id, testResult.Id, testResult.AttemptNumber);
+            _logger.LogInformation("Студент {StudentId} начал тест по орфографии {TestId}", student.Id, id);
 
             try
             {
+                var notificationData = new
+                {
+                    testId = test.Id,
+                    testTitle = test.Title,
+                    testType = "spelling",
+                    studentId = student.Id,
+                    studentName = student.User.FullName,
+                    timestamp = DateTime.Now,
+                    action = "started"
+                };
+
+                // Отправка в группу теста
                 await _hubContext.Clients.Group($"spelling_test_{test.Id}")
-                    .SendAsync("TestStarted", new
-                    {
-                        testId = test.Id,
-                        testType = "spelling",
-                        studentId = student.Id,
-                        studentName = student.User.FullName,
-                        timestamp = DateTime.Now
-                    });
+                    .SendAsync("TestStarted", notificationData);
+
+                // Отправка в группу учителя для Dashboard
+                await _hubContext.Clients.Group($"teacher_{test.TeacherId}")
+                    .SendAsync("StudentTestActivity", notificationData);
+
+                _logger.LogInformation("SignalR: Отправлены уведомления о начале теста по орфографии {TestId} студентом {StudentName}",
+                    test.Id, student.User.FullName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка отправки SignalR уведомления о начале теста по орфографии");
+                _logger.LogError(ex, "Ошибка отправки SignalR уведомления");
             }
 
             return RedirectToAction(nameof(TakeSpelling), new { id = testResult.Id });
@@ -424,24 +443,32 @@ namespace OnlineTutor2.Controllers
 
             if (ongoingResult != null)
             {
-                _logger.LogInformation("Студент {StudentId} продолжает незавершенный тест по пунктуации {TestId}, ResultId: {ResultId}",
-                    student.Id, id, ongoingResult.Id);
+                _logger.LogInformation("Студент {StudentId} продолжает незавершенный тест по пунктуации {TestId}", student.Id, id);
 
                 try
                 {
+                    var notificationData = new
+                    {
+                        testId = test.Id,
+                        testTitle = test.Title,
+                        testType = "punctuation",
+                        studentId = student.Id,
+                        studentName = student.User.FullName,
+                        timestamp = DateTime.Now,
+                        action = "continued"
+                    };
+
+                    // Группа теста
                     await _hubContext.Clients.Group($"punctuation_test_{test.Id}")
-                        .SendAsync("TestContinued", new
-                        {
-                            testId = test.Id,
-                            testType = "punctuation",
-                            studentId = student.Id,
-                            studentName = student.User.FullName,
-                            timestamp = DateTime.Now
-                        });
+                        .SendAsync("TestContinued", notificationData);
+
+                    // Dashboard учителя
+                    await _hubContext.Clients.Group($"teacher_{test.TeacherId}")
+                        .SendAsync("StudentTestActivity", notificationData);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Ошибка отправки SignalR уведомления о продолжении теста по пунктуации");
+                    _logger.LogError(ex, "Ошибка отправки SignalR уведомления");
                 }
 
                 return RedirectToAction(nameof(TakePunctuation), new { id = ongoingResult.Id });
@@ -460,24 +487,35 @@ namespace OnlineTutor2.Controllers
             _context.PunctuationTestResults.Add(testResult);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Студент {StudentId} начал тест по пунктуации {TestId}, ResultId: {ResultId}, Попытка: {AttemptNumber}",
-                student.Id, id, testResult.Id, testResult.AttemptNumber);
+            _logger.LogInformation("Студент {StudentId} начал тест по пунктуации {TestId}", student.Id, id, testResult.Id, testResult.AttemptNumber);
 
             try
             {
+                var notificationData = new
+                {
+                    testId = test.Id,
+                    testTitle = test.Title,
+                    testType = "punctuation",
+                    studentId = student.Id,
+                    studentName = student.User.FullName,
+                    timestamp = DateTime.Now,
+                    action = "started"
+                };
+
+                // Отправка в группу теста
                 await _hubContext.Clients.Group($"punctuation_test_{test.Id}")
-                    .SendAsync("TestStarted", new
-                    {
-                        testId = test.Id,
-                        testType = "punctuation",
-                        studentId = student.Id,
-                        studentName = student.User.FullName,
-                        timestamp = DateTime.Now
-                    });
+                    .SendAsync("TestStarted", notificationData);
+
+                // Отправка в группу учителя для Dashboard
+                await _hubContext.Clients.Group($"teacher_{test.TeacherId}")
+                    .SendAsync("StudentTestActivity", notificationData);
+
+                _logger.LogInformation("SignalR: Отправлены уведомления о начале теста по пунктуации {TestId} студентом {StudentName}",
+                    test.Id, student.User.FullName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка отправки SignalR уведомления о начале теста по пунктуации");
+                _logger.LogError(ex, "Ошибка отправки SignalR уведомления");
             }
 
             return RedirectToAction(nameof(TakePunctuation), new { id = testResult.Id });
@@ -768,27 +806,35 @@ namespace OnlineTutor2.Controllers
 
             if (ongoingResult != null)
             {
-                _logger.LogInformation("Студент {StudentId} продолжает незавершенный тест по орфоэпии {TestId}, ResultId: {ResultId}",
-                    student.Id, id, ongoingResult.Id);
+                _logger.LogInformation("Студент {StudentId} продолжает незавершенный тест по орфоэпии {TestId}", student.Id, id);
 
                 try
                 {
-                    await _hubContext.Clients.Group($"orthoepy_test_{test.Id}")
-                        .SendAsync("TestContinued", new
-                        {
-                            testId = test.Id,
-                            testType = "orthoepy",
-                            studentId = student.Id,
-                            studentName = student.User.FullName,
-                            timestamp = DateTime.Now
-                        });
+                    var notificationData = new
+                    {
+                        testId = test.Id,
+                        testTitle = test.Title,
+                        testType = "orthoeopy",
+                        studentId = student.Id,
+                        studentName = student.User.FullName,
+                        timestamp = DateTime.Now,
+                        action = "continued"
+                    };
+
+                    // Группа теста
+                    await _hubContext.Clients.Group($"orthoeopy_test_{test.Id}")
+                        .SendAsync("TestContinued", notificationData);
+
+                    // ✅ Dashboard учителя
+                    await _hubContext.Clients.Group($"teacher_{test.TeacherId}")
+                        .SendAsync("StudentTestActivity", notificationData);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Ошибка отправки SignalR уведомления о продолжении теста по орфоэпии");
+                    _logger.LogError(ex, "Ошибка отправки SignalR уведомления");
                 }
 
-                return RedirectToAction(nameof(TakeOrthoepy), new { id = ongoingResult.Id });
+                return RedirectToAction(nameof(TakeOrthoeopy), new { id = ongoingResult.Id });
             }
 
             var testResult = new OrthoeopyTestResult
@@ -804,31 +850,42 @@ namespace OnlineTutor2.Controllers
             _context.OrthoeopyTestResults.Add(testResult);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Студент {StudentId} начал тест по орфоэпии {TestId}, ResultId: {ResultId}, Попытка: {AttemptNumber}",
-                student.Id, id, testResult.Id, testResult.AttemptNumber);
+            _logger.LogInformation("Студент {StudentId} начал тест по орфоэпии {TestId}", student.Id, id);
 
             try
             {
-                await _hubContext.Clients.Group($"orthoepy_test_{test.Id}")
-                    .SendAsync("TestStarted", new
-                    {
-                        testId = test.Id,
-                        testType = "orthoepy",
-                        studentId = student.Id,
-                        studentName = student.User.FullName,
-                        timestamp = DateTime.Now
-                    });
+                var notificationData = new
+                {
+                    testId = test.Id,
+                    testTitle = test.Title,
+                    testType = "orthoeopy",
+                    studentId = student.Id,
+                    studentName = student.User.FullName,
+                    timestamp = DateTime.Now,
+                    action = "started"
+                };
+
+                // Отправка в группу теста
+                await _hubContext.Clients.Group($"orthoeopy_test_{test.Id}")
+                    .SendAsync("TestStarted", notificationData);
+
+                // Отправка в группу учителя для Dashboard
+                await _hubContext.Clients.Group($"teacher_{test.TeacherId}")
+                    .SendAsync("StudentTestActivity", notificationData);
+
+                _logger.LogInformation("SignalR: Отправлены уведомления о начале теста {TestId} студентом {StudentName}",
+                    test.Id, student.User.FullName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка отправки SignalR уведомления по орфоэпии");
+                _logger.LogError(ex, "Ошибка отправки SignalR уведомления");
             }
 
-            return RedirectToAction(nameof(TakeOrthoepy), new { id = testResult.Id });
+            return RedirectToAction(nameof(TakeOrthoeopy), new { id = testResult.Id });
         }
 
         // GET: StudentTest/TakeOrthoepy/5 - Прохождение теста по орфоэпии
-        public async Task<IActionResult> TakeOrthoepy(int id)
+        public async Task<IActionResult> TakeOrthoeopy(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var student = await _context.Students
@@ -1042,24 +1099,32 @@ namespace OnlineTutor2.Controllers
 
             if (ongoingResult != null)
             {
-                _logger.LogInformation("Студент {StudentId} продолжает незавершенный классический тест {TestId}, ResultId: {ResultId}",
-                    student.Id, id, ongoingResult.Id);
+                _logger.LogInformation("Студент {StudentId} продолжает незавершенный классический тест {TestId}", student.Id, id);
 
                 try
                 {
+                    var notificationData = new
+                    {
+                        testId = test.Id,
+                        testTitle = test.Title,
+                        testType = "regular",
+                        studentId = student.Id,
+                        studentName = student.User.FullName,
+                        timestamp = DateTime.Now,
+                        action = "continued"
+                    };
+
+                    // Группа теста
                     await _hubContext.Clients.Group($"regular_test_{test.Id}")
-                        .SendAsync("TestContinued", new
-                        {
-                            testId = test.Id,
-                            testType = "regular",
-                            studentId = student.Id,
-                            studentName = student.User.FullName,
-                            timestamp = DateTime.Now
-                        });
+                        .SendAsync("TestContinued", notificationData);
+
+                    // Dashboard учителя
+                    await _hubContext.Clients.Group($"teacher_{test.TeacherId}")
+                        .SendAsync("StudentTestActivity", notificationData);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Ошибка отправки SignalR уведомления о продолжении классического теста");
+                    _logger.LogError(ex, "Ошибка отправки SignalR уведомления");
                 }
 
                 return RedirectToAction(nameof(TakeRegular), new { id = ongoingResult.Id });
@@ -1078,24 +1143,35 @@ namespace OnlineTutor2.Controllers
             _context.RegularTestResults.Add(testResult);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Студент {StudentId} начал классический тест {TestId}, ResultId: {ResultId}, Попытка: {AttemptNumber}",
-                student.Id, id, testResult.Id, testResult.AttemptNumber);
+            _logger.LogInformation("Студент {StudentId} начал классический тест {TestId}", student.Id, id);
 
             try
             {
+                var notificationData = new
+                {
+                    testId = test.Id,
+                    testTitle = test.Title,
+                    testType = "regular",
+                    studentId = student.Id,
+                    studentName = student.User.FullName,
+                    timestamp = DateTime.Now,
+                    action = "started"
+                };
+
+                // Отправка в группу теста
                 await _hubContext.Clients.Group($"regular_test_{test.Id}")
-                    .SendAsync("TestStarted", new
-                    {
-                        testId = test.Id,
-                        testType = "regular",
-                        studentId = student.Id,
-                        studentName = student.User.FullName,
-                        timestamp = DateTime.Now
-                    });
+                    .SendAsync("TestStarted", notificationData);
+
+                // Отправка в группу учителя для Dashboard
+                await _hubContext.Clients.Group($"teacher_{test.TeacherId}")
+                    .SendAsync("StudentTestActivity", notificationData);
+
+                _logger.LogInformation("SignalR: Отправлены уведомления о начале классического теста {TestId} студентом {StudentName}",
+                    test.Id, student.User.FullName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка отправки SignalR уведомления о начале классического теста");
+                _logger.LogError(ex, "Ошибка отправки SignalR уведомления");
             }
 
             return RedirectToAction(nameof(TakeRegular), new { id = testResult.Id });
@@ -1494,31 +1570,47 @@ namespace OnlineTutor2.Controllers
 
             await _context.SaveChangesAsync();
 
+            // Загружаем связанные данные
+            var test = await _context.SpellingTests
+                .FirstOrDefaultAsync(t => t.Id == testResult.SpellingTestId);
+
             var student = await _context.Students
                 .Include(s => s.User)
                 .FirstOrDefaultAsync(s => s.Id == testResult.StudentId);
 
+            if (test == null || student == null) return;
+
+            // Отправляем уведомление
             try
             {
-                await _hubContext.Clients.Group($"spelling_test_{testResult.SpellingTestId}")
-                    .SendAsync("TestCompleted", new
-                    {
-                        testId = testResult.SpellingTestId,
-                        testType = "spelling",
-                        studentId = testResult.StudentId,
-                        studentName = student?.User?.FullName ?? "Неизвестный студент",
-                        score = testResult.Score,
-                        maxScore = testResult.MaxScore,
-                        percentage = testResult.Percentage,
-                        timestamp = DateTime.Now
-                    });
+                var notificationData = new
+                {
+                    testId = test.Id,
+                    testTitle = test.Title,
+                    testType = "spelling",
+                    studentId = student.Id,
+                    studentName = student.User.FullName,
+                    score = testResult.Score,
+                    maxScore = testResult.MaxScore,
+                    percentage = testResult.Percentage,
+                    timestamp = DateTime.Now,
+                    action = "completed"
+                };
 
-                _logger.LogInformation("SignalR: Отправлено уведомление о завершении теста орфографии {TestId} студентом {StudentId}",
-                    testResult.SpellingTestId, testResult.StudentId);
+                // Группа теста
+                await _hubContext.Clients.Group($"spelling_test_{test.Id}")
+                    .SendAsync("TestCompleted", notificationData);
+
+                // Dashboard учителя
+                await _hubContext.Clients.Group($"teacher_{test.TeacherId}")
+                    .SendAsync("StudentTestActivity", notificationData);
+
+                _logger.LogInformation("SignalR: Отправлены уведомления о завершении теста {TestId} студентом {StudentName}",
+                    test.Id, student.User.FullName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка отправки SignalR уведомления о завершении теста");
+                _logger.LogError(ex, "Ошибка отправки SignalR уведомления");
             }
         }
 
@@ -1533,31 +1625,47 @@ namespace OnlineTutor2.Controllers
 
             await _context.SaveChangesAsync();
 
+            // Загружаем связанные данные
+            var test = await _context.SpellingTests
+                .FirstOrDefaultAsync(t => t.Id == testResult.PunctuationTestId);
+
             var student = await _context.Students
                 .Include(s => s.User)
                 .FirstOrDefaultAsync(s => s.Id == testResult.StudentId);
 
+            if (test == null || student == null) return;
+
+            // Отправляем уведомление
             try
             {
-                await _hubContext.Clients.Group($"punctuation_test_{testResult.PunctuationTestId}")
-                    .SendAsync("TestCompleted", new
-                    {
-                        testId = testResult.PunctuationTestId,
-                        testType = "punctuation",
-                        studentId = testResult.StudentId,
-                        studentName = student?.User?.FullName ?? "Неизвестный студент",
-                        score = testResult.Score,
-                        maxScore = testResult.MaxScore,
-                        percentage = testResult.Percentage,
-                        timestamp = DateTime.Now
-                    });
+                var notificationData = new
+                {
+                    testId = test.Id,
+                    testTitle = test.Title,
+                    testType = "punctuation",
+                    studentId = student.Id,
+                    studentName = student.User.FullName,
+                    score = testResult.Score,
+                    maxScore = testResult.MaxScore,
+                    percentage = testResult.Percentage,
+                    timestamp = DateTime.Now,
+                    action = "completed"
+                };
 
-                _logger.LogInformation("SignalR: Отправлено уведомление о завершении теста по пунктуации {TestId} студентом {StudentId}",
-                    testResult.PunctuationTestId, testResult.StudentId);
+                // Группа теста
+                await _hubContext.Clients.Group($"punctuation_test_{test.Id}")
+                    .SendAsync("TestCompleted", notificationData);
+
+                // Dashboard учителя
+                await _hubContext.Clients.Group($"teacher_{test.TeacherId}")
+                    .SendAsync("StudentTestActivity", notificationData);
+
+                _logger.LogInformation("SignalR: Отправлены уведомления о завершении теста {TestId} студентом {StudentName}",
+                    test.Id, student.User.FullName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка отправки SignalR уведомления о завершении теста");
+                _logger.LogError(ex, "Ошибка отправки SignalR уведомления");
             }
         }
 
@@ -1572,31 +1680,47 @@ namespace OnlineTutor2.Controllers
 
             await _context.SaveChangesAsync();
 
+            // Загружаем связанные данные
+            var test = await _context.SpellingTests
+                .FirstOrDefaultAsync(t => t.Id == testResult.OrthoeopyTestId);
+
             var student = await _context.Students
                 .Include(s => s.User)
                 .FirstOrDefaultAsync(s => s.Id == testResult.StudentId);
 
+            if (test == null || student == null) return;
+
+            // Отправляем уведомление
             try
             {
-                await _hubContext.Clients.Group($"orthoepy_test_{testResult.OrthoeopyTestId}")
-                    .SendAsync("TestCompleted", new
-                    {
-                        testId = testResult.OrthoeopyTestId,
-                        testType = "orthoepy",
-                        studentId = testResult.StudentId,
-                        studentName = student?.User?.FullName ?? "Неизвестный студент",
-                        score = testResult.Score,
-                        maxScore = testResult.MaxScore,
-                        percentage = testResult.Percentage,
-                        timestamp = DateTime.Now
-                    });
+                var notificationData = new
+                {
+                    testId = test.Id,
+                    testTitle = test.Title,
+                    testType = "orthoeopy",
+                    studentId = student.Id,
+                    studentName = student.User.FullName,
+                    score = testResult.Score,
+                    maxScore = testResult.MaxScore,
+                    percentage = testResult.Percentage,
+                    timestamp = DateTime.Now,
+                    action = "completed"
+                };
 
-                _logger.LogInformation("SignalR: Отправлено уведомление о завершении теста орфоэпии {TestId} студентом {StudentId}",
-                    testResult.OrthoeopyTestId, testResult.StudentId);
+                // Группа теста
+                await _hubContext.Clients.Group($"orthoeopy_test_{test.Id}")
+                    .SendAsync("TestCompleted", notificationData);
+
+                // Dashboard учителя
+                await _hubContext.Clients.Group($"teacher_{test.TeacherId}")
+                    .SendAsync("StudentTestActivity", notificationData);
+
+                _logger.LogInformation("SignalR: Отправлены уведомления о завершении теста {TestId} студентом {StudentName}",
+                    test.Id, student.User.FullName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка отправки SignalR уведомления о завершении теста");
+                _logger.LogError(ex, "Ошибка отправки SignalR уведомления");
             }
         }
 
@@ -1611,31 +1735,47 @@ namespace OnlineTutor2.Controllers
 
             await _context.SaveChangesAsync();
 
+            // Загружаем связанные данные
+            var test = await _context.SpellingTests
+                .FirstOrDefaultAsync(t => t.Id == testResult.RegularTestId);
+
             var student = await _context.Students
                 .Include(s => s.User)
                 .FirstOrDefaultAsync(s => s.Id == testResult.StudentId);
 
+            if (test == null || student == null) return;
+
+            // Отправляем уведомление
             try
             {
-                await _hubContext.Clients.Group($"regular_test_{testResult.RegularTestId}")
-                    .SendAsync("TestCompleted", new
-                    {
-                        testId = testResult.RegularTestId,
-                        testType = "regular",
-                        studentId = testResult.StudentId,
-                        studentName = student?.User?.FullName ?? "Неизвестный студент",
-                        score = testResult.Score,
-                        maxScore = testResult.MaxScore,
-                        percentage = testResult.Percentage,
-                        timestamp = DateTime.Now
-                    });
+                var notificationData = new
+                {
+                    testId = test.Id,
+                    testTitle = test.Title,
+                    testType = "regular",
+                    studentId = student.Id,
+                    studentName = student.User.FullName,
+                    score = testResult.Score,
+                    maxScore = testResult.MaxScore,
+                    percentage = testResult.Percentage,
+                    timestamp = DateTime.Now,
+                    action = "completed"
+                };
 
-                _logger.LogInformation("SignalR: Отправлено уведомление о завершении классического теста {TestId} студентом {StudentId}",
-                    testResult.RegularTestId, testResult.StudentId);
+                // Группа теста
+                await _hubContext.Clients.Group($"regular_test_{test.Id}")
+                    .SendAsync("TestCompleted", notificationData);
+
+                // Dashboard учителя
+                await _hubContext.Clients.Group($"teacher_{test.TeacherId}")
+                    .SendAsync("StudentTestActivity", notificationData);
+
+                _logger.LogInformation("SignalR: Отправлены уведомления о завершении теста {TestId} студентом {StudentName}",
+                    test.Id, student.User.FullName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка отправки SignalR уведомления о завершении теста");
+                _logger.LogError(ex, "Ошибка отправки SignalR уведомления");
             }
         }
 
