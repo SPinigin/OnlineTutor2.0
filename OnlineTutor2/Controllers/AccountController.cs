@@ -226,7 +226,7 @@ namespace OnlineTutor2.Controllers
                                     <p>Спасибо за регистрацию на нашей образовательной платформе <strong>Тьюторная</strong>.</p>
                                     {(model.Role == ApplicationRoles.Teacher ?
                                         "<p><strong>Обратите внимание:</strong> Ваш аккаунт учителя требует одобрения администратора. После подтверждения email и одобрения администратором вы получите доступ ко всем функциям платформы.</p>" :
-                                        "<p>Для завершения регистрации и активации вашего аккаунта, пожалуйста, подтвердите ваш email-адрес:</p>")}
+                                        "<p>Для завершения регистрации и активации вашего аккаунта, пожалуйста, подтвердите ваш email:</p>")}
                                     <div style='text-align: center; margin: 30px 0;'>
                                         <a href='{callbackUrl}' 
                                            style='padding: 15px 30px; 
@@ -251,7 +251,7 @@ namespace OnlineTutor2.Controllers
                                 <div style='background-color: #e9ecef; padding: 15px; text-align: center;'>
                                     <p style='color: #666; font-size: 12px; margin: 0;'>
                                         © 2025 Тьюторная. Образовательная платформа.<br>
-                                        По вопросам: <a href='mailto:pn31@mail.ru'>pn31@mail.ru</a>
+                                        По вопросам: <a href='mailto:pn31@mail.ru'>tutornaya@yandex.ru</a>
                                     </p>
                                 </div>
                             </div>

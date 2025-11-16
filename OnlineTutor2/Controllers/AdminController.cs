@@ -220,7 +220,7 @@ namespace OnlineTutor2.Controllers
             if (teacher != null)
             {
                 _context.Teachers.Remove(teacher);
-                _logger.LogInformation("Удален профиль учителя {TeacherId}", teacher.Id);
+                _logger.LogInformation("Удален профиль учителя {TeacherId} / {FullName}", teacher.Id, teacher.User.FullName);
             }
 
             var result = await _userManager.DeleteAsync(user);
@@ -332,7 +332,7 @@ namespace OnlineTutor2.Controllers
                 GetIpAddress()
             );
 
-            _logger.LogInformation("Администратор {AdminId} одобрил учителя {TeacherId}, UserId: {UserId}, Email: {Email}", adminId, id, teacher.UserId, teacher.User.Email);
+            _logger.LogInformation("Администратор {AdminId} одобрил учителя {TeacherId}, UserId: {UserId}, FullName: {FullName}, Email: {Email}", adminId, id, teacher.UserId, teacher.User.FullName, teacher.User.Email);
             TempData["SuccessMessage"] = $"Учитель {teacher.User.FullName} одобрен!";
 
             return RedirectToAction(nameof(Teachers));
@@ -420,7 +420,7 @@ namespace OnlineTutor2.Controllers
                 AuditActions.ClassDeleted,
                 AuditEntityTypes.Class,
                 id.ToString(),
-                $"Deleted class: {className} (Students: {studentsCount}, Tests: {testsCount})",
+                $"Удален класс: {className} (Студентов: {studentsCount}, Тестов: {testsCount})",
                 GetIpAddress()
             );
 
@@ -638,14 +638,14 @@ namespace OnlineTutor2.Controllers
             var result = await _context.SpellingTestResults.FindAsync(id);
             if (result == null)
             {
-                _logger.LogWarning("Администратор {AdminId} попытался удалить несуществующий результат теста орфографии {ResultId}", adminId, id);
+                _logger.LogWarning("Администратор {AdminId} попытался удалить несуществующий результат теста по орфографии {ResultId}", adminId, id);
                 return NotFound();
             }
 
             _context.SpellingTestResults.Remove(result);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Администратор {AdminId} удалил результат теста орфографии {ResultId}, TestId: {TestId}, StudentId: {StudentId}", adminId, id, result.SpellingTestId, result.StudentId);
+            _logger.LogInformation("Администратор {AdminId} удалил результат теста по орфографии {ResultId}, TestId: {TestId}, StudentId: {StudentId}", adminId, id, result.SpellingTestId, result.StudentId);
 
             TempData["SuccessMessage"] = "Результат теста удален!";
             return RedirectToAction(nameof(TestResults));
@@ -695,7 +695,7 @@ namespace OnlineTutor2.Controllers
                 AuditActions.AllResultsCleared,
                 AuditEntityTypes.System,
                 null,
-                $"Cleared all test results (Total: {totalCount})",
+                $"Удалены все результаты тестов (Всего: {totalCount})",
                 GetIpAddress()
             );
 
@@ -808,7 +808,7 @@ namespace OnlineTutor2.Controllers
                     "Audit Logs Cleared",
                     AuditEntityTypes.System,
                     null,
-                    $"Cleared audit logs older than {daysToKeep} days",
+                    $"Удалены логи старше {daysToKeep} дней",
                     GetIpAddress()
                 );
 
@@ -816,7 +816,7 @@ namespace OnlineTutor2.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error clearing old audit logs");
+                _logger.LogError(ex, "Ошиюка при очистке старых логов");
                 TempData["ErrorMessage"] = "Ошибка при очистке старых логов.";
             }
 
@@ -942,7 +942,7 @@ namespace OnlineTutor2.Controllers
 
             stats.AdminActionsByType = adminActions.ToDictionary(x => x.Action, x => x.Count);
 
-            // Активность по дням недели - ИСПРАВЛЕНИЕ
+            // Активность по дням недели
             var auditLogsForActivity = await _context.AuditLogs
                 .Where(al => al.CreatedAt >= thirtyDaysAgo)
                 .Select(al => al.CreatedAt)
@@ -953,7 +953,7 @@ namespace OnlineTutor2.Controllers
                 .Select(g => new { DayOfWeek = g.Key, Count = g.Count() })
                 .ToList();
 
-            var dayNames = new[] { "Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота" };
+            var dayNames = new[] { "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье" };
             stats.ActivityByDayOfWeek = dayNames.ToDictionary(
                 day => day,
                 day => activityByDay.FirstOrDefault(x => dayNames[(int)x.DayOfWeek] == day)?.Count ?? 0
@@ -1023,13 +1023,13 @@ namespace OnlineTutor2.Controllers
                 if (format == "csv")
                 {
                     fileData = await _exportService.ExportUsersToCSVAsync();
-                    fileName = $"Users_{DateTime.Now:yyyy-MM-dd}.csv";
+                    fileName = $"Пользователи_{DateTime.Now:yyyy-MM-dd}.csv";
                     contentType = "text/csv";
                 }
                 else
                 {
                     fileData = await _exportService.ExportUsersToExcelAsync();
-                    fileName = $"Users_{DateTime.Now:yyyy-MM-dd}.xlsx";
+                    fileName = $"Пользователи_{DateTime.Now:yyyy-MM-dd}.xlsx";
                     contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
                 }
 
@@ -1039,7 +1039,7 @@ namespace OnlineTutor2.Controllers
                     "Export Users",
                     AuditEntityTypes.System,
                     null,
-                    $"Exported users to {format.ToUpper()}",
+                    $"Произведен экспорт пользователей в формат {format.ToUpper()}",
                     GetIpAddress()
                 );
 
@@ -1047,7 +1047,7 @@ namespace OnlineTutor2.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error exporting users");
+                _logger.LogError(ex, "Ошибка при экспорте пользователей");
                 TempData["ErrorMessage"] = "Ошибка при экспорте пользователей.";
                 return RedirectToAction(nameof(Users));
             }
@@ -1069,13 +1069,13 @@ namespace OnlineTutor2.Controllers
                 if (format == "csv")
                 {
                     fileData = await _exportService.ExportTeachersToCSVAsync();
-                    fileName = $"Teachers_{DateTime.Now:yyyy-MM-dd}.csv";
+                    fileName = $"Учителя_{DateTime.Now:yyyy-MM-dd}.csv";
                     contentType = "text/csv";
                 }
                 else
                 {
                     fileData = await _exportService.ExportTeachersToExcelAsync();
-                    fileName = $"Teachers_{DateTime.Now:yyyy-MM-dd}.xlsx";
+                    fileName = $"Учителя_{DateTime.Now:yyyy-MM-dd}.xlsx";
                     contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
                 }
 
@@ -1085,7 +1085,7 @@ namespace OnlineTutor2.Controllers
                     "Export Teachers",
                     AuditEntityTypes.System,
                     null,
-                    $"Exported teachers to {format.ToUpper()}",
+                    $"Произведен экспорт учителей в формат {format.ToUpper()}",
                     GetIpAddress()
                 );
 
@@ -1093,7 +1093,7 @@ namespace OnlineTutor2.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error exporting teachers");
+                _logger.LogError(ex, "Ошибка при экспорте учителей");
                 TempData["ErrorMessage"] = "Ошибка при экспорте учителей.";
                 return RedirectToAction(nameof(Teachers));
             }
@@ -1115,13 +1115,13 @@ namespace OnlineTutor2.Controllers
                 if (format == "csv")
                 {
                     fileData = await _exportService.ExportStudentsToCSVAsync();
-                    fileName = $"Students_{DateTime.Now:yyyy-MM-dd}.csv";
+                    fileName = $"Студенты_{DateTime.Now:yyyy-MM-dd}.csv";
                     contentType = "text/csv";
                 }
                 else
                 {
                     fileData = await _exportService.ExportStudentsToExcelAsync();
-                    fileName = $"Students_{DateTime.Now:yyyy-MM-dd}.xlsx";
+                    fileName = $"Студенты_{DateTime.Now:yyyy-MM-dd}.xlsx";
                     contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
                 }
 
@@ -1131,7 +1131,7 @@ namespace OnlineTutor2.Controllers
                     "Export Students",
                     AuditEntityTypes.System,
                     null,
-                    $"Exported students to {format.ToUpper()}",
+                    $"Протзведен экспорт студентов в формат {format.ToUpper()}",
                     GetIpAddress()
                 );
 
@@ -1139,7 +1139,7 @@ namespace OnlineTutor2.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error exporting students");
+                _logger.LogError(ex, "Ошибка при экспорте студентов");
                 TempData["ErrorMessage"] = "Ошибка при экспорте студентов.";
                 return RedirectToAction(nameof(Users));
             }
@@ -1161,13 +1161,13 @@ namespace OnlineTutor2.Controllers
                 if (format == "csv")
                 {
                     fileData = await _exportService.ExportClassesToCSVAsync();
-                    fileName = $"Classes_{DateTime.Now:yyyy-MM-dd}.csv";
+                    fileName = $"Классы_{DateTime.Now:yyyy-MM-dd}.csv";
                     contentType = "text/csv";
                 }
                 else
                 {
                     fileData = await _exportService.ExportClassesToExcelAsync();
-                    fileName = $"Classes_{DateTime.Now:yyyy-MM-dd}.xlsx";
+                    fileName = $"Классы_{DateTime.Now:yyyy-MM-dd}.xlsx";
                     contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
                 }
 
@@ -1177,7 +1177,7 @@ namespace OnlineTutor2.Controllers
                     "Export Classes",
                     AuditEntityTypes.System,
                     null,
-                    $"Exported classes to {format.ToUpper()}",
+                    $"Произведен экспорт классов в формат {format.ToUpper()}",
                     GetIpAddress()
                 );
 
@@ -1185,7 +1185,7 @@ namespace OnlineTutor2.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error exporting classes");
+                _logger.LogError(ex, "Ошибка при экспорте классов");
                 TempData["ErrorMessage"] = "Ошибка при экспорте классов.";
                 return RedirectToAction(nameof(Classes));
             }
@@ -1207,13 +1207,13 @@ namespace OnlineTutor2.Controllers
                 if (format == "csv")
                 {
                     fileData = await _exportService.ExportTestsToCSVAsync();
-                    fileName = $"Tests_{DateTime.Now:yyyy-MM-dd}.csv";
+                    fileName = $"Тесты_{DateTime.Now:yyyy-MM-dd}.csv";
                     contentType = "text/csv";
                 }
                 else
                 {
                     fileData = await _exportService.ExportTestsToExcelAsync();
-                    fileName = $"Tests_{DateTime.Now:yyyy-MM-dd}.xlsx";
+                    fileName = $"Тесты_{DateTime.Now:yyyy-MM-dd}.xlsx";
                     contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
                 }
 
@@ -1231,7 +1231,7 @@ namespace OnlineTutor2.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error exporting tests");
+                _logger.LogError(ex, "Ошибка при экспорте тестов");
                 TempData["ErrorMessage"] = "Ошибка при экспорте тестов.";
                 return RedirectToAction(nameof(Tests));
             }
@@ -1253,13 +1253,13 @@ namespace OnlineTutor2.Controllers
                 if (format == "csv")
                 {
                     fileData = await _exportService.ExportTestResultsToCSVAsync();
-                    fileName = $"TestResults_{DateTime.Now:yyyy-MM-dd}.csv";
+                    fileName = $"Результаты_{DateTime.Now:yyyy-MM-dd}.csv";
                     contentType = "text/csv";
                 }
                 else
                 {
                     fileData = await _exportService.ExportTestResultsToExcelAsync();
-                    fileName = $"TestResults_{DateTime.Now:yyyy-MM-dd}.xlsx";
+                    fileName = $"Результаты_{DateTime.Now:yyyy-MM-dd}.xlsx";
                     contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
                 }
 
@@ -1269,7 +1269,7 @@ namespace OnlineTutor2.Controllers
                     "Export Test Results",
                     AuditEntityTypes.System,
                     null,
-                    $"Exported test results to {format.ToUpper()}",
+                    $"Произведен экспорт резултатов в формат {format.ToUpper()}",
                     GetIpAddress()
                 );
 
@@ -1277,7 +1277,7 @@ namespace OnlineTutor2.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error exporting test results");
+                _logger.LogError(ex, "Ошибка при экспорте результатов");
                 TempData["ErrorMessage"] = "Ошибка при экспорте результатов.";
                 return RedirectToAction(nameof(TestResults));
             }
@@ -1299,13 +1299,13 @@ namespace OnlineTutor2.Controllers
                 if (format == "csv")
                 {
                     fileData = await _exportService.ExportAuditLogsToCSVAsync();
-                    fileName = $"AuditLogs_{DateTime.Now:yyyy-MM-dd}.csv";
+                    fileName = $"Logs_{DateTime.Now:yyyy-MM-dd}.csv";
                     contentType = "text/csv";
                 }
                 else
                 {
                     fileData = await _exportService.ExportAuditLogsToExcelAsync();
-                    fileName = $"AuditLogs_{DateTime.Now:yyyy-MM-dd}.xlsx";
+                    fileName = $"Logs_{DateTime.Now:yyyy-MM-dd}.xlsx";
                     contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
                 }
 
@@ -1315,7 +1315,7 @@ namespace OnlineTutor2.Controllers
                     "Export Audit Logs",
                     AuditEntityTypes.System,
                     null,
-                    $"Exported audit logs to {format.ToUpper()}",
+                    $"Произведен экспорт журнала в формат {format.ToUpper()}",
                     GetIpAddress()
                 );
 
@@ -1323,7 +1323,7 @@ namespace OnlineTutor2.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error exporting audit logs");
+                _logger.LogError(ex, "Ошибка при экспорте журнала");
                 TempData["ErrorMessage"] = "Ошибка при экспорте журнала.";
                 return RedirectToAction(nameof(AuditLogs));
             }
@@ -1363,7 +1363,5 @@ namespace OnlineTutor2.Controllers
         }
 
         #endregion
-
-
     }
 }
