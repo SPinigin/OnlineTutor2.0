@@ -55,7 +55,7 @@
 </div>
 
 <div class="row g-2 g-md-3">
-    <div class="col-6 col-md-6 mb-3 mb-md-4">
+    <div class="col-4 col-md-4 mb-3 mb-md-4">
         <div class="card teacher-card h-100">
             <div class="card-header">
                 <h5 class="card-title mb-0">Тесты</h5>
@@ -68,7 +68,7 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-6 mb-3 mb-md-4">
+    <div class="col-4 col-md-4 mb-3 mb-md-4">
         <div class="card teacher-card h-100">
             <div class="card-header">
                 <h5 class="card-title mb-0">Материалы</h5>
@@ -77,6 +77,19 @@
                 <p class="card-text d-none d-md-block">Загрузка и управление учебными материалами</p>
                 <a asp-controller="Material" asp-action="Index" class="btn btn-primary mt-auto w-100">
                     <i class="fas fa-book"></i> <span class="d-none d-sm-inline">Материалы</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-4 col-md-4 mb-3 mb-md-4">
+        <div class="card teacher-card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Мониторинг</h5>
+            </div>
+            <div class="card-body d-flex flex-column">
+                <p class="card-text d-none d-md-block">Мониторинг прохождения тестов в реальном времени</p>
+                <a asp-controller="TeacherDashboard" asp-action="Index" class="btn btn-primary mt-auto w-100">
+                    <i class="fas fa-tachometer-alt"></i> <span class="d-none d-sm-inline">Мониторинг</span>
                 </a>
             </div>
         </div>

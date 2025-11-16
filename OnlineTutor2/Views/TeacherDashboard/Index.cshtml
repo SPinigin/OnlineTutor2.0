@@ -1,0 +1,818 @@
+﻿@model OnlineTutor2.ViewModels.TeacherDashboardViewModel
+@{
+    ViewData["Title"] = "Панель мониторинга";
+}
+
+<div class="container-fluid px-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-tachometer-alt text-primary me-2"></i>
+                Панель мониторинга
+            </h2>
+            <p class="text-muted mb-0">Активность студентов в реальном времени</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <div id="signalr-status" class="signalr-status" style="display: none;">
+                <i class="fas fa-circle text-secondary me-1"></i>
+                <span>Подключение...</span>
+            </div>
+            <div id="signalr-activity-indicator"></div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-clipboard-list text-primary fs-2 mb-2"></i>
+                    <h3 class="mb-0">@Model.TotalActiveTests</h3>
+                    <small class="text-muted">Активных тестов</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-clock text-warning text-warning fs-2 mb-2"></i>
+                    <h3 class="mb-0" id="stats-in-progress">@Model.TotalStudentsInProgress</h3>
+                    <small class="text-muted">Проходят сейчас</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle text-success fs-2 mb-2"></i>
+                    <h3 class="mb-0" id="stats-completed-today">@Model.TotalCompletedToday</h3>
+                    <small class="text-muted">Завершено сегодня</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-bell text-info fs-2 mb-2"></i>
+                    <h3 class="mb-0" id="stats-notifications">0</h3>
+                    <small class="text-muted">Уведомлений сегодня</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-3" id="dashboardTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity" type="button" role="tab">
+                <i class="fas fa-stream"></i> Активность
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tests-tab" data-bs-toggle="tab" data-bs-target="#tests" type="button" role="tab">
+                <i class="fas fa-list"></i> Тесты
+            </button>
+        </li>
+    </ul>
+
+    
+    
+    <div class="tab-pane fade show active" id="activity" role="tabpanel">
+    
+    
+        <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-body py-2 px-3">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-search text-primary"></i>
+                        <strong class="small">Поиск:</strong>
+                    </div>
+        
+                    <div class="flex-grow-1" style="max-width: 400px;">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white">
+                                <i class="fas fa-search text-muted"></i>
+                            </span>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="activitySearchInput" 
+                                   placeholder="Поиск по имени студента или названию теста..."
+                                   onkeyup="filterActivities()">
+                            <button class="btn btn-outline-secondary" 
+                                    type="button" 
+                                    id="clearActivitySearch"
+                                    onclick="clearActivitySearch()"
+                                    style="display: none;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+        
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-sm btn-outline-primary" onclick="refreshActivity()">
+                            <i class="fas fa-sync"></i>
+                            <span class="d-none d-sm-inline ms-1">Обновить</span>
+                        </button>
+                        <span class="badge bg-secondary" id="activityCount">
+                            Показано: 0
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-compact mb-0" id="activityTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Уведомление</th>
+                                <th class="text-center d-none d-md-table-cell">Процент</th>
+                                <th class="text-center">Оценка</th>
+                                <th class="text-center d-none d-md-table-cell">Время</th>
+                                <th class="text-center">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activity-feed">
+                        
+                            <tr>
+                                <td colspan="5" class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Загрузка...</span>
+                                    </div>
+                                    <p class="text-muted mt-2 mb-0 small">Загрузка активности...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            
+                <div id="noActivityResults" class="text-center py-5" style="display: none;">
+                    <i class="fas fa-search text-muted mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
+                    <h5 class="text-muted mb-2">Ничего не найдено</h5>
+                    <p class="text-muted mb-3">Попробуйте изменить поисковый запрос</p>
+                    <button class="btn btn-outline-primary btn-sm" onclick="clearActivitySearch()">
+                        <i class="fas fa-redo"></i> Сбросить поиск
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="tab-pane fade" id="tests" role="tabpanel">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover tests-table mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Название теста</th>
+                                <th>Тип</th>
+                                <th>Класс</th>
+                                <th class="text-center">Завершено</th>
+                                <th class="text-center">В процессе</th>
+                                <th class="text-center">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @* Орфография *@
+                            @foreach (var test in Model.SpellingTests)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@test.Title</strong>
+                                        <br />
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            @test.CreatedAt.ToString("dd.MM.yyyy")
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary test-type-badge">
+                                            <i class="fas fa-spell-check me-1"></i>
+                                            Орфография
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (test.Class != null)
+                                        {
+                                            <i class="fas fa-users me-1"></i><span>@test.Class.Name</span>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-globe me-1"></i><span class="text-muted">Все классы</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success test-count-completed" data-test-id="@test.Id" data-test-type="spelling">
+                                            @test.SpellingTestResults.Count(r => r.IsCompleted)
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-warning test-count-progress" data-test-id="@test.Id" data-test-type="spelling">
+                                            @test.SpellingTestResults.Count(r => !r.IsCompleted)
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <a asp-controller="TestAnalytics" asp-action="Spelling" asp-route-id="@test.Id" 
+                                            class="btn btn-sm btn-outline-primary" title="Открыть аналитику">
+                                            <i class="fas fa-chart-bar"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+
+                            @* Пунктуация *@
+                            @foreach (var test in Model.PunctuationTests)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@test.Title</strong>
+                                        <br />
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            @test.CreatedAt.ToString("dd.MM.yyyy")
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info test-type-badge">
+                                            <i class="fas fa-paragraph me-1"></i>
+                                            Пунктуация
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (test.Class != null)
+                                        {
+                                            <i class="fas fa-users me-1"></i><span>@test.Class.Name</span>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-globe me-1"></i><span class="text-muted">Все классы</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success test-count-completed" data-test-id="@test.Id" data-test-type="punctuation">
+                                            @test.PunctuationTestResults.Count(r => r.IsCompleted)
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-warning test-count-progress" data-test-id="@test.Id" data-test-type="punctuation">
+                                            @test.PunctuationTestResults.Count(r => !r.IsCompleted)
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <a asp-controller="TestAnalytics" asp-action="Punctuation" asp-route-id="@test.Id" 
+                                            class="btn btn-sm btn-outline-primary" title="Открыть аналитику">
+                                            <i class="fas fa-chart-bar"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+
+                            @* Орфоэпия *@
+                            @foreach (var test in Model.OrthoeopyTests)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@test.Title</strong>
+                                        <br />
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            @test.CreatedAt.ToString("dd.MM.yyyy")
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-danger test-type-badge">
+                                            <i class="fas fa-volume-up me-1"></i>
+                                            Орфоэпия
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (test.Class != null)
+                                        {
+                                            <i class="fas fa-users me-1"></i><span>@test.Class.Name</span>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-globe me-1"></i><span class="text-muted">Все классы</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success test-count-completed" data-test-id="@test.Id" data-test-type="orthoepy">
+                                            @test.OrthoeopyTestResults.Count(r => r.IsCompleted)
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-warning test-count-progress" data-test-id="@test.Id" data-test-type="orthoepy">
+                                            @test.OrthoeopyTestResults.Count(r => !r.IsCompleted)
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <a asp-controller="TestAnalytics" asp-action="Orthoepy" asp-route-id="@test.Id" 
+                                            class="btn btn-sm btn-outline-primary" title="Открыть аналитику">
+                                            <i class="fas fa-chart-bar"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+
+                            @* Классические *@
+                            @foreach (var test in Model.RegularTests)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@test.Title</strong>
+                                        <br />
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            @test.CreatedAt.ToString("dd.MM.yyyy")
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary test-type-badge">
+                                            <i class="fas fa-question-circle me-1"></i>
+                                            Классический
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (test.Class != null)
+                                        {
+                                            <i class="fas fa-users me-1"></i><span>@test.Class.Name</span>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-globe me-1"></i><span class="text-muted">Все классы</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success test-count-completed" data-test-id="@test.Id" data-test-type="regular">
+                                            @test.RegularTestResults.Count(r => r.IsCompleted)
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-warning test-count-progress" data-test-id="@test.Id" data-test-type="regular">
+                                            @test.RegularTestResults.Count(r => !r.IsCompleted)
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <a asp-controller="TestAnalytics" asp-action="Regular" asp-route-id="@test.Id" 
+                                            class="btn btn-sm btn-outline-primary" title="Открыть аналитику">
+                                            <i class="fas fa-chart-bar"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="testResultModal" tabindex="-1" aria-labelledby="testResultModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="testResultModalTitle">Результат теста</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="testResultModalBody">
+                
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/teacher-dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/test-analytics-signalr.css" asp-append-version="true" />
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@7.0.0/dist/browser/signalr.min.js"></script>
+    <script src="~/js/teacher-dashboard-signalr.js" asp-append-version="true"></script>
+    
+    <script>
+        var TEACHER_ID = '@Model.Teacher.Id';
+        var notificationCount = 0;
+        var allActivities = []; // Храним все активности для фильтрации
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Инициализация Dashboard');
+
+            document.getElementById('signalr-status').style.display = 'inline-flex';
+
+            loadRecentActivity();
+
+            window.dashboardSignalR = new TeacherDashboardSignalR(TEACHER_ID);
+            window.dashboardSignalR.start();
+
+            // Обработка ввода в поиск
+            var searchInput = document.getElementById('activitySearchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    var clearBtn = document.getElementById('clearActivitySearch');
+                    if (clearBtn) {
+                        clearBtn.style.display = this.value ? 'block' : 'none';
+                    }
+                });
+            }
+
+            console.log('✅ Dashboard инициализирован');
+        });
+
+        // ===== ЗАГРУЗКА АКТИВНОСТИ =====
+
+        async function loadRecentActivity() {
+            console.log('📡 Загрузка активности...');
+            try {
+                var response = await fetch('/TeacherDashboard/GetRecentActivity');
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                
+                var activities = await response.json();
+                console.log('✅ Получено активностей:', activities.length);
+                
+                allActivities = activities; // Сохраняем для фильтрации
+                displayActivities(activities);
+            } catch (error) {
+                console.error('❌ Ошибка загрузки активности:', error);
+                var feed = document.getElementById('activity-feed');
+                if (feed) {
+                    feed.innerHTML = 
+                        '<tr><td colspan="5" class="text-center py-5">' +
+                        '<i class="fas fa-exclamation-triangle text-warning fs-1 mb-3"></i>' +
+                        '<p class="text-muted">Ошибка загрузки данных</p>' +
+                        '<button class="btn btn-primary btn-sm" onclick="loadRecentActivity()">' +
+                        '<i class="fas fa-redo"></i> Попробовать снова' +
+                        '</button>' +
+                        '</td></tr>';
+                }
+            }
+        }
+
+        // ===== ОТОБРАЖЕНИЕ АКТИВНОСТИ =====
+
+        function displayActivities(activities) {
+            var feed = document.getElementById('activity-feed');
+            var noResults = document.getElementById('noActivityResults');
+            
+            if (!activities || activities.length === 0) {
+                feed.innerHTML = 
+                    '<tr><td colspan="5" class="text-center py-5">' +
+                    '<i class="fas fa-inbox text-muted fs-1 mb-3" style="opacity: 0.3;"></i>' +
+                    '<p class="text-muted mb-0">Пока нет активности</p>' +
+                    '</td></tr>';
+                
+                if (noResults) noResults.style.display = 'none';
+                updateActivityCount(0);
+                return;
+            }
+
+            var html = '';
+            activities.forEach(function(activity) {
+                html += createActivityRow(activity);
+            });
+            
+            feed.innerHTML = html;
+            if (noResults) noResults.style.display = 'none';
+            updateActivityCount(activities.length);
+        }
+
+        // ===== СОЗДАНИЕ СТРОКИ АКТИВНОСТИ =====
+
+        function createActivityRow(activity) {
+            var timeAgo = formatTimeAgo(new Date(activity.lastActivityAt));
+            var testTypeIcon = getTestTypeIcon(activity.testType);
+            var testTypeColor = getTestTypeColor(activity.testType);
+            var testTypeName = getTestTypeName(activity.testType);
+            
+            // Определяем действие
+            var actionIcon, actionText, actionClass;
+            if (activity.status === 'completed') {
+                actionIcon = 'fa-check-circle';
+                actionText = 'завершил';
+                actionClass = 'text-success';
+            } else if (activity.status === 'in_progress') {
+                actionIcon = 'fa-clock';
+                actionText = 'проходит';
+                actionClass = 'text-warning';
+            } else {
+                actionIcon = 'fa-play-circle';
+                actionText = 'начал';
+                actionClass = 'text-info';
+            }
+
+            // Процент и оценка
+            var percentBadge = '';
+            var gradeBadge = '';
+            
+            if (activity.status === 'completed' && activity.percentage !== undefined) {
+                var percentColor = activity.percentage >= 80 ? 'success' : 
+                                  activity.percentage >= 60 ? 'warning' : 'danger';
+                percentBadge = '<span class="badge bg-' + percentColor + ' badge-sm">' + 
+                               activity.percentage.toFixed(1) + '%</span>';
+                
+                var grade = getGradeFromPercentage(activity.percentage);
+                var gradeColor = getGradeColor(grade);
+                gradeBadge = '<span class="grade-badge-compact grade-' + gradeColor + '">' + grade + '</span>';
+            } else {
+                percentBadge = '<span class="text-muted">—</span>';
+                gradeBadge = '<span class="text-muted">—</span>';
+            }
+
+            // Кнопка результата
+            var resultButton = '';
+            if (activity.status === 'completed' && activity.testResultId) {
+                resultButton = 
+                    '<button class="btn btn-outline-info btn-sm btn-icon" ' +
+                    'onclick="showTestResultModal(\'' + activity.testType + '\', ' + activity.testResultId + ', \'' + activity.studentName + '\')" ' +
+                    'title="Посмотреть результат">' +
+                    '<i class="fas fa-eye"></i>' +
+                    '</button>';
+            }
+
+            // Строка таблицы
+            return '<tr class="activity-row" data-activity-id="' + activity.testId + '_' + activity.studentId + '" ' +
+                   'data-search-text="' + (activity.studentName + ' ' + activity.testTitle).toLowerCase() + '">' +
+                   
+                   // Колонка 1: Уведомление
+                   '<td>' +
+                   '<div class="d-flex align-items-center gap-2">' +
+                   '<div class="activity-icon-small bg-' + testTypeColor + '">' +
+                   '<i class="fas ' + testTypeIcon + '"></i>' +
+                   '</div>' +
+                   '<div class="flex-grow-1 min-w-0">' +
+                   '<div class="d-flex align-items-center gap-1 mb-1">' +
+                   '<i class="fas ' + actionIcon + ' ' + actionClass + ' me-1"></i>' +
+                   '<strong class="text-truncate" style="max-width: 150px;">' + activity.studentName + '</strong>' +
+                   '<span class="text-muted d-none d-lg-inline">' + actionText + '</span>' +
+                   '</div>' +
+                   '<div class="d-flex align-items-center gap-1 flex-wrap">' +
+                   '<span class="badge bg-' + testTypeColor + ' badge-sm">' +
+                   '<i class="fas ' + testTypeIcon + ' d-md-none"></i>' +
+                   '<span class="d-none d-md-inline">' + testTypeName + '</span>' +
+                   '</span>' +
+                   '<span class="test-title-text small text-muted text-truncate" style="max-width: 200px;">' + 
+                   activity.testTitle + 
+                   '</span>' +
+                   '</div>' +
+                   '</div>' +
+                   '</div>' +
+                   '</td>' +
+                   
+                   // Колонка 2: Процент (скрыта на mobile)
+                   '<td class="text-center d-none d-md-table-cell">' +
+                   percentBadge +
+                   '</td>' +
+                   
+                   // Колонка 3: Оценка
+                   '<td class="text-center">' +
+                   gradeBadge +
+                   '</td>' +
+                   
+                   // Колонка 4: Время (скрыто на mobile)
+                   '<td class="text-center d-none d-md-table-cell">' +
+                   '<small class="text-muted">' + timeAgo + '</small>' +
+                   '</td>' +
+                   
+                   // Колонка 5: Действия
+                   '<td class="text-center">' +
+                   resultButton +
+                   '</td>' +
+                   
+                   '</tr>';
+        }
+
+        // ===== ФИЛЬТРАЦИЯ АКТИВНОСТИ =====
+
+        function filterActivities() {
+            var searchInput = document.getElementById('activitySearchInput');
+            if (!searchInput) return;
+
+            var searchText = searchInput.value.toLowerCase().trim();
+            console.log('🔍 Поиск активности:', searchText);
+
+            var rows = document.querySelectorAll('.activity-row');
+            var visibleCount = 0;
+
+            rows.forEach(function(row) {
+                var rowSearchText = row.getAttribute('data-search-text') || '';
+                
+                if (!searchText || rowSearchText.includes(searchText)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Показываем/скрываем сообщение "не найдено"
+            var noResults = document.getElementById('noActivityResults');
+            var tableBody = document.getElementById('activity-feed');
+            
+            if (visibleCount === 0 && searchText) {
+                if (tableBody) tableBody.style.display = 'none';
+                if (noResults) noResults.style.display = 'block';
+            } else {
+                if (tableBody) tableBody.style.display = '';
+                if (noResults) noResults.style.display = 'none';
+            }
+
+            updateActivityCount(visibleCount);
+            console.log('✅ Фильтрация завершена. Показано:', visibleCount, 'из', rows.length);
+        }
+
+        function clearActivitySearch() {
+            var searchInput = document.getElementById('activitySearchInput');
+            var clearBtn = document.getElementById('clearActivitySearch');
+            
+            if (searchInput) {
+                searchInput.value = '';
+            }
+            if (clearBtn) {
+                clearBtn.style.display = 'none';
+            }
+            
+            filterActivities();
+        }
+
+        function updateActivityCount(count) {
+            var countElement = document.getElementById('activityCount');
+            if (countElement) {
+                var total = document.querySelectorAll('.activity-row').length;
+                countElement.textContent = 'Показано: ' + count + (count !== total ? ' из ' + total : '');
+            }
+        }
+
+        // ===== ОБНОВЛЕНИЕ АКТИВНОСТИ =====
+
+        function refreshActivity() {
+            console.log('🔄 Ручное обновление активности');
+            loadRecentActivity();
+        }
+
+        // ===== ДОБАВЛЕНИЕ НОВОЙ АКТИВНОСТИ В НАЧАЛО =====
+
+        function prependActivity(activity) {
+            console.log('➕ Добавление новой активности');
+
+            var feed = document.getElementById('activity-feed');
+            if (!feed) return;
+
+            // Удаляем сообщение "нет активности" если есть
+            var emptyRow = feed.querySelector('td[colspan="5"]');
+            if (emptyRow) {
+                feed.innerHTML = '';
+            }
+
+            // Создаем новую строку
+            var newRow = document.createElement('tr');
+            newRow.className = 'activity-row activity-row-new';
+            newRow.setAttribute('data-activity-id', activity.testId + '_' + activity.studentId);
+            newRow.setAttribute('data-search-text', (activity.studentName + ' ' + activity.testTitle).toLowerCase());
+            newRow.innerHTML = createActivityRow(activity).replace('<tr class="activity-row"', '<tr').replace('</tr>', '');
+            
+            // Вставляем в начало
+            feed.insertBefore(newRow, feed.firstChild);
+
+            // Убираем класс анимации через 1 секунду
+            setTimeout(function() {
+                newRow.classList.remove('activity-row-new');
+            }, 1000);
+
+            // Ограничиваем количество (макс 100)
+            var rows = feed.querySelectorAll('.activity-row');
+            if (rows.length > 100) {
+                rows[rows.length - 1].remove();
+            }
+
+            // Добавляем в массив для фильтрации
+            allActivities.unshift(activity);
+            if (allActivities.length > 100) {
+                allActivities.pop();
+            }
+
+            // Применяем текущий фильтр
+            filterActivities();
+        }
+
+        // ===== ОБНОВЛЕНИЕ СТАТИСТИКИ =====
+
+        function updateStats(action) {
+            if (action === 'completed') {
+                var completedEl = document.getElementById('stats-completed-today');
+                if (completedEl) {
+                    var current = parseInt(completedEl.textContent) || 0;
+                    completedEl.textContent = current + 1;
+                    animateNumber(completedEl);
+                }
+            } else if (action === 'started') {
+                var inProgressEl = document.getElementById('stats-in-progress');
+                if (inProgressEl) {
+                    var current = parseInt(inProgressEl.textContent) || 0;
+                    inProgressEl.textContent = current + 1;
+                    animateNumber(inProgressEl);
+                }
+            }
+
+            var notificationsEl = document.getElementById('stats-notifications');
+            if (notificationsEl) {
+                notificationCount++;
+                notificationsEl.textContent = notificationCount;
+                animateNumber(notificationsEl);
+            }
+        }
+
+        function animateNumber(element) {
+            element.classList.add('number-change');
+            setTimeout(function() {
+                element.classList.remove('number-change');
+            }, 600);
+        }
+
+        // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
+
+        function getStatusBadge(status, percentage) {
+            if (status === 'completed' && percentage !== undefined) {
+                var badgeColor = percentage >= 80 ? 'success' : 
+                                percentage >= 60 ? 'warning' : 'danger';
+                return '<span class="badge bg-' + badgeColor + ' badge-sm">' + 
+                       percentage.toFixed(1) + '%</span>';
+            }
+            return status === 'in_progress' 
+                ? '<span class="badge bg-warning badge-sm">В процессе</span>' 
+                : '';
+        }
+
+        function getTestTypeIcon(type) {
+            var icons = {
+                'spelling': 'fa-spell-check',
+                'punctuation': 'fa-paragraph',
+                'orthoepy': 'fa-volume-up',
+                'regular': 'fa-question-circle'
+            };
+            return icons[type] || 'fa-clipboard-list';
+        }
+
+        function getTestTypeColor(type) {
+            var colors = {
+                'spelling': 'primary',
+                'punctuation': 'info',
+                'orthoepy': 'danger',
+                'regular': 'secondary'
+            };
+            return colors[type] || 'secondary';
+        }
+
+        function getTestTypeName(type) {
+            var names = {
+                'spelling': 'Орфография',
+                'punctuation': 'Пунктуация',
+                'orthoepy': 'Орфоэпия',
+                'regular': 'Классический'
+            };
+            return names[type] || type;
+        }
+
+        function getGradeFromPercentage(percentage) {
+            if (percentage >= 91) return 5;
+            if (percentage >= 76) return 4;
+            if (percentage >= 61) return 3;
+            return 2;
+        }
+
+        function getGradeColor(grade) {
+            var colors = {
+                5: 'excellent',
+                4: 'good',
+                3: 'satisfactory',
+                2: 'unsatisfactory'
+            };
+            return colors[grade] || 'unsatisfactory';
+        }
+
+        function formatTimeAgo(date) {
+            var seconds = Math.floor((new Date() - date) / 1000);
+            
+            if (seconds < 60) return 'только что';
+            if (seconds < 3600) return Math.floor(seconds / 60) + ' мин назад';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + ' ч назад';
+            if (seconds < 604800) return Math.floor(seconds / 86400) + ' дн назад';
+            return date.toLocaleDateString('ru-RU');
+        }
+
+        // ===== ОСТАНОВКА ПРИ ВЫХОДЕ =====
+
+        window.addEventListener('beforeunload', function() {
+            if (window.dashboardSignalR) {
+                window.dashboardSignalR.stop();
+            }
+        });
+    </script>
+}
+

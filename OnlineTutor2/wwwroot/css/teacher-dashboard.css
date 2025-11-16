@@ -1,0 +1,457 @@
+﻿/* wwwroot/css/teacher-dashboard.css */
+
+/* ===== ОБЩИЕ СТИЛИ ===== */
+.test-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+    .test-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
+    }
+
+/* ===== ЛЕНТА АКТИВНОСТИ ===== */
+.activity-feed {
+    /* убрал max-height и overflow-y ???? */
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e9ecef;
+    transition: background-color 0.3s;
+}
+
+    .activity-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+    margin-right: 15px;
+}
+
+    .activity-icon i {
+        font-size: 1.2rem;
+    }
+
+.activity-content {
+    flex-grow: 1;
+}
+
+/* Кнопка результата в активности */
+.activity-result-btn {
+    opacity: 1;
+    transition: all 0.2s;
+}
+
+    .activity-result-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+/* Анимация появления новой активности */
+.activity-item-new {
+    animation: slideInLeft 0.5s ease;
+    background-color: #d1ecf1;
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-50px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* ===== УВЕДОМЛЕНИЯ ===== */
+.dashboard-notification {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 1060;
+    min-width: 350px;
+    max-width: 500px;
+    animation: slideInRight 0.4s ease;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.dashboard-notification .alert {
+    margin-bottom: 10px;
+    border-radius: 8px;
+}
+
+/* Специальное уведомление о истечении времени */
+.notification-timeout {
+    border-left: 4px solid #dc3545;
+}
+
+/* ===== СТАТУС SIGNALR ===== */
+.signalr-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+    .signalr-status.status-connected {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .signalr-status.status-reconnecting {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    .signalr-status.status-disconnected,
+    .signalr-status.status-error {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+/* ===== ИНДИКАТОР АКТИВНОСТИ ===== */
+#signalr-activity-indicator {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #28a745;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1070;
+}
+
+    #signalr-activity-indicator.active {
+        opacity: 1;
+        animation: pulse 1.5s ease-in-out;
+    }
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+    }
+
+    50% {
+        transform: scale(1.5);
+        box-shadow: 0 0 0 15px rgba(40, 167, 69, 0);
+    }
+}
+
+/* ===== АНИМАЦИЯ ЧИСЕЛ ===== */
+.number-change {
+    animation: numberPulse 0.6s ease;
+    color: #0d6efd !important;
+    font-weight: bold;
+}
+
+@keyframes numberPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.2);
+    }
+}
+
+/* ===== АНИМАЦИЯ БЕЙДЖЕЙ ===== */
+.badge-pulse {
+    animation: badgePulse 0.6s ease;
+}
+
+@keyframes badgePulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.3);
+        box-shadow: 0 0 0 5px rgba(13, 110, 253, 0.2);
+    }
+}
+
+/* ===== ТАБЛИЦА ТЕСТОВ ===== */
+.tests-table {
+    font-size: 0.9rem;
+}
+
+    .tests-table td {
+        vertical-align: middle;
+    }
+
+.test-type-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* ===== КАРТОЧКИ СТАТИСТИКИ ===== */
+.card-body h3 {
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+.card-body i.fs-2 {
+    opacity: 0.7;
+}
+
+/* ===== АДАПТИВНОСТЬ ===== */
+@media (max-width: 768px) {
+    .dashboard-notification {
+        min-width: 300px;
+        right: 10px;
+        top: 70px;
+    }
+
+    .activity-item {
+        padding: 12px 15px;
+    }
+
+    .activity-icon {
+        width: 35px;
+        height: 35px;
+        margin-right: 10px;
+    }
+
+        .activity-icon i {
+            font-size: 1rem;
+        }
+
+    .card-body h3 {
+        font-size: 2rem;
+    }
+}
+
+/* ===== ПУСТОЕ СОСТОЯНИЕ ===== */
+.activity-feed .text-center {
+    padding: 3rem 1rem;
+}
+
+    .activity-feed .text-center i {
+        opacity: 0.5;
+    }
+
+/* ===== ССЫЛКИ В АКТИВНОСТИ ===== */
+.activity-content a {
+    font-weight: 500;
+    text-decoration: none;
+    color: #0d6efd;
+}
+
+    .activity-content a:hover {
+        text-decoration: none;
+        color: #0a58ca;
+    }
+
+/* ===== ВКЛАДКИ ===== */
+.nav-tabs .nav-link {
+    color: #6c757d;
+    border: none;
+    border-bottom: 3px solid transparent;
+}
+
+    .nav-tabs .nav-link:hover {
+        border-bottom-color: #dee2e6;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #0d6efd;
+        border-bottom-color: #0d6efd;
+        background-color: transparent;
+    }
+
+/* ===== ЗАГРУЗКА ===== */
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* ===== МОДАЛЬНОЕ ОКНО РЕЗУЛЬТАТА ===== */
+#testResultModal .modal-dialog {
+    max-width: 900px;
+}
+
+#testResultModal .modal-body {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+/* Убираем навигационные кнопки из Result.cshtml в модальном окне */
+#testResultModal .navigation-card {
+    display: none;
+}
+
+#testResultModal .breadcrumb {
+    display: none;
+}
+
+/* ===== ТАБЛИЦА АКТИВНОСТИ ===== */
+.activity-row {
+    transition: background-color 0.2s;
+}
+
+    .activity-row:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+
+/* Иконка типа теста в таблице */
+.activity-icon-small {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+}
+
+    .activity-icon-small i {
+        font-size: 0.9rem;
+    }
+
+/* Название теста без подчеркивания */
+.test-title-text {
+    font-weight: 400;
+    color: #6c757d;
+}
+
+/* Анимация новой строки */
+.activity-row-new {
+    animation: slideInLeft 0.5s ease;
+    background-color: #d1ecf1;
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* ===== ПОИСК АКТИВНОСТИ ===== */
+#activitySearchInput {
+    border-left: none;
+    font-size: 0.875rem;
+}
+
+    #activitySearchInput:focus {
+        box-shadow: none;
+        border-color: #dee2e6;
+    }
+
+.input-group-text {
+    background-color: white;
+    border-right: none;
+}
+
+#clearActivitySearch {
+    border-left: none;
+}
+
+/* ===== АДАПТИВНОСТЬ ТАБЛИЦЫ АКТИВНОСТИ ===== */
+
+@media (max-width: 767.98px) {
+    .activity-icon-small {
+        width: 28px;
+        height: 28px;
+    }
+
+        .activity-icon-small i {
+            font-size: 0.8rem;
+        }
+
+    .test-title-text {
+        font-size: 0.75rem;
+    }
+
+    .table-compact td {
+        padding: 0.5rem 0.3rem;
+    }
+
+    .btn-icon {
+        width: 30px;
+        height: 30px;
+        padding: 0;
+    }
+
+        .btn-icon i {
+            font-size: 0.85rem;
+        }
+}
+
+@media (max-width: 575.98px) {
+    .activity-icon-small {
+        width: 24px;
+        height: 24px;
+    }
+
+        .activity-icon-small i {
+            font-size: 0.75rem;
+        }
+
+    .test-title-text {
+        font-size: 0.7rem;
+        max-width: 120px !important;
+    }
+
+    .table-compact td {
+        padding: 0.4rem 0.25rem;
+        font-size: 0.8rem;
+    }
+
+    .btn-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+        .btn-icon i {
+            font-size: 0.8rem;
+        }
+
+    .grade-badge-compact {
+        width: 20px;
+        height: 20px;
+        font-size: 0.7rem;
+    }
+}

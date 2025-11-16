@@ -257,7 +257,7 @@ namespace OnlineTutor2.Controllers
             {
                 _logger.LogInformation("Время теста по орфографии {ResultId} истекло для студента {StudentId}. Прошло: {TimeElapsed}, Лимит: {TimeLimit}",
                     id, student.Id, timeElapsed, timeLimit);
-                await CompleteSpellingTest(testResult);
+                await CompleteSpellingTest(testResult, isAutoCompleted: true);
                 return RedirectToAction(nameof(SpellingResult), new { id = testResult.Id });
             }
 
@@ -1559,7 +1559,7 @@ namespace OnlineTutor2.Controllers
             return correctSet.SetEquals(studentSet);
         }
 
-        private async Task CompleteSpellingTest(SpellingTestResult testResult)
+        private async Task CompleteSpellingTest(SpellingTestResult testResult, bool isAutoCompleted = false)
         {
             testResult.CompletedAt = DateTime.Now;
             testResult.IsCompleted = true;
@@ -1594,7 +1594,8 @@ namespace OnlineTutor2.Controllers
                     maxScore = testResult.MaxScore,
                     percentage = testResult.Percentage,
                     timestamp = DateTime.Now,
-                    action = "completed"
+                    action = "completed",
+                    isAutoCompleted = isAutoCompleted
                 };
 
                 // Группа теста
@@ -1614,7 +1615,7 @@ namespace OnlineTutor2.Controllers
             }
         }
 
-        private async Task CompletePunctuationTest(PunctuationTestResult testResult)
+        private async Task CompletePunctuationTest(PunctuationTestResult testResult, bool isAutoCompleted = false)
         {
             testResult.CompletedAt = DateTime.Now;
             testResult.IsCompleted = true;
@@ -1649,7 +1650,8 @@ namespace OnlineTutor2.Controllers
                     maxScore = testResult.MaxScore,
                     percentage = testResult.Percentage,
                     timestamp = DateTime.Now,
-                    action = "completed"
+                    action = "completed",
+                    isAutoCompleted = isAutoCompleted
                 };
 
                 // Группа теста
@@ -1669,7 +1671,7 @@ namespace OnlineTutor2.Controllers
             }
         }
 
-        private async Task CompleteOrthoeopyTest(OrthoeopyTestResult testResult)
+        private async Task CompleteOrthoeopyTest(OrthoeopyTestResult testResult, bool isAutoCompleted = false)
         {
             testResult.CompletedAt = DateTime.Now;
             testResult.IsCompleted = true;
@@ -1704,7 +1706,8 @@ namespace OnlineTutor2.Controllers
                     maxScore = testResult.MaxScore,
                     percentage = testResult.Percentage,
                     timestamp = DateTime.Now,
-                    action = "completed"
+                    action = "completed",
+                    isAutoCompleted = isAutoCompleted
                 };
 
                 // Группа теста
@@ -1724,7 +1727,7 @@ namespace OnlineTutor2.Controllers
             }
         }
 
-        private async Task CompleteRegularTest(RegularTestResult testResult)
+        private async Task CompleteRegularTest(RegularTestResult testResult, bool isAutoCompleted = false)
         {
             testResult.CompletedAt = DateTime.Now;
             testResult.IsCompleted = true;
@@ -1759,7 +1762,8 @@ namespace OnlineTutor2.Controllers
                     maxScore = testResult.MaxScore,
                     percentage = testResult.Percentage,
                     timestamp = DateTime.Now,
-                    action = "completed"
+                    action = "completed",
+                    isAutoCompleted = isAutoCompleted
                 };
 
                 // Группа теста

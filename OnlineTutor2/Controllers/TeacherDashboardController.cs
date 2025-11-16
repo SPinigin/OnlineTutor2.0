@@ -25,12 +25,10 @@ namespace OnlineTutor2.Controllers
             _logger = logger;
         }
 
-        // GET: TeacherDashboard
         public async Task<IActionResult> Index()
         {
             var currentUser = await _userManager.GetUserAsync(User);
 
-            // Получаем все активные тесты учителя
             var spellingTests = await _context.SpellingTests
                 .Where(st => st.TeacherId == currentUser.Id && st.IsActive)
                 .Include(st => st.Class)
@@ -83,16 +81,12 @@ namespace OnlineTutor2.Controllers
             return View(viewModel);
         }
 
-        // GET: TeacherDashboard/GetRecentActivity
         [HttpGet]
         public async Task<IActionResult> GetRecentActivity()
         {
             var currentUser = await _userManager.GetUserAsync(User);
-
-            // Получаем последние 50 активностей
             var activities = new List<TestActivityViewModel>();
 
-            // Spelling
             var spellingActivities = await _context.SpellingTestResults
                 .Include(tr => tr.SpellingTest)
                 .Include(tr => tr.Student)
@@ -113,13 +107,13 @@ namespace OnlineTutor2.Controllers
                     Percentage = tr.Percentage,
                     StartedAt = tr.StartedAt,
                     CompletedAt = tr.CompletedAt,
-                    LastActivityAt = tr.CompletedAt ?? tr.StartedAt
+                    LastActivityAt = tr.CompletedAt ?? tr.StartedAt,
+                    TestResultId = tr.Id
                 })
                 .ToListAsync();
 
             activities.AddRange(spellingActivities);
 
-            // Punctuation
             var punctuationActivities = await _context.PunctuationTestResults
                 .Include(tr => tr.PunctuationTest)
                 .Include(tr => tr.Student)
@@ -140,13 +134,13 @@ namespace OnlineTutor2.Controllers
                     Percentage = tr.Percentage,
                     StartedAt = tr.StartedAt,
                     CompletedAt = tr.CompletedAt,
-                    LastActivityAt = tr.CompletedAt ?? tr.StartedAt
+                    LastActivityAt = tr.CompletedAt ?? tr.StartedAt,
+                    TestResultId = tr.Id
                 })
                 .ToListAsync();
 
             activities.AddRange(punctuationActivities);
 
-            // Orthoepy
             var orthoeopyActivities = await _context.OrthoeopyTestResults
                 .Include(tr => tr.OrthoeopyTest)
                 .Include(tr => tr.Student)
@@ -167,13 +161,13 @@ namespace OnlineTutor2.Controllers
                     Percentage = tr.Percentage,
                     StartedAt = tr.StartedAt,
                     CompletedAt = tr.CompletedAt,
-                    LastActivityAt = tr.CompletedAt ?? tr.StartedAt
+                    LastActivityAt = tr.CompletedAt ?? tr.StartedAt,
+                    TestResultId = tr.Id
                 })
                 .ToListAsync();
 
             activities.AddRange(orthoeopyActivities);
 
-            // Regular
             var regularActivities = await _context.RegularTestResults
                 .Include(tr => tr.RegularTest)
                 .Include(tr => tr.Student)
@@ -194,19 +188,92 @@ namespace OnlineTutor2.Controllers
                     Percentage = tr.Percentage,
                     StartedAt = tr.StartedAt,
                     CompletedAt = tr.CompletedAt,
-                    LastActivityAt = tr.CompletedAt ?? tr.StartedAt
+                    LastActivityAt = tr.CompletedAt ?? tr.StartedAt,
+                    TestResultId = tr.Id
                 })
                 .ToListAsync();
 
             activities.AddRange(regularActivities);
 
-            // Сортируем по времени активности
             var sortedActivities = activities
                 .OrderByDescending(a => a.LastActivityAt)
                 .Take(50)
                 .ToList();
 
             return Json(sortedActivities);
+        }
+
+        // GET: TeacherDashboard/GetTestResult
+        [HttpGet]
+        public async Task<IActionResult> GetTestResult(string testType, int testResultId)
+        {
+            try
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+
+                object result = null;
+
+                switch (testType.ToLower())
+                {
+                    case "spelling":
+                        result = await _context.SpellingTestResults
+                            .Include(tr => tr.SpellingTest)
+                                .ThenInclude(st => st.SpellingQuestions.OrderBy(q => q.OrderIndex))
+                            .Include(tr => tr.SpellingAnswers)
+                                .ThenInclude(a => a.SpellingQuestion)
+                            .Include(tr => tr.Student)
+                                .ThenInclude(s => s.User)
+                            .FirstOrDefaultAsync(tr => tr.Id == testResultId && tr.SpellingTest.TeacherId == currentUser.Id);
+                        break;
+
+                    case "punctuation":
+                        result = await _context.PunctuationTestResults
+                            .Include(tr => tr.PunctuationTest)
+                                .ThenInclude(pt => pt.PunctuationQuestions.OrderBy(q => q.OrderIndex))
+                            .Include(tr => tr.PunctuationAnswers)
+                                .ThenInclude(a => a.PunctuationQuestion)
+                            .Include(tr => tr.Student)
+                                .ThenInclude(s => s.User)
+                            .FirstOrDefaultAsync(tr => tr.Id == testResultId && tr.PunctuationTest.TeacherId == currentUser.Id);
+                        break;
+
+                    case "orthoepy":
+                        result = await _context.OrthoeopyTestResults
+                            .Include(tr => tr.OrthoeopyTest)
+                                .ThenInclude(ot => ot.OrthoeopyQuestions.OrderBy(q => q.OrderIndex))
+                            .Include(tr => tr.OrthoeopyAnswers)
+                                .ThenInclude(a => a.OrthoeopyQuestion)
+                            .Include(tr => tr.Student)
+                                .ThenInclude(s => s.User)
+                            .FirstOrDefaultAsync(tr => tr.Id == testResultId && tr.OrthoeopyTest.TeacherId == currentUser.Id);
+                        break;
+
+                    case "regular":
+                        result = await _context.RegularTestResults
+                            .Include(tr => tr.RegularTest)
+                                .ThenInclude(rt => rt.RegularQuestions.OrderBy(q => q.OrderIndex))
+                                    .ThenInclude(q => q.Options.OrderBy(o => o.OrderIndex))
+                            .Include(tr => tr.RegularAnswers)
+                                .ThenInclude(a => a.RegularQuestion)
+                            .Include(tr => tr.Student)
+                                .ThenInclude(s => s.User)
+                            .FirstOrDefaultAsync(tr => tr.Id == testResultId && tr.RegularTest.TeacherId == currentUser.Id);
+                        break;
+                }
+
+                if (result == null)
+                {
+                    return NotFound();
+                }
+
+                // Возвращаем частичное представление
+                return PartialView("~/Views/StudentTest/Result.cshtml", result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка загрузки результата теста {TestType} {ResultId}", testType, testResultId);
+                return StatusCode(500, "Ошибка загрузки результата");
+            }
         }
     }
 }
