@@ -1,0 +1,66 @@
+﻿/* Анимация изменения значений */
+@keyframes valueChange {
+    0%, 100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.value-changed {
+    animation: valueChange 0.6s ease;
+    color: #0d6efd !important;
+    font-weight: bold;
+}
+
+/* Анимация новой строки */
+@keyframes rowAppear {
+    from {
+        background-color: #d1ecf1;
+        transform: translateX(-10px);
+    }
+
+    to {
+        background-color: transparent;
+        transform: translateX(0);
+    }
+}
+
+.table-row-new {
+    animation: rowAppear 1s ease;
+}
+
+/* Индикатор обновления */
+#updateIndicator .alert {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Пульсация для активных элементов */
+.stats-card-compact.updating {
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 0 10px rgba(13, 110, 253, 0);
+    }
+}

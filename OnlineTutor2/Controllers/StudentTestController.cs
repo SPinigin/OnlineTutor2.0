@@ -161,6 +161,7 @@ namespace OnlineTutor2.Controllers
                             testId = test.Id,
                             testType = "spelling",
                             studentId = student.Id,
+                            studentName = student.User.FullName,
                             timestamp = DateTime.Now
                         });
                 }
@@ -196,6 +197,7 @@ namespace OnlineTutor2.Controllers
                         testId = test.Id,
                         testType = "spelling",
                         studentId = student.Id,
+                        studentName = student.User.FullName,
                         timestamp = DateTime.Now
                     });
             }
@@ -433,6 +435,7 @@ namespace OnlineTutor2.Controllers
                             testId = test.Id,
                             testType = "punctuation",
                             studentId = student.Id,
+                            studentName = student.User.FullName,
                             timestamp = DateTime.Now
                         });
                 }
@@ -468,6 +471,7 @@ namespace OnlineTutor2.Controllers
                         testId = test.Id,
                         testType = "punctuation",
                         studentId = student.Id,
+                        studentName = student.User.FullName,
                         timestamp = DateTime.Now
                     });
             }
@@ -775,6 +779,7 @@ namespace OnlineTutor2.Controllers
                             testId = test.Id,
                             testType = "orthoepy",
                             studentId = student.Id,
+                            studentName = student.User.FullName,
                             timestamp = DateTime.Now
                         });
                 }
@@ -810,6 +815,7 @@ namespace OnlineTutor2.Controllers
                         testId = test.Id,
                         testType = "orthoepy",
                         studentId = student.Id,
+                        studentName = student.User.FullName,
                         timestamp = DateTime.Now
                     });
             }
@@ -1047,6 +1053,7 @@ namespace OnlineTutor2.Controllers
                             testId = test.Id,
                             testType = "regular",
                             studentId = student.Id,
+                            studentName = student.User.FullName,
                             timestamp = DateTime.Now
                         });
                 }
@@ -1082,6 +1089,7 @@ namespace OnlineTutor2.Controllers
                         testId = test.Id,
                         testType = "regular",
                         studentId = student.Id,
+                        studentName = student.User.FullName,
                         timestamp = DateTime.Now
                     });
             }
@@ -1486,6 +1494,10 @@ namespace OnlineTutor2.Controllers
 
             await _context.SaveChangesAsync();
 
+            var student = await _context.Students
+                .Include(s => s.User)
+                .FirstOrDefaultAsync(s => s.Id == testResult.StudentId);
+
             try
             {
                 await _hubContext.Clients.Group($"spelling_test_{testResult.SpellingTestId}")
@@ -1494,6 +1506,10 @@ namespace OnlineTutor2.Controllers
                         testId = testResult.SpellingTestId,
                         testType = "spelling",
                         studentId = testResult.StudentId,
+                        studentName = student?.User?.FullName ?? "Неизвестный студент",
+                        score = testResult.Score,
+                        maxScore = testResult.MaxScore,
+                        percentage = testResult.Percentage,
                         timestamp = DateTime.Now
                     });
 
@@ -1517,6 +1533,10 @@ namespace OnlineTutor2.Controllers
 
             await _context.SaveChangesAsync();
 
+            var student = await _context.Students
+                .Include(s => s.User)
+                .FirstOrDefaultAsync(s => s.Id == testResult.StudentId);
+
             try
             {
                 await _hubContext.Clients.Group($"punctuation_test_{testResult.PunctuationTestId}")
@@ -1525,6 +1545,10 @@ namespace OnlineTutor2.Controllers
                         testId = testResult.PunctuationTestId,
                         testType = "punctuation",
                         studentId = testResult.StudentId,
+                        studentName = student?.User?.FullName ?? "Неизвестный студент",
+                        score = testResult.Score,
+                        maxScore = testResult.MaxScore,
+                        percentage = testResult.Percentage,
                         timestamp = DateTime.Now
                     });
 
@@ -1548,6 +1572,10 @@ namespace OnlineTutor2.Controllers
 
             await _context.SaveChangesAsync();
 
+            var student = await _context.Students
+                .Include(s => s.User)
+                .FirstOrDefaultAsync(s => s.Id == testResult.StudentId);
+
             try
             {
                 await _hubContext.Clients.Group($"orthoepy_test_{testResult.OrthoeopyTestId}")
@@ -1556,6 +1584,10 @@ namespace OnlineTutor2.Controllers
                         testId = testResult.OrthoeopyTestId,
                         testType = "orthoepy",
                         studentId = testResult.StudentId,
+                        studentName = student?.User?.FullName ?? "Неизвестный студент",
+                        score = testResult.Score,
+                        maxScore = testResult.MaxScore,
+                        percentage = testResult.Percentage,
                         timestamp = DateTime.Now
                     });
 
@@ -1579,6 +1611,10 @@ namespace OnlineTutor2.Controllers
 
             await _context.SaveChangesAsync();
 
+            var student = await _context.Students
+                .Include(s => s.User)
+                .FirstOrDefaultAsync(s => s.Id == testResult.StudentId);
+
             try
             {
                 await _hubContext.Clients.Group($"regular_test_{testResult.RegularTestId}")
@@ -1587,6 +1623,10 @@ namespace OnlineTutor2.Controllers
                         testId = testResult.RegularTestId,
                         testType = "regular",
                         studentId = testResult.StudentId,
+                        studentName = student?.User?.FullName ?? "Неизвестный студент",
+                        score = testResult.Score,
+                        maxScore = testResult.MaxScore,
+                        percentage = testResult.Percentage,
                         timestamp = DateTime.Now
                     });
 

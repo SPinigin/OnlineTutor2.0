@@ -13,11 +13,15 @@ namespace OnlineTutor2.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ILogger<TestAnalyticsController> _logger;
 
-        public TestAnalyticsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public TestAnalyticsController(ApplicationDbContext context, 
+            UserManager<ApplicationUser> userManager,
+            ILogger<TestAnalyticsController> logger)
         {
             _context = context;
             _userManager = userManager;
+            _logger = logger;
         }
 
         // GET: TestAnalytics/Spelling/5 - Аналитика теста по орфографии
@@ -1132,5 +1136,379 @@ namespace OnlineTutor2.Controllers
 
             return Json(response);
         }
+
+        #region API Methods for Real-time Updates
+
+        // GET: TestAnalytics/GetSpellingAnalyticsData
+        [HttpGet]
+        public async Task<IActionResult> GetSpellingAnalyticsData(int testId)
+        {
+            try
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+
+                var test = await _context.SpellingTests
+                    .Include(st => st.Class)
+                        .ThenInclude(c => c.Students)
+                            .ThenInclude(s => s.User)
+                    .Include(st => st.SpellingQuestions.OrderBy(q => q.OrderIndex))
+                    .Include(st => st.SpellingTestResults)
+                        .ThenInclude(tr => tr.Student)
+                            .ThenInclude(s => s.User)
+                    .Include(st => st.SpellingTestResults)
+                        .ThenInclude(tr => tr.SpellingAnswers)
+                            .ThenInclude(a => a.SpellingQuestion)
+                    .FirstOrDefaultAsync(st => st.Id == testId && st.TeacherId == currentUser.Id);
+
+                if (test == null)
+                {
+                    return NotFound();
+                }
+
+                var analytics = await BuildSpellingAnalyticsAsync(test);
+
+                return Json(new
+                {
+                    statistics = new
+                    {
+                        totalStudents = analytics.Statistics.TotalStudents,
+                        averagePercentage = analytics.Statistics.AveragePercentage,
+                        averageCompletionTime = new
+                        {
+                            minutes = analytics.Statistics.AverageCompletionTime.Minutes,
+                            seconds = analytics.Statistics.AverageCompletionTime.Seconds
+                        },
+                        studentsCompleted = analytics.Statistics.StudentsCompleted,
+                        studentsInProgress = analytics.Statistics.StudentsInProgress,
+                        studentsNotStarted = analytics.Statistics.StudentsNotStarted
+                    },
+                    studentResults = analytics.SpellingResults.Select(sr => new
+                    {
+                        studentId = sr.Student.Id,
+                        studentName = sr.Student.User.FullName,
+                        hasCompleted = sr.HasCompleted,
+                        isInProgress = sr.IsInProgress,
+                        attemptsUsed = sr.AttemptsUsed,
+                        maxAttempts = test.MaxAttempts,
+                        bestResult = sr.BestResult != null ? new
+                        {
+                            percentage = sr.BestResult.Percentage,
+                            score = sr.BestResult.Score,
+                            maxScore = sr.BestResult.MaxScore
+                        } : null,
+                        latestResult = sr.LatestResult != null ? new
+                        {
+                            percentage = sr.LatestResult.Percentage,
+                            score = sr.LatestResult.Score,
+                            maxScore = sr.LatestResult.MaxScore,
+                            completedAt = sr.LatestResult.CompletedAt?.ToString("dd.MM")
+                        } : null,
+                        totalTimeSpent = sr.TotalTimeSpent.HasValue ? new
+                        {
+                            minutes = sr.TotalTimeSpent.Value.Minutes,
+                            seconds = sr.TotalTimeSpent.Value.Seconds
+                        } : null
+                    }),
+                    questionAnalytics = analytics.SpellingQuestionAnalytics.Select(qa => new
+                    {
+                        questionId = qa.SpellingQuestion.Id,
+                        successRate = qa.SuccessRate,
+                        totalAnswers = qa.TotalAnswers,
+                        correctAnswers = qa.CorrectAnswers,
+                        commonMistakes = qa.CommonMistakes.Select(m => new
+                        {
+                            incorrectAnswer = m.IncorrectAnswer,
+                            count = m.Count,
+                            studentNames = m.StudentNames
+                        })
+                    })
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка получения данных аналитики для теста по орфографии {TestId}", testId);
+                return StatusCode(500, new { error = "Ошибка загрузки данных" });
+            }
+        }
+
+        // GET: TestAnalytics/GetPunctuationAnalyticsData
+        [HttpGet]
+        public async Task<IActionResult> GetPunctuationAnalyticsData(int testId)
+        {
+            try
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+
+                var test = await _context.PunctuationTests
+                    .Include(pt => pt.Class)
+                        .ThenInclude(c => c.Students)
+                            .ThenInclude(s => s.User)
+                    .Include(pt => pt.PunctuationQuestions.OrderBy(q => q.OrderIndex))
+                    .Include(pt => pt.PunctuationTestResults)
+                        .ThenInclude(tr => tr.Student)
+                            .ThenInclude(s => s.User)
+                    .Include(pt => pt.PunctuationTestResults)
+                        .ThenInclude(tr => tr.PunctuationAnswers)
+                            .ThenInclude(a => a.PunctuationQuestion)
+                    .FirstOrDefaultAsync(pt => pt.Id == testId && pt.TeacherId == currentUser.Id);
+
+                if (test == null)
+                {
+                    return NotFound();
+                }
+
+                var analytics = await BuildPunctuationAnalyticsAsync(test);
+
+                return Json(new
+                {
+                    statistics = new
+                    {
+                        totalStudents = analytics.Statistics.TotalStudents,
+                        averagePercentage = analytics.Statistics.AveragePercentage,
+                        averageCompletionTime = new
+                        {
+                            minutes = analytics.Statistics.AverageCompletionTime.Minutes,
+                            seconds = analytics.Statistics.AverageCompletionTime.Seconds
+                        },
+                        studentsCompleted = analytics.Statistics.StudentsCompleted,
+                        studentsInProgress = analytics.Statistics.StudentsInProgress,
+                        studentsNotStarted = analytics.Statistics.StudentsNotStarted
+                    },
+                    studentResults = analytics.StudentResults.Select(sr => new
+                    {
+                        studentId = sr.Student.Id,
+                        studentName = sr.Student.User.FullName,
+                        hasCompleted = sr.HasCompleted,
+                        isInProgress = sr.IsInProgress,
+                        attemptsUsed = sr.AttemptsUsed,
+                        maxAttempts = test.MaxAttempts,
+                        bestResult = sr.BestResult != null ? new
+                        {
+                            percentage = sr.BestResult.Percentage,
+                            score = sr.BestResult.Score,
+                            maxScore = sr.BestResult.MaxScore
+                        } : null,
+                        latestResult = sr.LatestResult != null ? new
+                        {
+                            percentage = sr.LatestResult.Percentage,
+                            score = sr.LatestResult.Score,
+                            maxScore = sr.LatestResult.MaxScore,
+                            completedAt = sr.LatestResult.CompletedAt?.ToString("dd.MM")
+                        } : null,
+                        totalTimeSpent = sr.TotalTimeSpent.HasValue ? new
+                        {
+                            minutes = sr.TotalTimeSpent.Value.Minutes,
+                            seconds = sr.TotalTimeSpent.Value.Seconds
+                        } : null
+                    }),
+                    questionAnalytics = analytics.QuestionAnalytics.Select(qa => new
+                    {
+                        questionId = qa.Question.Id,
+                        successRate = qa.SuccessRate,
+                        totalAnswers = qa.TotalAnswers,
+                        correctAnswers = qa.CorrectAnswers,
+                        commonMistakes = qa.CommonMistakes.Select(m => new
+                        {
+                            incorrectAnswer = m.IncorrectAnswer,
+                            count = m.Count,
+                            studentNames = m.StudentNames
+                        })
+                    })
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка получения данных аналитики для теста по пунктуации {TestId}", testId);
+                return StatusCode(500, new { error = "Ошибка загрузки данных" });
+            }
+        }
+
+        // GET: TestAnalytics/GetOrthoeopyAnalyticsData
+        [HttpGet]
+        public async Task<IActionResult> GetOrthoeopyAnalyticsData(int testId)
+        {
+            try
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+
+                var test = await _context.OrthoeopyTests
+                    .Include(ot => ot.Class)
+                        .ThenInclude(c => c.Students)
+                            .ThenInclude(s => s.User)
+                    .Include(ot => ot.OrthoeopyQuestions.OrderBy(q => q.OrderIndex))
+                    .Include(ot => ot.OrthoeopyTestResults)
+                        .ThenInclude(tr => tr.Student)
+                            .ThenInclude(s => s.User)
+                    .Include(ot => ot.OrthoeopyTestResults)
+                        .ThenInclude(tr => tr.OrthoeopyAnswers)
+                            .ThenInclude(a => a.OrthoeopyQuestion)
+                    .FirstOrDefaultAsync(ot => ot.Id == testId && ot.TeacherId == currentUser.Id);
+
+                if (test == null)
+                {
+                    return NotFound();
+                }
+
+                var analytics = await BuildOrthoeopyAnalyticsAsync(test);
+
+                return Json(new
+                {
+                    statistics = new
+                    {
+                        totalStudents = analytics.Statistics.TotalStudents,
+                        averagePercentage = analytics.Statistics.AveragePercentage,
+                        averageCompletionTime = new
+                        {
+                            minutes = analytics.Statistics.AverageCompletionTime.Minutes,
+                            seconds = analytics.Statistics.AverageCompletionTime.Seconds
+                        },
+                        studentsCompleted = analytics.Statistics.StudentsCompleted,
+                        studentsInProgress = analytics.Statistics.StudentsInProgress,
+                        studentsNotStarted = analytics.Statistics.StudentsNotStarted
+                    },
+                    studentResults = analytics.StudentResults.Select(sr => new
+                    {
+                        studentId = sr.Student.Id,
+                        studentName = sr.Student.User.FullName,
+                        hasCompleted = sr.HasCompleted,
+                        isInProgress = sr.IsInProgress,
+                        attemptsUsed = sr.AttemptsUsed,
+                        maxAttempts = test.MaxAttempts,
+                        bestResult = sr.BestResult != null ? new
+                        {
+                            percentage = sr.BestResult.Percentage,
+                            score = sr.BestResult.Score,
+                            maxScore = sr.BestResult.MaxScore
+                        } : null,
+                        latestResult = sr.LatestResult != null ? new
+                        {
+                            percentage = sr.LatestResult.Percentage,
+                            score = sr.LatestResult.Score,
+                            maxScore = sr.LatestResult.MaxScore,
+                            completedAt = sr.LatestResult.CompletedAt?.ToString("dd.MM")
+                        } : null,
+                        totalTimeSpent = sr.TotalTimeSpent.HasValue ? new
+                        {
+                            minutes = sr.TotalTimeSpent.Value.Minutes,
+                            seconds = sr.TotalTimeSpent.Value.Seconds
+                        } : null
+                    }),
+                    questionAnalytics = analytics.QuestionAnalytics.Select(qa => new
+                    {
+                        questionId = qa.Question.Id,
+                        successRate = qa.SuccessRate,
+                        totalAnswers = qa.TotalAnswers,
+                        correctAnswers = qa.CorrectAnswers,
+                        commonMistakes = qa.CommonMistakes.Select(m => new
+                        {
+                            incorrectPosition = m.IncorrectPosition,
+                            count = m.Count,
+                            studentNames = m.StudentNames
+                        })
+                    })
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка получения данных аналитики для теста по орфоэпии {TestId}", testId);
+                return StatusCode(500, new { error = "Ошибка загрузки данных" });
+            }
+        }
+
+        // GET: TestAnalytics/GetRegularTestAnalyticsData
+        [HttpGet]
+        public async Task<IActionResult> GetRegularTestAnalyticsData(int testId)
+        {
+            try
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+
+                var test = await _context.RegularTests
+                    .Include(rt => rt.Class)
+                        .ThenInclude(c => c.Students)
+                            .ThenInclude(s => s.User)
+                    .Include(rt => rt.RegularQuestions.OrderBy(q => q.OrderIndex))
+                        .ThenInclude(q => q.Options)
+                    .Include(rt => rt.RegularTestResults)
+                        .ThenInclude(tr => tr.Student)
+                            .ThenInclude(s => s.User)
+                    .Include(rt => rt.RegularTestResults)
+                        .ThenInclude(tr => tr.RegularAnswers)
+                            .ThenInclude(a => a.RegularQuestion)
+                    .FirstOrDefaultAsync(rt => rt.Id == testId && rt.TeacherId == currentUser.Id);
+
+                if (test == null)
+                {
+                    return NotFound();
+                }
+
+                var analytics = await BuildRegularTestAnalyticsAsync(test);
+
+                return Json(new
+                {
+                    statistics = new
+                    {
+                        totalStudents = analytics.Statistics.TotalStudents,
+                        averagePercentage = analytics.Statistics.AveragePercentage,
+                        averageCompletionTime = new
+                        {
+                            minutes = analytics.Statistics.AverageCompletionTime.Minutes,
+                            seconds = analytics.Statistics.AverageCompletionTime.Seconds
+                        },
+                        studentsCompleted = analytics.Statistics.StudentsCompleted,
+                        studentsInProgress = analytics.Statistics.StudentsInProgress,
+                        studentsNotStarted = analytics.Statistics.StudentsNotStarted
+                    },
+                    studentResults = analytics.RegularResults.Select(sr => new
+                    {
+                        studentId = sr.Student.Id,
+                        studentName = sr.Student.User.FullName,
+                        hasCompleted = sr.HasCompleted,
+                        isInProgress = sr.IsInProgress,
+                        attemptsUsed = sr.AttemptsUsed,
+                        maxAttempts = test.MaxAttempts,
+                        bestResult = sr.BestResult != null ? new
+                        {
+                            percentage = sr.BestResult.Percentage,
+                            score = sr.BestResult.Score,
+                            maxScore = sr.BestResult.MaxScore
+                        } : null,
+                        latestResult = sr.LatestResult != null ? new
+                        {
+                            percentage = sr.LatestResult.Percentage,
+                            score = sr.LatestResult.Score,
+                            maxScore = sr.LatestResult.MaxScore,
+                            completedAt = sr.LatestResult.CompletedAt?.ToString("dd.MM")
+                        } : null,
+                        totalTimeSpent = sr.TotalTimeSpent.HasValue ? new
+                        {
+                            minutes = sr.TotalTimeSpent.Value.Minutes,
+                            seconds = sr.TotalTimeSpent.Value.Seconds
+                        } : null
+                    }),
+                    questionAnalytics = analytics.QuestionAnalytics.Select(qa => new
+                    {
+                        questionId = qa.RegularQuestion.Id,
+                        successRate = qa.SuccessRate,
+                        totalAnswers = qa.TotalAnswers,
+                        correctAnswers = qa.CorrectAnswers,
+                        commonMistakes = qa.CommonMistakes.Select(m => new
+                        {
+                            incorrectAnswer = m.IncorrectAnswer,
+                            count = m.Count,
+                            studentNames = m.StudentNames
+                        })
+                    })
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка получения данных аналитики для классического теста {TestId}", testId);
+                return StatusCode(500, new { error = "Ошибка загрузки данных" });
+            }
+        }
+
+        #endregion
+
     }
 }
