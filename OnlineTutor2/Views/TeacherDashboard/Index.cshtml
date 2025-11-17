@@ -710,23 +710,29 @@
             var testTypeColor = getTestTypeColor(activity.testType);
             
             var actionText;
-            if (activity.status === 'completed') {
-                actionText = 'завершил';
-            } else if (activity.status === 'in_progress') {
-                actionText = 'продолжил';
-            } else {
-                actionText = 'начал';
+            switch (activity.action) {
+                case 'completed':
+                    actionText = 'завершил';
+                    break;
+                case 'continued':
+                    actionText = 'продолжил';
+                    break;
+                case 'started':
+                default:
+                    actionText = 'начал';
+                    break;
             }
 
             var percentBadge = '';
             var gradeBadge = '';
             
+            // Для завершенных тестов показываем процент и оценку
             if (activity.status === 'completed' && activity.percentage !== undefined) {
                 var percentColor = activity.percentage >= 80 ? 'success' : 
                                   activity.percentage >= 60 ? 'warning' : 'danger';
                 percentBadge = '<span class="badge bg-' + percentColor + ' badge-sm">' + 
                                activity.percentage.toFixed(1) + '%</span>';
-                
+        
                 var grade = getGradeFromPercentage(activity.percentage);
                 var gradeColor = getGradeColor(grade);
                 gradeBadge = '<span class="grade-badge-compact grade-' + gradeColor + '">' + grade + '</span>';
