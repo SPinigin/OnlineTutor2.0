@@ -1521,12 +1521,24 @@ namespace OnlineTutor2.Controllers
             var correct = correctLetter.Trim().ToLowerInvariant();
             var student = studentAnswer.Trim().ToLowerInvariant();
 
+            // Прямое сравнение
             if (correct == student) return true;
 
-            if (correct.Contains(','))
+            // Если есть запятые, сравниваем массивы букв
+            if (correct.Contains(',') || student.Contains(','))
             {
-                var correctVariants = correct.Split(',').Select(v => v.Trim()).ToArray();
-                return correctVariants.Contains(student);
+                var correctLetters = correct.Split(',')
+                    .Select(l => l.Trim())
+                    .Where(l => !string.IsNullOrEmpty(l))
+                    .ToArray();
+
+                var studentLetters = student.Split(',')
+                    .Select(l => l.Trim())
+                    .Where(l => !string.IsNullOrEmpty(l))
+                    .ToArray();
+
+                // Сравниваем последовательности букв
+                return correctLetters.SequenceEqual(studentLetters);
             }
 
             return false;

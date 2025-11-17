@@ -105,7 +105,7 @@
                             <div class="input-group">
                                 <input type="text" class="form-control answer-input"
                                        maxlength="10"
-                                       placeholder="Введите букву"
+                                       placeholder="Введите ответ"
                                        value="@(existingAnswer?.StudentAnswer ?? "")"
                                        data-question-id="@question.Id" />
                                 <button class="btn btn-outline-secondary" type="button" onclick="clearAnswer(@question.Id)"
@@ -115,8 +115,17 @@
                             </div>
                             <small class="form-text text-muted d-block mt-1">
                                 <i class="fas fa-info-circle"></i>
-                                <span class="d-none d-sm-inline">Введите одну или несколько букв (например: е или а,о)</span>
-                                <span class="d-sm-none">Одна или несколько букв (е или а,о)</span>
+                                @{
+                                    var gapCount = question.WordWithGap.Count(c => c == '…');
+                                    if (gapCount > 1)
+                                    {
+                                        <span>Введите @gapCount буквы через запятую (например: а,о)</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Введите одну букву</span>
+                                    }
+                                }
                             </small>
                         </div>
 
