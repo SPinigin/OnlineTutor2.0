@@ -455,3 +455,244 @@
         font-size: 0.7rem;
     }
 }
+
+/* ===== ВКЛАДКИ ===== */
+#dashboardTabsContent {
+    margin-top: 0;
+}
+
+    #dashboardTabsContent .tab-pane {
+        padding-top: 0;
+    }
+
+.nav-tabs {
+    margin-bottom: 1rem !important;
+}
+
+    .nav-tabs .nav-link {
+        color: #6c757d;
+        border: none;
+        border-bottom: 3px solid transparent;
+    }
+
+        .nav-tabs .nav-link:hover {
+            border-bottom-color: #dee2e6;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: #0d6efd;
+            border-bottom-color: #0d6efd;
+            background-color: transparent;
+        }
+
+/* ===== ТАБЛИЦА ТЕСТОВ - АДАПТИВНОСТЬ ===== */
+.tests-table {
+    font-size: 0.9rem;
+}
+
+    .tests-table td {
+        vertical-align: middle;
+    }
+
+.test-type-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Мобильные бейджи типов */
+@media (max-width: 991.98px) {
+    .test-type-badge {
+        padding: 3px 6px;
+        font-size: 0.7rem;
+    }
+
+        .test-type-badge i {
+            margin: 0 !important;
+        }
+}
+
+/* Компактная первая колонка на маленьких экранах */
+@media (max-width: 767.98px) {
+    .tests-table td:first-child {
+        min-width: 0;
+        max-width: 200px;
+    }
+
+        .tests-table td:first-child strong {
+            font-size: 0.85rem;
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .tests-table td:first-child small {
+            font-size: 0.7rem;
+        }
+}
+
+@media (max-width: 575.98px) {
+    .tests-table td:first-child {
+        max-width: 150px;
+    }
+
+        .tests-table td:first-child strong {
+            font-size: 0.8rem;
+        }
+
+        .tests-table td:first-child small {
+            font-size: 0.65rem;
+        }
+}
+
+/* ===== КОМПАКТНЫЕ КАРТОЧКИ СТАТИСТИКИ ===== */
+.stat-card-compact {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+    .stat-card-compact:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.15) !important;
+    }
+
+    .stat-card-compact .card-body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+/* Иконки статистики */
+.stat-icon {
+    font-size: 1.5rem;
+    opacity: 0.8;
+}
+
+/* Числа статистики */
+.stat-number {
+    font-size: 1.8rem;
+    font-weight: bold;
+    line-height: 1.2;
+}
+
+/* Подписи статистики */
+.stat-label {
+    font-size: 0.7rem;
+    display: block;
+    line-height: 1.2;
+    margin-top: 0.25rem;
+}
+
+/* ===== АДАПТИВНОСТЬ ДЛЯ МОБИЛЬНЫХ (до 576px) ===== */
+@media (max-width: 575.98px) {
+    /* Уменьшаем карточки на очень маленьких экранах */
+    .stat-card-compact .card-body {
+        padding: 0.5rem !important;
+    }
+
+    .stat-icon {
+        font-size: 1.2rem;
+    }
+
+    .stat-number {
+        font-size: 1.4rem;
+    }
+
+    .stat-label {
+        font-size: 0.65rem;
+    }
+}
+
+/* ===== АДАПТИВНОСТЬ ДЛЯ СРЕДНИХ ЭКРАНОВ (576px - 768px) ===== */
+@media (min-width: 576px) and (max-width: 767.98px) {
+    .stat-icon {
+        font-size: 1.6rem;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+    }
+}
+
+/* ===== АДАПТИВНОСТЬ ДЛЯ БОЛЬШИХ ЭКРАНОВ (768px+) ===== */
+@media (min-width: 768px) {
+    .stat-icon {
+        font-size: 2rem;
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+    }
+}
+
+/* Анимация для обновления чисел */
+.stat-number {
+    transition: all 0.3s ease;
+}
+
+.number-change.stat-number {
+    transform: scale(1.1);
+}
+
+/* ===== ГРУППИРОВКА ПО ДАТАМ ===== */
+.date-group-header {
+    background-color: #f8f9fa;
+    border-top: 2px solid #dee2e6;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    user-select: none;
+}
+
+    .date-group-header:hover {
+        background-color: #e9ecef;
+    }
+
+    .date-group-header td {
+        font-weight: 600;
+        color: #495057;
+    }
+
+.date-group-icon {
+    font-size: 0.85rem;
+    transition: transform 0.2s;
+    width: 14px;
+    display: inline-block;
+}
+
+.date-group-header:active .date-group-icon {
+    transform: scale(1.2);
+}
+
+/* Первая группа (сегодня) */
+.date-group-header:first-child {
+    border-top: none;
+}
+
+/* Адаптивность заголовков групп */
+@media (max-width: 575.98px) {
+    .date-group-header td {
+        font-size: 0.9rem;
+        padding: 0.6rem 0.5rem !important;
+    }
+
+    .date-group-icon {
+        font-size: 0.75rem;
+        width: 12px;
+    }
+
+    .date-group-header .badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+}
