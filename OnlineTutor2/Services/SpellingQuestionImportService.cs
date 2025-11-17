@@ -239,11 +239,37 @@ namespace OnlineTutor2.Services
                 !string.IsNullOrWhiteSpace(question.FullWord) &&
                 !string.IsNullOrWhiteSpace(question.CorrectLetter))
             {
-                // Простая проверка - замещаем … на правильную букву и сравниваем
-                var reconstructed = question.WordWithGap.Replace("…", question.CorrectLetter);
+                // Подсчитываем количество пропусков в слове
+                int gapCount = question.WordWithGap.Count(c => c == '…');
+
+                // Разбиваем правильные буквы по запятой
+                var correctLetters = question.CorrectLetter.Split(',')
+                    .Select(l => l.Trim())
+                    .Where(l => !string.IsNullOrEmpty(l))
+                    .ToArray();
+
+                // Проверяем, что количество букв соответствует количеству пропусков
+                if (correctLetters.Length != gapCount)
+                {
+                    question.Errors.Add($"Количество букв ({correctLetters.Length}) не соответствует количеству пропусков ({gapCount})");
+                    return;
+                }
+
+                // Заменяем пропуски по очереди
+                var reconstructed = question.WordWithGap;
+                foreach (var letter in correctLetters)
+                {
+                    int index = reconstructed.IndexOf('…');
+                    if (index >= 0)
+                    {
+                        reconstructed = reconstructed.Remove(index, 1).Insert(index, letter);
+                    }
+                }
+
+                // Сравниваем результат с полным словом
                 if (!reconstructed.Equals(question.FullWord, StringComparison.OrdinalIgnoreCase))
                 {
-                    question.Errors.Add("Полное слово не соответствует слову с заменёнными буквами");
+                    question.Errors.Add("Полное слово не соответствует слову с заменённым буквами");
                 }
             }
         }
