@@ -708,9 +708,10 @@
             var timeAgo = formatTimeAgo(new Date(activity.lastActivityAt));
             var testTypeIcon = getTestTypeIcon(activity.testType);
             var testTypeColor = getTestTypeColor(activity.testType);
-            
+    
+            // ✅ Используем activity.status
             var actionText;
-            switch (activity.action) {
+            switch (activity.status) {
                 case 'completed':
                     actionText = 'завершил';
                     break;
@@ -718,6 +719,11 @@
                     actionText = 'продолжил';
                     break;
                 case 'started':
+                    actionText = 'начал';
+                    break;
+                case 'in_progress':
+                    actionText = 'продолжил';  // Для загруженных из БД
+                    break;
                 default:
                     actionText = 'начал';
                     break;
@@ -725,7 +731,7 @@
 
             var percentBadge = '';
             var gradeBadge = '';
-            
+    
             // Для завершенных тестов показываем процент и оценку
             if (activity.status === 'completed' && activity.percentage !== undefined) {
                 var percentColor = activity.percentage >= 80 ? 'success' : 
@@ -759,7 +765,7 @@
                    'data-search-text="' + (activity.studentName + ' ' + activity.testTitle).toLowerCase() + '" ' +
                    'data-date-group="' + dateKey + '" ' +
                    'style="' + displayStyle + '">' +
-                   
+           
                    '<td>' +
                    '<div class="d-flex align-items-center gap-2">' +
                    '<div class="activity-icon-small bg-' + testTypeColor + '">' +
@@ -774,23 +780,23 @@
                    '</div>' +
                    '</div>' +
                    '</td>' +
-                   
+           
                    '<td class="text-center d-none d-md-table-cell">' +
                    percentBadge +
                    '</td>' +
-                   
+           
                    '<td class="text-center">' +
                    gradeBadge +
                    '</td>' +
-                   
+           
                    '<td class="text-center d-none d-md-table-cell">' +
                    '<small class="text-muted">' + timeAgo + '</small>' +
                    '</td>' +
-                   
+           
                    '<td class="text-center">' +
                    resultButton +
                    '</td>' +
-                   
+           
                    '</tr>';
         }
 

@@ -223,8 +223,7 @@ class TeacherDashboardSignalR {
             testType: data.testType,
             studentId: data.studentId,
             studentName: data.studentName,
-            action: data.action,  // ← ДОБАВЛЯЕМ ЭТО ПОЛЕ
-            status: data.action === 'completed' ? 'completed' : 'in_progress',
+            status: data.action,
             percentage: data.percentage || 0,
             score: data.score || 0,
             maxScore: data.maxScore || 0,
