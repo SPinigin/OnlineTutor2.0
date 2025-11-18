@@ -22,10 +22,10 @@ namespace OnlineTutor2.Models
         // Навигационные свойства
         public virtual ApplicationUser Teacher { get; set; }
         public virtual ICollection<Student> Students { get; set; } = new List<Student>();
-        public virtual ICollection<RegularTest> RegularTests { get; set; } = new List<RegularTest>();
-        public virtual ICollection<SpellingTest> SpellingTests { get; set; } = new List<SpellingTest>();
-        public virtual ICollection<PunctuationTest> PunctuationTests { get; set; } = new List<PunctuationTest>();
-        public virtual ICollection<OrthoeopyTest> OrthoeopyTests { get; set; } = new List<OrthoeopyTest>();
+        public virtual ICollection<SpellingTestClass> SpellingTests { get; set; } = new List<SpellingTestClass>();
+        public virtual ICollection<PunctuationTestClass> PunctuationTests { get; set; } = new List<PunctuationTestClass>();
+        public virtual ICollection<OrthoeopyTestClass> OrthoeopyTests { get; set; } = new List<OrthoeopyTestClass>();
+        public virtual ICollection<RegularTestClass> RegularTests { get; set; } = new List<RegularTestClass>();
         public virtual ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
         public virtual ICollection<Material> Materials { get; set; } = new List<Material>();
     }
