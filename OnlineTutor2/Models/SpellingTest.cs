@@ -17,7 +17,6 @@ namespace OnlineTutor2.Models
         // Внешние ключи
         public string TeacherId { get; set; } = string.Empty;
         public int TestCategoryId { get; set; }
-        public int? ClassId { get; set; }
 
         // Настройки теста
         [Range(5, 300, ErrorMessage = "Время должно быть от 5 до 300 минут")]
@@ -47,7 +46,6 @@ namespace OnlineTutor2.Models
         // Навигационные свойства
         public virtual ApplicationUser Teacher { get; set; } = null!;
         public virtual TestCategory TestCategory { get; set; } = null!;
-        public virtual Class? Class { get; set; }
         public virtual ICollection<SpellingQuestion> SpellingQuestions { get; set; } = new List<SpellingQuestion>();
         public virtual ICollection<SpellingTestResult> SpellingTestResults { get; set; } = new List<SpellingTestResult>();
     }
