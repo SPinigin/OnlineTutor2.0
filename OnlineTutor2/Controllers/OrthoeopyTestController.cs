@@ -43,7 +43,7 @@ namespace OnlineTutor2.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var tests = await _context.OrthoeopyTests
                 .Where(ot => ot.TeacherId == currentUser.Id)
-                .Include(ot => ot.Class)
+                .Include(st => st.TestClasses)
                 .Include(ot => ot.OrthoeopyQuestions)
                 .Include(ot => ot.OrthoeopyTestResults)
                 .OrderByDescending(ot => ot.CreatedAt)
@@ -60,7 +60,8 @@ namespace OnlineTutor2.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.OrthoeopyTests
                 .Include(ot => ot.Teacher)
-                .Include(ot => ot.Class)
+                .Include(st => st.TestClasses)
+                    .ThenInclude(tc => tc.Class)
                 .Include(ot => ot.OrthoeopyQuestions.OrderBy(q => q.OrderIndex))
                 .Include(ot => ot.OrthoeopyTestResults)
                     .ThenInclude(tr => tr.Student)
@@ -96,7 +97,6 @@ namespace OnlineTutor2.Controllers
                     Description = model.Description,
                     TeacherId = currentUser.Id,
                     TestCategoryId = TestCategoryConstants.Orthoeopy,
-                    ClassId = model.ClassId,
                     TimeLimit = model.TimeLimit,
                     MaxAttempts = model.MaxAttempts,
                     StartDate = model.StartDate,
@@ -109,8 +109,22 @@ namespace OnlineTutor2.Controllers
                 _context.OrthoeopyTests.Add(test);
                 await _context.SaveChangesAsync();
 
+                if (model.SelectedClassIds != null && model.SelectedClassIds.Any())
+                {
+                    foreach (var classId in model.SelectedClassIds)
+                    {
+                        var testClass = new OrthoeopyTestClass
+                        {
+                            OrthoeopyTestId = test.Id,
+                            ClassId = classId
+                        };
+                        _context.OrthoeopyTestClasses.Add(testClass);
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
                 _logger.LogInformation(
-                    "Учитель {TeacherId} создал тест орфоэпии {TestId}: {Title}",
+                    "Учитель {TeacherId} создал тест по орфоэпии {TestId}: {Title}",
                     currentUser.Id, test.Id, test.Title);
 
                 TempData["SuccessMessage"] = $"Тест \"{test.Title}\" успешно создан! Теперь добавьте вопросы.";
@@ -140,7 +154,6 @@ namespace OnlineTutor2.Controllers
             {
                 Title = test.Title,
                 Description = test.Description,
-                ClassId = test.ClassId,
                 TimeLimit = test.TimeLimit,
                 MaxAttempts = test.MaxAttempts,
                 StartDate = test.StartDate,
@@ -173,7 +186,6 @@ namespace OnlineTutor2.Controllers
 
                     test.Title = model.Title;
                     test.Description = model.Description;
-                    test.ClassId = model.ClassId;
                     test.TimeLimit = model.TimeLimit;
                     test.MaxAttempts = model.MaxAttempts;
                     test.StartDate = model.StartDate;
@@ -181,6 +193,18 @@ namespace OnlineTutor2.Controllers
                     test.ShowHints = model.ShowHints;
                     test.ShowCorrectAnswers = model.ShowCorrectAnswers;
                     test.IsActive = model.IsActive;
+
+                    if (model.SelectedClassIds != null && model.SelectedClassIds.Any())
+                    {
+                        foreach (var classId in model.SelectedClassIds)
+                        {
+                            test.TestClasses.Add(new OrthoeopyTestClass
+                            {
+                                OrthoeopyTestId = test.Id,
+                                ClassId = classId
+                            });
+                        }
+                    }
 
                     _context.Update(test);
                     await _context.SaveChangesAsync();
@@ -213,7 +237,7 @@ namespace OnlineTutor2.Controllers
 
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.OrthoeopyTests
-                .Include(ot => ot.Class)
+                .Include(st => st.TestClasses)
                 .Include(ot => ot.OrthoeopyQuestions)
                 .Include(ot => ot.OrthoeopyTestResults)
                     .ThenInclude(tr => tr.Student)

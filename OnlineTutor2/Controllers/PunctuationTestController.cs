@@ -240,7 +240,7 @@ namespace OnlineTutor2.Controllers
 
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.PunctuationTests
-                .Include(pt => pt.Class)
+                .Include(st => st.TestClasses)
                 .Include(pt => pt.PunctuationQuestions)
                 .Include(pt => pt.PunctuationTestResults)
                     .ThenInclude(tr => tr.Student)
