@@ -46,6 +46,7 @@ namespace OnlineTutor2.Models
         // Навигационные свойства
         public virtual ApplicationUser Teacher { get; set; }
         public virtual TestCategory TestCategory { get; set; } = null!;
+        public virtual ICollection<RegularTestClass> TestClasses { get; set; } = new List<RegularTestClass>();
         public virtual ICollection<RegularQuestion> RegularQuestions { get; set; } = new List<RegularQuestion>();
         public virtual ICollection<RegularTestResult> RegularTestResults { get; set; } = new List<RegularTestResult>();
     }

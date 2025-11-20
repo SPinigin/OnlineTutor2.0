@@ -46,6 +46,7 @@ namespace OnlineTutor2.Models
         // Навигационные свойства
         public virtual ApplicationUser Teacher { get; set; } = null!;
         public virtual TestCategory TestCategory { get; set; } = null!;
+        public virtual ICollection<OrthoeopyTestClass> TestClasses { get; set; } = new List<OrthoeopyTestClass>();
         public virtual ICollection<OrthoeopyQuestion> OrthoeopyQuestions { get; set; } = new List<OrthoeopyQuestion>();
         public virtual ICollection<OrthoeopyTestResult> OrthoeopyTestResults { get; set; } = new List<OrthoeopyTestResult>();
     }

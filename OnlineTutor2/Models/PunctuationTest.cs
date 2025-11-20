@@ -46,6 +46,7 @@ namespace OnlineTutor2.Models
         // Навигационные свойства
         public virtual ApplicationUser Teacher { get; set; } = null!;
         public virtual TestCategory TestCategory { get; set; } = null!;
+        public virtual ICollection<PunctuationTestClass> TestClasses { get; set; } = new List<PunctuationTestClass>();
         public virtual ICollection<PunctuationQuestion> PunctuationQuestions { get; set; } = new List<PunctuationQuestion>();
         public virtual ICollection<PunctuationTestResult> PunctuationTestResults { get; set; } = new List<PunctuationTestResult>();
     }
