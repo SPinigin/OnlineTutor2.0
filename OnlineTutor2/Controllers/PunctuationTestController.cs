@@ -155,6 +155,7 @@ namespace OnlineTutor2.Controllers
             {
                 Title = test.Title,
                 Description = test.Description,
+                SelectedClassIds = test.TestClasses.Select(tc => tc.ClassId).ToList(),
                 TimeLimit = test.TimeLimit,
                 MaxAttempts = test.MaxAttempts,
                 StartDate = test.StartDate,
@@ -181,6 +182,7 @@ namespace OnlineTutor2.Controllers
                 try
                 {
                     var test = await _context.PunctuationTests
+                        .Include(st => st.TestClasses)
                         .FirstOrDefaultAsync(pt => pt.Id == id && pt.TeacherId == currentUser.Id);
 
                     if (test == null) return NotFound();
