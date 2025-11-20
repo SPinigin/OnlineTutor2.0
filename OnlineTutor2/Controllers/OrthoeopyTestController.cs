@@ -146,6 +146,7 @@ namespace OnlineTutor2.Controllers
 
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.OrthoeopyTests
+                .Include(st => st.TestClasses)
                 .FirstOrDefaultAsync(ot => ot.Id == id && ot.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -154,6 +155,7 @@ namespace OnlineTutor2.Controllers
             {
                 Title = test.Title,
                 Description = test.Description,
+                SelectedClassIds = test.TestClasses.Select(tc => tc.ClassId).ToList(),
                 TimeLimit = test.TimeLimit,
                 MaxAttempts = test.MaxAttempts,
                 StartDate = test.StartDate,
@@ -180,6 +182,7 @@ namespace OnlineTutor2.Controllers
                 try
                 {
                     var test = await _context.OrthoeopyTests
+                        .Include(st => st.TestClasses)
                         .FirstOrDefaultAsync(ot => ot.Id == id && ot.TeacherId == currentUser.Id);
 
                     if (test == null) return NotFound();
