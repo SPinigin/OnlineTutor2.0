@@ -78,17 +78,18 @@
         <div class="row">
             <div class="col-md-6">
                 <dl class="row">
-                    @if (Model.Class != null)
+                    @if (Model.TestClasses.Any())
                     {
-                        <dt class="col-sm-4">Назначен классу:</dt>
-                        <dd class="col-sm-8">
-                            <span class="badge bg-info">@Model.Class.Name</span>
-                        </dd>
+                        <div class="d-flex flex-wrap gap-1">
+                            @foreach (var testClass in Model.TestClasses)
+                            {
+                                <span class="badge bg-info">@testClass.Class.Name</span>
+                            }
+                        </div>
                     }
                     else
                     {
-                        <dt class="col-sm-4">Доступность:</dt>
-                        <dd class="col-sm-8">Всем ученикам</dd>
+                        <span class="text-muted">Доступен всем ученикам</span>
                     }
 
                     <dt class="col-sm-4">Подсказки:</dt>
