@@ -87,13 +87,18 @@
                 <strong>Настройки:</strong>
             </div>
         
-            @if (Model.Class != null)
+            @if (Model.TestClasses.Any())
             {
-                <div class="setting-chip">
-                    <i class="fas fa-users text-muted me-1"></i>
-                    <span class="badge bg-info">@Model.Class.Name</span>
+                <div class="d-flex flex-wrap gap-1">
+                    @foreach (var testClass in Model.TestClasses)
+                    {
+                        <span class="badge bg-info">@testClass.Class.Name</span>
+                    }
                 </div>
-                <span class="setting-divider">|</span>
+            }
+            else
+            {
+                <span class="text-muted">Доступен всем ученикам</span>
             }
         
             <div class="setting-chip">

@@ -44,13 +44,35 @@
                         </legend>
 
                         <div class="mb-3">
-                            <label asp-for="ClassId" class="form-label">
-                                <i class="fas fa-graduation-cap"></i> Назначить классу
+                            <label class="form-label">
+                                <i class="fas fa-graduation-cap"></i> Назначить классам
                             </label>
-                            <select asp-for="ClassId" asp-items="@ViewBag.Classes" class="form-select">
-                                <option value="">Доступен всем ученикам</option>
-                            </select>
-                            <span asp-validation-for="ClassId" class="text-danger"></span>
+                            <div class="border rounded p-3 bg-light">
+                                @if (ViewBag.Classes != null && ((SelectList)ViewBag.Classes).Any())
+                                {
+                                    @foreach (var classItem in (SelectList)ViewBag.Classes)
+                                    {
+                                        var isChecked = Model.SelectedClassIds?.Contains(int.Parse(classItem.Value)) == true;
+                                        <div class="form-check">
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   name="SelectedClassIds"
+                                                   value="@classItem.Value"
+                                                   id="class_@classItem.Value"
+                                                   @(isChecked ? "checked" : "") />
+                                            <label class="form-check-label" for="class_@classItem.Value">
+                                                @classItem.Text
+                                            </label>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-muted mb-0">
+                                        <i class="fas fa-info-circle"></i> У вас нет активных классов.
+                                    </p>
+                                }
+                            </div>
                         </div>
                     </fieldset>
 
