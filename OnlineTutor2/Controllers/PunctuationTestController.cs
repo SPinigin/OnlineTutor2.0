@@ -43,7 +43,7 @@ namespace OnlineTutor2.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var tests = await _context.PunctuationTests
                 .Where(pt => pt.TeacherId == currentUser.Id)
-                .Include(pt => pt.Class)
+                .Include(st => st.TestClasses)
                 .Include(pt => pt.PunctuationQuestions)
                 .Include(pt => pt.PunctuationTestResults)
                 .OrderByDescending(pt => pt.CreatedAt)
@@ -60,7 +60,8 @@ namespace OnlineTutor2.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.PunctuationTests
                 .Include(pt => pt.Teacher)
-                .Include(pt => pt.Class)
+                .Include(st => st.TestClasses)
+                    .ThenInclude(tc => tc.Class)
                 .Include(pt => pt.PunctuationQuestions.OrderBy(q => q.OrderIndex))
                 .Include(pt => pt.PunctuationTestResults)
                     .ThenInclude(tr => tr.Student)
@@ -96,7 +97,6 @@ namespace OnlineTutor2.Controllers
                     Description = model.Description,
                     TeacherId = currentUser.Id,
                     TestCategoryId = TestCategoryConstants.Punctuation,
-                    ClassId = model.ClassId,
                     TimeLimit = model.TimeLimit,
                     MaxAttempts = model.MaxAttempts,
                     StartDate = model.StartDate,
@@ -108,6 +108,20 @@ namespace OnlineTutor2.Controllers
 
                 _context.PunctuationTests.Add(test);
                 await _context.SaveChangesAsync();
+
+                if (model.SelectedClassIds != null && model.SelectedClassIds.Any())
+                {
+                    foreach (var classId in model.SelectedClassIds)
+                    {
+                        var testClass = new PunctuationTestClass
+                        {
+                            PunctuationTestId = test.Id,
+                            ClassId = classId
+                        };
+                        _context.PunctuationTestClasses.Add(testClass);
+                    }
+                    await _context.SaveChangesAsync();
+                }
 
                 _logger.LogInformation(
                     "Учитель {TeacherId} создал тест пунктуации {TestId}: {Title}",
@@ -132,6 +146,7 @@ namespace OnlineTutor2.Controllers
 
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.PunctuationTests
+                .Include(st => st.TestClasses)
                 .FirstOrDefaultAsync(pt => pt.Id == id && pt.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -140,7 +155,6 @@ namespace OnlineTutor2.Controllers
             {
                 Title = test.Title,
                 Description = test.Description,
-                ClassId = test.ClassId,
                 TimeLimit = test.TimeLimit,
                 MaxAttempts = test.MaxAttempts,
                 StartDate = test.StartDate,
@@ -173,7 +187,6 @@ namespace OnlineTutor2.Controllers
 
                     test.Title = model.Title;
                     test.Description = model.Description;
-                    test.ClassId = model.ClassId;
                     test.TimeLimit = model.TimeLimit;
                     test.MaxAttempts = model.MaxAttempts;
                     test.StartDate = model.StartDate;
@@ -182,11 +195,25 @@ namespace OnlineTutor2.Controllers
                     test.ShowCorrectAnswers = model.ShowCorrectAnswers;
                     test.IsActive = model.IsActive;
 
+                    _context.PunctuationTestClasses.RemoveRange(test.TestClasses);
+
+                    if (model.SelectedClassIds != null && model.SelectedClassIds.Any())
+                    {
+                        foreach (var classId in model.SelectedClassIds)
+                        {
+                            test.TestClasses.Add(new PunctuationTestClass
+                            {
+                                PunctuationTestId = test.Id,
+                                ClassId = classId
+                            });
+                        }
+                    }
+
                     _context.Update(test);
                     await _context.SaveChangesAsync();
 
                     _logger.LogInformation(
-                        "Учитель {TeacherId} обновил тест пунктуации {TestId}: {Title}",
+                        "Учитель {TeacherId} обновил тест по пунктуации {TestId}: {Title}",
                         currentUser.Id, id, test.Title);
 
                     TempData["SuccessMessage"] = $"Тест \"{test.Title}\" успешно обновлен!";
@@ -195,7 +222,7 @@ namespace OnlineTutor2.Controllers
                 catch (DbUpdateConcurrencyException ex)
                 {
                     _logger.LogError(ex,
-                        "Ошибка конкурентности при обновлении теста пунктуации {TestId}",
+                        "Ошибка конкурентности при обновлении теста по пунктуации {TestId}",
                         id);
                     ModelState.AddModelError("", "Произошла ошибка при сохранении. Попробуйте еще раз.");
                 }
