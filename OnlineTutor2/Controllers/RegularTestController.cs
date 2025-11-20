@@ -234,7 +234,8 @@ namespace OnlineTutor2.Controllers
 
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.RegularTests
-                .Include(st => st.TestClasses)
+                .Include(rt => rt.TestClasses)
+                    .ThenInclude(rtc => rtc.Class)
                 .Include(rt => rt.RegularQuestions)
                 .Include(rt => rt.RegularTestResults)
                     .ThenInclude(tr => tr.Student)
@@ -253,6 +254,7 @@ namespace OnlineTutor2.Controllers
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.RegularTests
+                .Include(rt => rt.TestClasses)
                 .Include(rt => rt.RegularTestResults)
                 .FirstOrDefaultAsync(rt => rt.Id == id && rt.TeacherId == currentUser.Id);
 

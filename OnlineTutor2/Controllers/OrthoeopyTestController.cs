@@ -240,7 +240,8 @@ namespace OnlineTutor2.Controllers
 
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.OrthoeopyTests
-                .Include(st => st.TestClasses)
+                .Include(ot => ot.TestClasses)
+                    .ThenInclude(otc => otc.Class)
                 .Include(ot => ot.OrthoeopyQuestions)
                 .Include(ot => ot.OrthoeopyTestResults)
                     .ThenInclude(tr => tr.Student)
@@ -259,6 +260,7 @@ namespace OnlineTutor2.Controllers
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.OrthoeopyTests
+                .Include(ot => ot.TestClasses)
                 .Include(ot => ot.OrthoeopyTestResults)
                 .FirstOrDefaultAsync(ot => ot.Id == id && ot.TeacherId == currentUser.Id);
 

@@ -242,7 +242,8 @@ namespace OnlineTutor2.Controllers
 
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.PunctuationTests
-                .Include(st => st.TestClasses)
+                .Include(pt => pt.TestClasses)
+                    .ThenInclude(ptc => ptc.Class)
                 .Include(pt => pt.PunctuationQuestions)
                 .Include(pt => pt.PunctuationTestResults)
                     .ThenInclude(tr => tr.Student)
@@ -261,6 +262,7 @@ namespace OnlineTutor2.Controllers
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.PunctuationTests
+                .Include(pt => pt.TestClasses)
                 .Include(pt => pt.PunctuationTestResults)
                 .FirstOrDefaultAsync(pt => pt.Id == id && pt.TeacherId == currentUser.Id);
 

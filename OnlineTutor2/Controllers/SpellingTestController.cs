@@ -243,6 +243,7 @@ namespace OnlineTutor2.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.SpellingTests
                 .Include(st => st.TestClasses)
+                    .ThenInclude(stc => stc.Class)
                 .Include(st => st.SpellingQuestions)
                 .Include(st => st.SpellingTestResults)
                     .ThenInclude(tr => tr.Student)
