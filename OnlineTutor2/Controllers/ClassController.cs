@@ -41,52 +41,14 @@ namespace OnlineTutor2.Controllers
                 .OrderBy(c => c.Name)
                 .ToListAsync();
 
-            // Получаем ID всех классов
-            var classIds = classes.Select(c => c.Id).ToList();
-
-            // Получаем количество тестов по орфографии для каждого класса
-            var spellingTestsCounts = await _context.SpellingTests
-                .Where(st => classIds.Contains(st.ClassId.Value))
-                .GroupBy(st => st.ClassId)
-                .Select(g => new { ClassId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(x => x.ClassId.Value, x => x.Count);
-
-            // Получаем количество тестов по пунктуации для каждого класса
-            var punctuationTestsCounts = await _context.PunctuationTests
-                .Where(pt => classIds.Contains(pt.ClassId.Value))
-                .GroupBy(pt => pt.ClassId)
-                .Select(g => new { ClassId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(x => x.ClassId.Value, x => x.Count);
-
-            // Получаем количество тестов классических для каждого класса
-            var regularTestsCounts = await _context.RegularTests
-                .Where(pt => classIds.Contains(pt.ClassId.Value))
-                .GroupBy(pt => pt.ClassId)
-                .Select(g => new { ClassId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(x => x.ClassId.Value, x => x.Count);
-
-            // Получаем количество тестов по орфоэпии для каждого класса
-            var orthoeopyTestsCounts = await _context.PunctuationTests
-                .Where(pt => classIds.Contains(pt.ClassId.Value))
-                .GroupBy(pt => pt.ClassId)
-                .Select(g => new { ClassId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(x => x.ClassId.Value, x => x.Count);
-
-
-            // Создаем словарь с общим количеством тестов для каждого класса
-            var totalTestsCounts = new Dictionary<int, int>();
-
-            foreach (var @class in classes)
-            {
-                var regularTestsCount = regularTestsCounts.ContainsKey(@class.Id) ? regularTestsCounts[@class.Id] : 0;
-                var spellingTestsCount = spellingTestsCounts.ContainsKey(@class.Id) ? spellingTestsCounts[@class.Id] : 0;
-                var punctuationTestsCount = punctuationTestsCounts.ContainsKey(@class.Id) ? punctuationTestsCounts[@class.Id] : 0;
-                var orthoeopyTestsCount = orthoeopyTestsCounts.ContainsKey(@class.Id) ? orthoeopyTestsCounts[@class.Id] : 0;
-
-                var totalCount = regularTestsCount + spellingTestsCount + punctuationTestsCount + orthoeopyTestsCount;
-
-                totalTestsCounts[@class.Id] = totalCount;
-            }
+            // LINQ подсчет всех тестов одним выражением
+            var totalTestsCounts = classes.ToDictionary(
+                c => c.Id,
+                c => (c.RegularTests?.Count ?? 0) +
+                     (c.SpellingTests?.Count ?? 0) +
+                     (c.PunctuationTests?.Count ?? 0) +
+                     (c.OrthoeopyTests?.Count ?? 0)
+            );
 
             ViewBag.TotalTestsCounts = totalTestsCounts;
 
@@ -99,176 +61,120 @@ namespace OnlineTutor2.Controllers
             if (id == null) return NotFound();
 
             var currentUser = await _userManager.GetUserAsync(User);
+
             var @class = await _context.Classes
                 .Include(c => c.Teacher)
-                .Include(c => c.Students)
-                    .ThenInclude(s => s.User)
-                .Include(c => c.SpellingTests)
-                    .ThenInclude(t => t.SpellingQuestions)
-                .Include(c => c.SpellingTests)
-                    .ThenInclude(t => t.SpellingTestResults)
-                .Include(c => c.PunctuationTests)
-                    .ThenInclude(t => t.PunctuationQuestions)
-                .Include(c => c.PunctuationTests)
-                    .ThenInclude(t => t.PunctuationTestResults)
-                .Include(c => c.RegularTests)
-                    .ThenInclude(t => t.RegularQuestions)
-                .Include(c => c.RegularTests)
-                    .ThenInclude(t => t.RegularTestResults)
-                .Include(c => c.OrthoeopyTests)
-                    .ThenInclude(t => t.OrthoeopyQuestions)
-                .Include(c => c.OrthoeopyTests)
-                    .ThenInclude(t => t.OrthoeopyTestResults)
+                .Include(c => c.Students).ThenInclude(s => s.User)
+                .Include(c => c.SpellingTests).ThenInclude(stc => stc.SpellingTest).ThenInclude(st => st.SpellingQuestions)
+                .Include(c => c.SpellingTests).ThenInclude(stc => stc.SpellingTest).ThenInclude(st => st.SpellingTestResults)
+                .Include(c => c.PunctuationTests).ThenInclude(ptc => ptc.PunctuationTest).ThenInclude(pt => pt.PunctuationQuestions)
+                .Include(c => c.PunctuationTests).ThenInclude(ptc => ptc.PunctuationTest).ThenInclude(pt => pt.PunctuationTestResults)
+                .Include(c => c.OrthoeopyTests).ThenInclude(otc => otc.OrthoeopyTest).ThenInclude(ot => ot.OrthoeopyQuestions)
+                .Include(c => c.OrthoeopyTests).ThenInclude(otc => otc.OrthoeopyTest).ThenInclude(ot => ot.OrthoeopyTestResults)
+                .Include(c => c.RegularTests).ThenInclude(rtc => rtc.RegularTest).ThenInclude(rt => rt.RegularQuestions)
+                .Include(c => c.RegularTests).ThenInclude(rtc => rtc.RegularTest).ThenInclude(rt => rt.RegularTestResults)
                 .Include(c => c.Materials)
                 .FirstOrDefaultAsync(c => c.Id == id && c.TeacherId == currentUser.Id);
 
             if (@class == null) return NotFound();
 
-            // Получаем все тесты по орфографии для этого класса
-            var spellingTests = await _context.SpellingTests
-                .Include(st => st.SpellingQuestions)
-                .Include(st => st.SpellingTestResults)
-                .Include(st => st.TestCategory)
-                .Where(st => st.ClassId == id)
-                .ToListAsync();
+            // Извлекаем тесты
+            var spellingTests = @class.SpellingTests.Select(x => x.SpellingTest).Where(x => x != null).ToList();
+            var punctuationTests = @class.PunctuationTests.Select(x => x.PunctuationTest).Where(x => x != null).ToList();
+            var orthoeopyTests = @class.OrthoeopyTests.Select(x => x.OrthoeopyTest).Where(x => x != null).ToList();
+            var regularTests = @class.RegularTests.Select(x => x.RegularTest).Where(x => x != null).ToList();
 
-            // Получаем все тесты по пунктуации для этого класса
-            var punctuationTests = await _context.PunctuationTests
-                .Include(pt => pt.PunctuationQuestions)
-                .Include(pt => pt.PunctuationTestResults)
-                .Include(pt => pt.TestCategory)
-                .Where(pt => pt.ClassId == id)
-                .ToListAsync();
-
-            // Получаем все тесты по орфоэпии для этого класса
-            var orthoeopyTests = await _context.OrthoeopyTests
-                .Include(pt => pt.OrthoeopyQuestions)
-                .Include(pt => pt.OrthoeopyTestResults)
-                .Include(pt => pt.TestCategory)
-                .Where(pt => pt.ClassId == id)
-                .ToListAsync();
-
-            // Получаем все тесты классические для этого класса
-            var regularTests = await _context.RegularTests
-                .Include(pt => pt.RegularQuestions)
-                .Include(pt => pt.RegularTestResults)
-                .Include(pt => pt.TestCategory)
-                .Where(pt => pt.ClassId == id)
-                .ToListAsync();
-
-            // Создаем объединенный список всех тестов
-            var allTests = new List<object>();
-
-            // Добавляем классические тесты
-            foreach (var regularTest in @class.RegularTests)
+            // Создаем общий список с единым анонимным типом
+            var allTests = regularTests.Select(t => new
             {
-                allTests.Add(new
-                {
-                    Id = regularTest.Id,
-                    Title = regularTest.Title,
-                    Description = regularTest.Description,
-                    CreatedAt = regularTest.CreatedAt,
-                    CreatedAtFormatted = regularTest.CreatedAt.ToString("dd.MM.yyyy"),
-                    IsActive = regularTest.IsActive,
-                    TestType = "Regular",
-                    TypeDisplayName = "Классический тест",
-                    IconClass = "fas fa-tasks",
-                    ColorClass = "info",
-                    ControllerName = "RegularTest",
-                    QuestionsCount = regularTest.RegularQuestions?.Count ?? 0,
-                    TimeLimit = regularTest.TimeLimit,
-                    ResultsCount = regularTest.RegularTestResults?.Count ?? 0,
-                    MaxAttempts = regularTest.MaxAttempts,
-                    StartDate = regularTest.StartDate,
-                    StartDateFormatted = regularTest.StartDate?.ToString("dd.MM.yyyy HH:mm"),
-                    EndDate = regularTest.EndDate,
-                    EndDateFormatted = regularTest.EndDate?.ToString("dd.MM.yyyy HH:mm")
-                });
-            }
-
-            // Добавляем тесты по орфографии
-            foreach (var spellingTest in spellingTests)
+                Id = t.Id,
+                Title = t.Title,
+                Description = t.Description,
+                CreatedAt = t.CreatedAt,
+                CreatedAtFormatted = t.CreatedAt.ToString("dd.MM.yyyy"),
+                IsActive = t.IsActive,
+                TestType = "Regular",
+                TypeDisplayName = "Классический тест",
+                IconClass = "fas fa-tasks",
+                ColorClass = "info",
+                ControllerName = "RegularTest",
+                QuestionsCount = t.RegularQuestions?.Count ?? 0,
+                TimeLimit = t.TimeLimit,
+                ResultsCount = t.RegularTestResults?.Count ?? 0,
+                MaxAttempts = t.MaxAttempts,
+                StartDate = t.StartDate,
+                StartDateFormatted = t.StartDate?.ToString("dd.MM.yyyy HH:mm"),
+                EndDate = t.EndDate,
+                EndDateFormatted = t.EndDate?.ToString("dd.MM.yyyy HH:mm")
+            })
+            .Concat(spellingTests.Select(t => new
             {
-                allTests.Add(new
-                {
-                    Id = spellingTest.Id,
-                    Title = spellingTest.Title,
-                    Description = spellingTest.Description,
-                    CreatedAt = spellingTest.CreatedAt,
-                    CreatedAtFormatted = spellingTest.CreatedAt.ToString("dd.MM.yyyy"),
-                    IsActive = spellingTest.IsActive,
-                    TestType = "Spelling",
-                    TypeDisplayName = "Орфография",
-                    IconClass = "fas fa-spell-check",
-                    ColorClass = "primary",
-                    ControllerName = "SpellingTest",
-                    QuestionsCount = spellingTest.SpellingQuestions?.Count ?? 0,
-                    TimeLimit = spellingTest.TimeLimit,
-                    ResultsCount = spellingTest.SpellingTestResults?.Count ?? 0,
-                    MaxAttempts = spellingTest.MaxAttempts,
-                    StartDate = spellingTest.StartDate,
-                    StartDateFormatted = spellingTest.StartDate?.ToString("dd.MM.yyyy HH:mm"),
-                    EndDate = spellingTest.EndDate,
-                    EndDateFormatted = spellingTest.EndDate?.ToString("dd.MM.yyyy HH:mm")
-                });
-            }
-
-            // Добавляем тесты по пунктуации
-            foreach (var punctuationTest in punctuationTests)
+                Id = t.Id,
+                Title = t.Title,
+                Description = t.Description,
+                CreatedAt = t.CreatedAt,
+                CreatedAtFormatted = t.CreatedAt.ToString("dd.MM.yyyy"),
+                IsActive = t.IsActive,
+                TestType = "Spelling",
+                TypeDisplayName = "Орфография",
+                IconClass = "fas fa-spell-check",
+                ColorClass = "primary",
+                ControllerName = "SpellingTest",
+                QuestionsCount = t.SpellingQuestions?.Count ?? 0,
+                TimeLimit = t.TimeLimit,
+                ResultsCount = t.SpellingTestResults?.Count ?? 0,
+                MaxAttempts = t.MaxAttempts,
+                StartDate = t.StartDate,
+                StartDateFormatted = t.StartDate?.ToString("dd.MM.yyyy HH:mm"),
+                EndDate = t.EndDate,
+                EndDateFormatted = t.EndDate?.ToString("dd.MM.yyyy HH:mm")
+            }))
+            .Concat(punctuationTests.Select(t => new
             {
-                allTests.Add(new
-                {
-                    Id = punctuationTest.Id,
-                    Title = punctuationTest.Title,
-                    Description = punctuationTest.Description,
-                    CreatedAt = punctuationTest.CreatedAt,
-                    CreatedAtFormatted = punctuationTest.CreatedAt.ToString("dd.MM.yyyy"),
-                    IsActive = punctuationTest.IsActive,
-                    TestType = "Punctuation",
-                    TypeDisplayName = "Пунктуация",
-                    IconClass = "fas fa-quote-right",
-                    ColorClass = "success",
-                    ControllerName = "PunctuationTest",
-                    QuestionsCount = punctuationTest.PunctuationQuestions?.Count ?? 0,
-                    TimeLimit = punctuationTest.TimeLimit,
-                    ResultsCount = punctuationTest.PunctuationTestResults?.Count ?? 0,
-                    MaxAttempts = punctuationTest.MaxAttempts,
-                    StartDate = punctuationTest.StartDate,
-                    StartDateFormatted = punctuationTest.StartDate?.ToString("dd.MM.yyyy HH:mm"),
-                    EndDate = punctuationTest.EndDate,
-                    EndDateFormatted = punctuationTest.EndDate?.ToString("dd.MM.yyyy HH:mm")
-                });
-            }
-
-            // Добавляем тесты по орфоэпии
-            foreach (var orthoeopyTest in orthoeopyTests)
+                Id = t.Id,
+                Title = t.Title,
+                Description = t.Description,
+                CreatedAt = t.CreatedAt,
+                CreatedAtFormatted = t.CreatedAt.ToString("dd.MM.yyyy"),
+                IsActive = t.IsActive,
+                TestType = "Punctuation",
+                TypeDisplayName = "Пунктуация",
+                IconClass = "fas fa-quote-right",
+                ColorClass = "success",
+                ControllerName = "PunctuationTest",
+                QuestionsCount = t.PunctuationQuestions?.Count ?? 0,
+                TimeLimit = t.TimeLimit,
+                ResultsCount = t.PunctuationTestResults?.Count ?? 0,
+                MaxAttempts = t.MaxAttempts,
+                StartDate = t.StartDate,
+                StartDateFormatted = t.StartDate?.ToString("dd.MM.yyyy HH:mm"),
+                EndDate = t.EndDate,
+                EndDateFormatted = t.EndDate?.ToString("dd.MM.yyyy HH:mm")
+            }))
+            .Concat(orthoeopyTests.Select(t => new
             {
-                allTests.Add(new
-                {
-                    Id = orthoeopyTest.Id,
-                    Title = orthoeopyTest.Title,
-                    Description = orthoeopyTest.Description,
-                    CreatedAt = orthoeopyTest.CreatedAt,
-                    CreatedAtFormatted = orthoeopyTest.CreatedAt.ToString("dd.MM.yyyy"),
-                    IsActive = orthoeopyTest.IsActive,
-                    TestType = "Punctuation",
-                    TypeDisplayName = "Орфоэпия",
-                    IconClass = "fas fa-check",
-                    ColorClass = "success",
-                    ControllerName = "OrthoeopyTest",
-                    QuestionsCount = orthoeopyTest.OrthoeopyQuestions?.Count ?? 0,
-                    TimeLimit = orthoeopyTest.TimeLimit,
-                    ResultsCount = orthoeopyTest.OrthoeopyTestResults?.Count ?? 0,
-                    MaxAttempts = orthoeopyTest.MaxAttempts,
-                    StartDate = orthoeopyTest.StartDate,
-                    StartDateFormatted = orthoeopyTest.StartDate?.ToString("dd.MM.yyyy HH:mm"),
-                    EndDate = orthoeopyTest.EndDate,
-                    EndDateFormatted = orthoeopyTest.EndDate?.ToString("dd.MM.yyyy HH:mm")
-                });
-            }
-
-            // Сортируем по дате создания (новые первыми)
-            allTests = allTests.OrderByDescending(t => ((dynamic)t).CreatedAt).ToList();
+                Id = t.Id,
+                Title = t.Title,
+                Description = t.Description,
+                CreatedAt = t.CreatedAt,
+                CreatedAtFormatted = t.CreatedAt.ToString("dd.MM.yyyy"),
+                IsActive = t.IsActive,
+                TestType = "Orthoeopy",
+                TypeDisplayName = "Орфоэпия",
+                IconClass = "fas fa-volume-up",
+                ColorClass = "warning",
+                ControllerName = "OrthoeopyTest",
+                QuestionsCount = t.OrthoeopyQuestions?.Count ?? 0,
+                TimeLimit = t.TimeLimit,
+                ResultsCount = t.OrthoeopyTestResults?.Count ?? 0,
+                MaxAttempts = t.MaxAttempts,
+                StartDate = t.StartDate,
+                StartDateFormatted = t.StartDate?.ToString("dd.MM.yyyy HH:mm"),
+                EndDate = t.EndDate,
+                EndDateFormatted = t.EndDate?.ToString("dd.MM.yyyy HH:mm")
+            }))
+            .OrderByDescending(t => t.CreatedAt)
+            .ToList();
 
             ViewBag.AllTests = allTests;
             ViewBag.AllTestsCount = allTests.Count;
