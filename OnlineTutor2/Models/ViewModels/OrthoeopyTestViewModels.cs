@@ -14,8 +14,8 @@ namespace OnlineTutor2.ViewModels
         [Display(Name = "Описание")]
         public string? Description { get; set; }
 
-        [Display(Name = "Онлайн-класс")]
-        public int? ClassId { get; set; }
+        [Display(Name = "Назначить классу(ам)")]
+        public List<int> SelectedClassIds { get; set; } = new List<int>();
 
         [Required]
         [Range(5, 300)]
