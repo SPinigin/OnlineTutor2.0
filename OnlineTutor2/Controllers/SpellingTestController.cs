@@ -43,7 +43,7 @@ namespace OnlineTutor2.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var tests = await _context.SpellingTests
                 .Where(st => st.TeacherId == currentUser.Id)
-                .Include(st => st.Class)
+                .Include(st => st.TestClasses)
                 .Include(st => st.SpellingQuestions)
                 .Include(st => st.SpellingTestResults)
                 .OrderByDescending(st => st.CreatedAt)
@@ -60,7 +60,8 @@ namespace OnlineTutor2.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.SpellingTests
                 .Include(st => st.Teacher)
-                .Include(st => st.Class)
+                .Include(st => st.TestClasses)
+                    .ThenInclude(tc => tc.Class)
                 .Include(st => st.SpellingQuestions.OrderBy(q => q.OrderIndex))
                 .Include(st => st.SpellingTestResults)
                     .ThenInclude(tr => tr.Student)
@@ -96,7 +97,6 @@ namespace OnlineTutor2.Controllers
                     Description = model.Description,
                     TeacherId = currentUser.Id,
                     TestCategoryId = TestCategoryConstants.Spelling,
-                    ClassId = model.ClassId,
                     TimeLimit = model.TimeLimit,
                     MaxAttempts = model.MaxAttempts,
                     StartDate = model.StartDate,
@@ -109,8 +109,22 @@ namespace OnlineTutor2.Controllers
                 _context.SpellingTests.Add(test);
                 await _context.SaveChangesAsync();
 
+                if (model.SelectedClassIds != null && model.SelectedClassIds.Any())
+                {
+                    foreach (var classId in model.SelectedClassIds)
+                    {
+                        var testClass = new SpellingTestClass
+                        {
+                            SpellingTestId = test.Id,
+                            ClassId = classId
+                        };
+                        _context.SpellingTestClasses.Add(testClass);
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
                 _logger.LogInformation(
-                    "Учитель {TeacherId} создал тест орфографии {TestId}: {Title}",
+                    "Учитель {TeacherId} создал тест по орфографии {TestId}: {Title}",
                     currentUser.Id, test.Id, test.Title);
 
                 TempData["SuccessMessage"] = $"Тест \"{test.Title}\" успешно создан! Теперь добавьте вопросы.";
@@ -118,7 +132,7 @@ namespace OnlineTutor2.Controllers
             }
 
             _logger.LogWarning(
-                "Учитель {TeacherId} отправил невалидную форму создания теста орфографии",
+                "Учитель {TeacherId} отправил невалидную форму создания теста по орфографии",
                 currentUser.Id);
 
             await LoadClasses();
@@ -132,6 +146,7 @@ namespace OnlineTutor2.Controllers
 
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.SpellingTests
+                .Include(st => st.TestClasses)
                 .FirstOrDefaultAsync(st => st.Id == id && st.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -140,7 +155,7 @@ namespace OnlineTutor2.Controllers
             {
                 Title = test.Title,
                 Description = test.Description,
-                ClassId = test.ClassId,
+                SelectedClassIds = test.TestClasses.Select(tc => tc.ClassId).ToList(),
                 TimeLimit = test.TimeLimit,
                 MaxAttempts = test.MaxAttempts,
                 StartDate = test.StartDate,
@@ -167,13 +182,13 @@ namespace OnlineTutor2.Controllers
                 try
                 {
                     var test = await _context.SpellingTests
+                        .Include(st => st.TestClasses)
                         .FirstOrDefaultAsync(st => st.Id == id && st.TeacherId == currentUser.Id);
 
                     if (test == null) return NotFound();
 
                     test.Title = model.Title;
                     test.Description = model.Description;
-                    test.ClassId = model.ClassId;
                     test.TimeLimit = model.TimeLimit;
                     test.MaxAttempts = model.MaxAttempts;
                     test.StartDate = model.StartDate;
@@ -182,11 +197,25 @@ namespace OnlineTutor2.Controllers
                     test.ShowCorrectAnswers = model.ShowCorrectAnswers;
                     test.IsActive = model.IsActive;
 
+                    _context.SpellingTestClasses.RemoveRange(test.TestClasses);
+
+                    if (model.SelectedClassIds != null && model.SelectedClassIds.Any())
+                    {
+                        foreach (var classId in model.SelectedClassIds)
+                        {
+                            test.TestClasses.Add(new SpellingTestClass
+                            {
+                                SpellingTestId = test.Id,
+                                ClassId = classId
+                            });
+                        }
+                    }
+
                     _context.Update(test);
                     await _context.SaveChangesAsync();
 
                     _logger.LogInformation(
-                        "Учитель {TeacherId} обновил тест орфографии {TestId}: {Title}",
+                        "Учитель {TeacherId} обновил тест по орфографии {TestId}: {Title}",
                         currentUser.Id, id, test.Title);
 
                     TempData["SuccessMessage"] = $"Тест \"{test.Title}\" успешно обновлен!";
@@ -195,7 +224,7 @@ namespace OnlineTutor2.Controllers
                 catch (DbUpdateConcurrencyException ex)
                 {
                     _logger.LogError(ex,
-                        "Ошибка конкурентности при обновлении теста орфографии {TestId}",
+                        "Ошибка конкурентности при обновлении теста по орфографии {TestId}",
                         id);
                     ModelState.AddModelError("", "Произошла ошибка при сохранении. Попробуйте еще раз.");
                 }
@@ -213,7 +242,7 @@ namespace OnlineTutor2.Controllers
 
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.SpellingTests
-                .Include(st => st.Class)
+                .Include(st => st.TestClasses)
                 .Include(st => st.SpellingQuestions)
                 .Include(st => st.SpellingTestResults)
                     .ThenInclude(tr => tr.Student)
