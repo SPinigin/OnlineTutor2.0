@@ -33,7 +33,7 @@ namespace OnlineTutor2.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var tests = await _context.RegularTests
                 .Where(rt => rt.TeacherId == currentUser.Id)
-                .Include(rt => rt.Class)
+                .Include(st => st.TestClasses)
                 .Include(rt => rt.RegularQuestions)
                 .Include(rt => rt.RegularTestResults)
                 .OrderByDescending(rt => rt.CreatedAt)
@@ -50,7 +50,8 @@ namespace OnlineTutor2.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.RegularTests
                 .Include(rt => rt.Teacher)
-                .Include(rt => rt.Class)
+                .Include(st => st.TestClasses)
+                    .ThenInclude(tc => tc.Class)
                 .Include(rt => rt.RegularQuestions.OrderBy(q => q.OrderIndex))
                     .ThenInclude(q => q.Options.OrderBy(o => o.OrderIndex))
                 .Include(rt => rt.RegularTestResults)
@@ -87,8 +88,7 @@ namespace OnlineTutor2.Controllers
                     Title = model.Title,
                     Description = model.Description,
                     TeacherId = currentUser.Id,
-                    TestCategoryId = 4, // Категория "Классические тесты"
-                    ClassId = model.ClassId,
+                    TestCategoryId = TestCategoryConstants.Regular,
                     TimeLimit = model.TimeLimit,
                     MaxAttempts = model.MaxAttempts,
                     StartDate = model.StartDate,
@@ -102,8 +102,22 @@ namespace OnlineTutor2.Controllers
                 _context.RegularTests.Add(test);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Учитель {TeacherId} создал классический тест {TestId}: {Title}, Тип: {TestType}, ClassId: {ClassId}",
-                    currentUser.Id, test.Id, test.Title, test.Type, test.ClassId);
+                if (model.SelectedClassIds != null && model.SelectedClassIds.Any())
+                {
+                    foreach (var classId in model.SelectedClassIds)
+                    {
+                        var testClass = new RegularTestClass
+                        {
+                            RegularTestId = test.Id,
+                            ClassId = classId
+                        };
+                        _context.RegularTestClasses.Add(testClass);
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
+                _logger.LogInformation("Учитель {TeacherId} создал классический тест {TestId}: {Title}, Тип: {TestType}",
+                    currentUser.Id, test.Id, test.Title, test.Type);
 
                 TempData["SuccessMessage"] = $"Тест \"{test.Title}\" успешно создан! Теперь добавьте вопросы.";
                 return RedirectToAction(nameof(Details), new { id = test.Id });
@@ -123,6 +137,7 @@ namespace OnlineTutor2.Controllers
 
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.RegularTests
+                .Include(st => st.TestClasses)
                 .FirstOrDefaultAsync(rt => rt.Id == id && rt.TeacherId == currentUser.Id);
 
             if (test == null) return NotFound();
@@ -131,7 +146,7 @@ namespace OnlineTutor2.Controllers
             {
                 Title = test.Title,
                 Description = test.Description,
-                ClassId = test.ClassId,
+                SelectedClassIds = test.TestClasses.Select(tc => tc.ClassId).ToList(),
                 TimeLimit = test.TimeLimit,
                 MaxAttempts = test.MaxAttempts,
                 StartDate = test.StartDate,
@@ -160,13 +175,13 @@ namespace OnlineTutor2.Controllers
                 try
                 {
                     var test = await _context.RegularTests
+                        .Include(st => st.TestClasses)
                         .FirstOrDefaultAsync(rt => rt.Id == id && rt.TeacherId == currentUser.Id);
 
                     if (test == null) return NotFound();
 
                     test.Title = model.Title;
                     test.Description = model.Description;
-                    test.ClassId = model.ClassId;
                     test.TimeLimit = model.TimeLimit;
                     test.MaxAttempts = model.MaxAttempts;
                     test.StartDate = model.StartDate;
@@ -175,6 +190,20 @@ namespace OnlineTutor2.Controllers
                     test.ShowCorrectAnswers = model.ShowCorrectAnswers;
                     test.IsActive = model.IsActive;
                     test.Type = model.TestType;
+
+                    _context.RegularTestClasses.RemoveRange(test.TestClasses);
+
+                    if (model.SelectedClassIds != null && model.SelectedClassIds.Any())
+                    {
+                        foreach (var classId in model.SelectedClassIds)
+                        {
+                            test.TestClasses.Add(new RegularTestClass
+                            {
+                                RegularTestId = test.Id,
+                                ClassId = classId
+                            });
+                        }
+                    }
 
                     _context.Update(test);
                     await _context.SaveChangesAsync();
@@ -205,7 +234,7 @@ namespace OnlineTutor2.Controllers
 
             var currentUser = await _userManager.GetUserAsync(User);
             var test = await _context.RegularTests
-                .Include(rt => rt.Class)
+                .Include(st => st.TestClasses)
                 .Include(rt => rt.RegularQuestions)
                 .Include(rt => rt.RegularTestResults)
                     .ThenInclude(tr => tr.Student)
