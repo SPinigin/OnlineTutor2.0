@@ -466,3 +466,6 @@ _ReSharper*/
 node_modules/
 package-lock.json
 /OnlineTutor2/appsettings.json
+/OnlineTutor2/README_ENVIRONMENT.md
+/OnlineTutor2/MIGRATION_TO_ADONET.md
+/OnlineTutor2/LINQ_REPORT.md
