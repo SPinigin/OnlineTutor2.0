@@ -19,11 +19,6 @@
                 </ol>
             </nav>
             <div class="flex-shrink-0 ms-2 d-flex align-items-center gap-2">
-                <div id="signalr-status" class="signalr-status status-connected" style="display: none;">
-                    <i class="fas fa-circle text-success me-1"></i>
-                    <span>Подключение...</span>
-                </div>
-                <div id="signalr-activity-indicator"></div>
                 <a asp-controller="SpellingTest" asp-action="Details" asp-route-id="@Model.SpellingTest.Id" 
                    class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-arrow-left"></i> <span class="d-none d-sm-inline">Назад</span>
@@ -471,7 +466,6 @@
 @section Styles {
     <link rel="stylesheet" href="~/css/test-analytics.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/test-analytics-realtime.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/test-analytics-signalr.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 }
 
@@ -498,14 +492,9 @@
 }
 
 @section Scripts {
-    
-    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@7.0.0/dist/browser/signalr.min.js"></script>
-    
-    
     <script src="~/js/layout.js" asp-append-version="true"></script>
     <script src="~/js/test-analytics.js" asp-append-version="true"></script>
     <script src="~/js/test-analytics-realtime.js" asp-append-version="true"></script>
-    <script src="~/js/test-analytics-signalr.js" asp-append-version="true"></script>
 
     <script>
         // ===== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ =====
@@ -807,13 +796,6 @@
             console.log('🚀 DOMContentLoaded - начало инициализации');
 
             try {
-                // Показываем статус SignalR
-                const signalrStatus = document.getElementById('signalr-status');
-                if (signalrStatus) {
-                    signalrStatus.style.display = 'inline-flex';
-                    console.log('✅ Элемент signalr-status показан');
-                }
-                
                 // ===== 1. ДОБАВЛЯЕМ DATA-АТРИБУТЫ К СТРОКАМ ТАБЛИЦЫ =====
                 console.log('📋 Шаг 1: Добавление data-student-id');
                 const studentIds = @Html.Raw(Json.Serialize(Model.SpellingResults.Select(r => r.Student.Id).ToList()));
@@ -856,27 +838,11 @@
                 window.testAnalyticsRealtime.start();
                 console.log('✅ Polling запущен:', { testId: TEST_ID, interval: '60s', type: TEST_TYPE });
 
-                // ===== 4. ЗАПУСКАЕМ SIGNALR =====
-                console.log('📋 Шаг 4: Запуск SignalR');
-                
-                // Проверяем доступность библиотеки SignalR
-                if (typeof signalR === 'undefined') {
-                    console.error('❌ SignalR библиотека не загружена!');
-                    throw new Error('SignalR library not loaded');
-                }
-                
-                window.testAnalyticsSignalR = new TestAnalyticsSignalR(
-                    TEST_ID,        // testId
-                    TEST_TYPE       // testType ('spelling')
-                );
-                window.testAnalyticsSignalR.start();
-                console.log('✅ SignalR инициализирован:', { testId: TEST_ID, type: TEST_TYPE });
-
-                // ===== 5. ДОБАВЛЯЕМ КНОПКУ УПРАВЛЕНИЯ =====
+                // ===== 4. ДОБАВЛЯЕМ КНОПКУ УПРАВЛЕНИЯ =====
                 console.log('📋 Шаг 5: Добавление кнопки управления');
                 addRealtimeControls();
 
-                // ===== 6. НАСТРОЙКА ФИЛЬТРОВ ВОПРОСОВ =====
+                // ===== 5. НАСТРОЙКА ФИЛЬТРОВ ВОПРОСОВ =====
                 console.log('📋 Шаг 6: Настройка фильтров вопросов');
                 
                 const questionsTab = document.getElementById('questions-tab');
@@ -923,11 +889,6 @@
                     window.testAnalyticsRealtime.stop();
                     console.log('⏹️ Polling остановлен');
                 }
-                
-                if (window.testAnalyticsSignalR) {
-                    window.testAnalyticsSignalR.stop();
-                    console.log('⏹️ SignalR отключен');
-                }
             } catch (error) {
                 console.error('❌ Ошибка при остановке подключений:', error);
             }
@@ -948,20 +909,6 @@
                 if (window.testAnalyticsRealtime && !window.testAnalyticsRealtime.intervalId) {
                     window.testAnalyticsRealtime.start();
                 }
-                
-                // SignalR переподключается автоматически
-                if (window.testAnalyticsSignalR && !window.testAnalyticsSignalR.isConnected) {
-                    console.log('🔄 Попытка переподключения SignalR');
-                    window.testAnalyticsSignalR.start();
-                }
-            }
-        });
-
-        // ===== ОБРАБОТКА ОШИБОК =====
-
-        window.addEventListener('error', function(event) {
-            if (event.message.includes('signalR') || event.message.includes('SignalR')) {
-                console.error('❌ Глобальная ошибка SignalR:', event.message, event.filename, event.lineno);
             }
         });
 
@@ -972,7 +919,6 @@
             console.log('- Test ID:', TEST_ID);
             console.log('- Test Type:', TEST_TYPE);
             console.log('- Polling активен:', window.testAnalyticsRealtime?.intervalId !== null);
-            console.log('- SignalR подключен:', window.testAnalyticsSignalR?.isConnected);
             console.log('- Строк студентов:', document.querySelectorAll('#students table tbody tr[data-student-id]').length);
             console.log('- Карточек вопросов:', document.querySelectorAll('.question-analytics-card[data-question-id]').length);
         };

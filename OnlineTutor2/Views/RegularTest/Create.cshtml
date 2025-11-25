@@ -46,12 +46,40 @@
                     <span asp-validation-for="Description" class="text-danger"></span>
                 </div>
 
-                <div class="col-md-6 mb-3">
-                    <label asp-for="ClassId" class="form-label"></label>
-                    <select asp-for="ClassId" class="form-select" asp-items="ViewBag.Classes">
-                        <option value="">Все ученики</option>
+                <div class="col-md-12 mb-3">
+                    <label asp-for="TestAssignmentId" class="form-label">
+                        <i class="fas fa-folder"></i> Привязать к заданию
+                    </label>
+                    <select asp-for="TestAssignmentId" class="form-select" asp-items="ViewBag.TestAssignments">
                     </select>
-                    <small class="text-muted">Если не выбран класс, тест будет доступен всем вашим ученикам</small>
+                    <small class="text-muted">Выберите задание, к которому будет привязан этот тест (необязательно)</small>
+                    <span asp-validation-for="TestAssignmentId" class="text-danger"></span>
+                </div>
+
+                <div class="border rounded p-3 bg-light">
+                    @if (ViewBag.Classes != null && ((SelectList)ViewBag.Classes).Any())
+                    {
+                        @foreach (var classItem in (SelectList)ViewBag.Classes)
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       name="SelectedClassIds"
+                                       value="@classItem.Value"
+                                       id="class_@classItem.Value" />
+                                <label class="form-check-label" for="class_@classItem.Value">
+                                    @classItem.Text
+                                </label>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-info-circle"></i> У вас пока нет активных классов.
+                            <a asp-controller="Class" asp-action="Create">Создать класс</a>
+                        </p>
+                    }
                 </div>
             </div>
         </div>

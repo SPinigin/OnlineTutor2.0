@@ -46,16 +46,17 @@
                                         <small class="text-muted d-block">
                                             <i class="fas fa-redo"></i> Попытки: @Model.MaxAttempts
                                         </small>
-                                        @if (Model.Class != null)
+                                        @if (Model.TestClasses.Any())
                                         {
                                             <small class="text-muted d-block">
-                                                <i class="fas fa-users"></i> Класс: @Model.Class.Name
+                                                <i class="fas fa-users"></i> Классы:
+                                                @string.Join(", ", Model.TestClasses.Select(tc => tc.Class.Name))
                                             </small>
                                         }
                                         else
                                         {
                                             <small class="text-muted d-block">
-                                                <i class="fas fa-globe"></i> Доступен всем
+                                                <i class="fas fa-globe"></i> Доступен всем ученикам
                                             </small>
                                         }
                                     </div>

@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using OnlineTutor2.Data;
+using OnlineTutor2.Data.Repositories;
 using OnlineTutor2.Models;
 using System.Diagnostics;
 
@@ -10,18 +9,18 @@ namespace OnlineTutor2.Controllers
     public class HomeController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ApplicationDbContext _context;
+        private readonly ITeacherRepository _teacherRepository;
 
         public HomeController(UserManager<ApplicationUser> userManager, 
-            ApplicationDbContext context)
+            ITeacherRepository teacherRepository)
         {
             _userManager = userManager;
-            _context = context;
+            _teacherRepository = teacherRepository;
         }
 
         public async Task<IActionResult> Index()
         {
-            // Перенаправление авторизованных пользователей в их кабинеты
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             if (User.Identity.IsAuthenticated)
             {
                 var user = await _userManager.GetUserAsync(User);
@@ -29,15 +28,15 @@ namespace OnlineTutor2.Controllers
                 {
                     if (User.IsInRole(ApplicationRoles.Teacher))
                     {
-                        // Проверяем, одобрен ли учитель
-                        var teacher = await _context.Teachers.FirstOrDefaultAsync(t => t.UserId == user.Id);
+                        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+                        var teacher = await _teacherRepository.GetByUserIdAsync(user.Id);
                         if (teacher != null && teacher.IsApproved)
                         {
                             return RedirectToAction("Index", "Teacher");
                         }
                         else
                         {
-                            TempData["InfoMessage"] = "Ваш аккаунт учителя ожидает одобрения администратором.";
+                            TempData["InfoMessage"] = "пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.";
                         }
                     }
                     else if (User.IsInRole(ApplicationRoles.Student))
@@ -60,9 +59,37 @@ namespace OnlineTutor2.Controllers
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        public IActionResult Error(int? statusCode = null)
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            var errorViewModel = new ErrorViewModel
+            {
+                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
+                StatusCode = statusCode,
+                Path = HttpContext.Request.Path
+            };
+
+            // РџРѕР»СѓС‡Р°РµРј РёРЅС„РѕСЂРјР°С†РёСЋ РѕР± РёСЃРєР»СЋС‡РµРЅРёРё РёР· РєРѕРЅС‚РµРєСЃС‚Р°
+            var exceptionHandlerPathFeature = HttpContext.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>();
+            if (exceptionHandlerPathFeature != null)
+            {
+                var exception = exceptionHandlerPathFeature.Error;
+                errorViewModel.Message = exception.Message;
+                
+                // Р›РѕРіРёСЂСѓРµРј С‚РѕР»СЊРєРѕ РµСЃР»Рё СЌС‚Рѕ РЅРµ 404
+                if (statusCode != 404)
+                {
+                    // Р›РѕРіРёСЂРѕРІР°РЅРёРµ СѓР¶Рµ РІС‹РїРѕР»РЅРµРЅРѕ РІ middleware
+                }
+            }
+
+            // Р•СЃР»Рё СЃС‚Р°С‚СѓСЃ РєРѕРґ РЅРµ РїРµСЂРµРґР°РЅ, РїС‹С‚Р°РµРјСЃСЏ РїРѕР»СѓС‡РёС‚СЊ РёР· Response
+            if (statusCode == null && Response.StatusCode != 200)
+            {
+                errorViewModel.StatusCode = Response.StatusCode;
+            }
+
+            Response.StatusCode = errorViewModel.StatusCode ?? 500;
+            return View(errorViewModel);
         }
     }
 }

@@ -41,9 +41,17 @@ else
                             <span class="badge bg-@(test.IsActive ? "success" : "secondary")">
                                 @(test.IsActive ? "Активный" : "Неактивный")
                             </span>
-                            @if (test.Class != null)
+                            @* ✅ ИСПРАВЛЕНО: Отображение классов через many-to-many *@
+                            @if (test.TestClasses != null && test.TestClasses.Any())
                             {
-                                <span class="badge bg-info">@test.Class.Name</span>
+                                @foreach (var testClass in test.TestClasses)
+                                {
+                                    <span class="badge bg-info">@testClass.Class.Name</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Все классы</span>
                             }
                         </div>
                     </div>

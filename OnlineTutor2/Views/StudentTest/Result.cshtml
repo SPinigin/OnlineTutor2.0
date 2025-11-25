@@ -93,16 +93,19 @@
 }
 
 
-<div class="mb-3">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb breadcrumb-compact">
-            <li class="breadcrumb-item">
-                <a asp-action="Index">Мои тесты</a>
-            </li>
-            <li class="breadcrumb-item active text-truncate">@testTitle</li>
-        </ol>
-    </nav>
-</div>
+@if (ViewBag.IsModal != true)
+{
+    <div class="mb-3">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-compact">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index">Мои тесты</a>
+                </li>
+                <li class="breadcrumb-item active text-truncate">@testTitle</li>
+            </ol>
+        </nav>
+    </div>
+}
 
 <div class="test-container">
     
@@ -613,21 +616,23 @@
         </div>
     }
 
-    
-    <div class="card shadow-sm navigation-card">
-        <div class="card-body p-2">
-            <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
-                <a asp-action="Index" class="btn btn-outline-primary btn-sm">
-                    <i class="fas fa-arrow-left"></i>
-                    <span class="d-none d-sm-inline ms-1">К списку тестов</span>
-                </a>
-                <a asp-action="History" class="btn btn-outline-info btn-sm">
-                    <i class="fas fa-history"></i>
-                    <span class="d-none d-sm-inline ms-1">История</span>
-                </a>
+    @if (ViewBag.IsModal != true)
+    {
+        <div class="card shadow-sm navigation-card">
+            <div class="card-body p-2">
+                <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                    <a asp-action="Index" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-arrow-left"></i>
+                        <span class="d-none d-sm-inline ms-1">К списку тестов</span>
+                    </a>
+                    <a asp-action="History" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-history"></i>
+                        <span class="d-none d-sm-inline ms-1">История</span>
+                    </a>
+                </div>
             </div>
         </div>
-    </div>
+    }
 </div>
 
 @section Scripts {

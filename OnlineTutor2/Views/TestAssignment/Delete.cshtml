@@ -1,0 +1,58 @@
+@model OnlineTutor2.Models.TestAssignment
+@{
+    ViewData["Title"] = "Удалить задание";
+}
+
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="Index"><i class="fas fa-folder"></i> Задания</a>
+            </li>
+            <li class="breadcrumb-item active">Удалить</li>
+        </ol>
+    </nav>
+    <h2><i class="fas fa-trash text-danger"></i> Удалить задание</h2>
+</div>
+
+<div class="alert alert-warning">
+    <i class="fas fa-exclamation-triangle"></i>
+    <strong>Внимание!</strong> Вы уверены, что хотите удалить это задание? 
+    Тесты, связанные с этим заданием, не будут удалены, но потеряют связь с заданием.
+</div>
+
+<div class="card">
+    <div class="card-header bg-danger text-white">
+        <h5 class="mb-0">Задание @Model.AssignmentNumber: @Model.Title</h5>
+    </div>
+    <div class="card-body">
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <p><strong>Описание:</strong> @Model.Description</p>
+        }
+        <p><strong>Категория:</strong> @(Model.TestCategory?.Name ?? "Не указана")</p>
+        <p><strong>Статус:</strong> 
+            <span class="badge bg-@(Model.IsActive ? "success" : "secondary")">
+                @(Model.IsActive ? "Активно" : "Неактивно")
+            </span>
+        </p>
+        <p><strong>Создано:</strong> @Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</p>
+    </div>
+    <div class="card-footer">
+        <form asp-action="Delete" method="post">
+            <input type="hidden" asp-for="Id" />
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Отмена
+                </a>
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Удалить задание
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+

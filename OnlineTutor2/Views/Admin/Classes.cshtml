@@ -1,6 +1,8 @@
 ﻿@model List<OnlineTutor2.Models.Class>
 @{
     ViewData["Title"] = "Управление классами";
+    var activeClasses = Model.Count(c => c.IsActive);
+    var inactiveClasses = Model.Count(c => !c.IsActive);
 }
 
 @await Html.PartialAsync("_AdminNav")
@@ -43,7 +45,7 @@
         <div class="card text-center border-primary">
             <div class="card-body">
                 <i class="fas fa-graduation-cap text-primary" style="font-size: 2rem;"></i>
-                <h3 class="mt-2">@Model.Count</h3>
+                <h3 class="mt-2" id="totalClassesCount">@Model.Count</h3>
                 <p class="text-muted mb-0">Всего классов</p>
             </div>
         </div>
@@ -61,7 +63,7 @@
         <div class="card text-center border-success">
             <div class="card-body">
                 <i class="fas fa-tasks text-success" style="font-size: 2rem;"></i>
-                <h3 class="mt-2">@(Model.Sum(c => c.RegularTests.Count + c.SpellingTests.Count + c.PunctuationTests.Count + c.OrthoeopyTests.Count))</h3>
+                <h3 class="mt-2">@(Model.Sum(c => c.RegularTestClasses.Count + c.SpellingTestClasses.Count + c.PunctuationTestClasses.Count + c.OrthoeopyTestClasses.Count))</h3>
                 <p class="text-muted mb-0">Тестов</p>
             </div>
         </div>
@@ -77,19 +79,53 @@
     </div>
 </div>
 
+<!-- Фильтры по статусу -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="btn-group" role="group">
+            <button type="button" 
+                    class="btn btn-outline-primary active" 
+                    data-filter="all"
+                    onclick="filterClassesByStatus('all')">
+                Все (@Model.Count)
+            </button>
+            <button type="button" 
+                    class="btn btn-outline-success" 
+                    data-filter="active"
+                    onclick="filterClassesByStatus('active')">
+                Активные (@activeClasses)
+            </button>
+            <button type="button" 
+                    class="btn btn-outline-secondary" 
+                    data-filter="inactive"
+                    onclick="filterClassesByStatus('inactive')">
+                Неактивные (@inactiveClasses)
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="noResultsMessage" class="alert alert-info" style="display: none;">
+    <i class="fas fa-info-circle"></i> 
+    По выбранному фильтру ничего не найдено.
+</div>
 
 <div class="row">
     @foreach (var classItem in Model)
     {
-        var totalTests = classItem.RegularTests.Count + classItem.SpellingTests.Count +
-        classItem.PunctuationTests.Count + classItem.OrthoeopyTests.Count;
+        var totalTests = classItem.RegularTestClasses.Count + classItem.SpellingTestClasses.Count +
+        classItem.PunctuationTestClasses.Count + classItem.OrthoeopyTestClasses.Count;
 
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100">
-                <div class="card-header bg-primary text-white">
+        <div class="col-md-6 col-lg-4 mb-4 class-card" data-status="@(classItem.IsActive ? "active" : "inactive")">
+            <div class="card h-100 @(classItem.IsActive ? "" : "border-secondary opacity-75")">
+                <div class="card-header @(classItem.IsActive ? "bg-primary" : "bg-secondary") text-white">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
                             <i class="fas fa-graduation-cap"></i> @classItem.Name
+                            @if (!classItem.IsActive)
+                            {
+                                <span class="badge bg-warning text-dark ms-2">Неактивен</span>
+                            }
                         </h5>
                         <span class="badge bg-light text-dark">
                             <i class="fas fa-users"></i> @classItem.Students.Count
@@ -119,7 +155,7 @@
                             <div class="card bg-light text-center">
                                 <div class="card-body p-2">
                                     <i class="fas fa-spell-check text-primary"></i>
-                                    <h6 class="mb-0">@classItem.SpellingTests.Count</h6>
+                                    <h6 class="mb-0">@classItem.SpellingTestClasses.Count</h6>
                                     <small class="text-muted">Орфография</small>
                                 </div>
                             </div>
@@ -128,7 +164,7 @@
                             <div class="card bg-light text-center">
                                 <div class="card-body p-2">
                                     <i class="fas fa-list-ul text-success"></i>
-                                    <h6 class="mb-0">@classItem.RegularTests.Count</h6>
+                                    <h6 class="mb-0">@classItem.RegularTestClasses.Count</h6>
                                     <small class="text-muted">Классические</small>
                                 </div>
                             </div>
@@ -137,7 +173,7 @@
                             <div class="card bg-light text-center">
                                 <div class="card-body p-2">
                                     <i class="fas fa-quote-right text-danger"></i>
-                                    <h6 class="mb-0">@classItem.PunctuationTests.Count</h6>
+                                    <h6 class="mb-0">@classItem.PunctuationTestClasses.Count</h6>
                                     <small class="text-muted">Пунктуация</small>
                                 </div>
                             </div>
@@ -146,7 +182,7 @@
                             <div class="card bg-light text-center">
                                 <div class="card-body p-2">
                                     <i class="fas fa-volume-up text-warning"></i>
-                                    <h6 class="mb-0">@classItem.OrthoeopyTests.Count</h6>
+                                    <h6 class="mb-0">@classItem.OrthoeopyTestClasses.Count</h6>
                                     <small class="text-muted">Орфоэпия</small>
                                 </div>
                             </div>
@@ -200,6 +236,71 @@
 
 @section Scripts {
     <script src="~/js/layout.js" asp-append-version="true"></script>
+    <script>
+        let currentStatusFilter = 'all';
+
+        // Фильтрация по статусу
+        function filterClassesByStatus(status) {
+            currentStatusFilter = status;
+            const buttons = document.querySelectorAll('.btn-group .btn');
+            
+            // Обновляем активную кнопку
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.filter === status) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            applyFilters();
+        }
+
+        // Применение фильтров
+        function applyFilters() {
+            const cards = document.querySelectorAll('.class-card');
+            let visibleCount = 0;
+            
+            cards.forEach(card => {
+                const matchesStatus = currentStatusFilter === 'all' || 
+                                    card.dataset.status === currentStatusFilter;
+                
+                if (matchesStatus) {
+                    card.style.display = '';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            // Показываем сообщение если ничего не найдено
+            const noResultsMessage = document.getElementById('noResultsMessage');
+            if (visibleCount === 0) {
+                noResultsMessage.style.display = 'block';
+            } else {
+                noResultsMessage.style.display = 'none';
+            }
+            
+            // Обновляем счетчик
+            updateClassesCount(visibleCount);
+        }
+
+        // Обновление счетчика классов
+        function updateClassesCount(count) {
+            const totalClasses = document.querySelectorAll('.class-card').length;
+            const countsElement = document.getElementById('totalClassesCount');
+            
+            if (count === totalClasses) {
+                countsElement.textContent = totalClasses;
+            } else {
+                countsElement.textContent = `${count} из ${totalClasses}`;
+            }
+        }
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            applyFilters();
+        });
+    </script>
 }
 
 @section Styles {

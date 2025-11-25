@@ -1,82 +1,19 @@
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.EntityFrameworkCore;
 using NLog;
 using NLog.Web;
-using OfficeOpenXml;
 using OnlineTutor2.Data;
-using OnlineTutor2.Hubs;
-using OnlineTutor2.Models;
-using OnlineTutor2.Services;
+using OnlineTutor2.Infrastructure;
 
 var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
 
 try
 {
-    logger.Info("Запуск приложения");
-
     var builder = WebApplication.CreateBuilder(args);
 
-    // Настройка NLog
-    builder.Logging.ClearProviders();
-    builder.Host.UseNLog();
-
-    // EPPlus License
-    try
-    {
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-        logger.Info("EPPlus license configured successfully");
-    }
-    catch (Exception ex)
-    {
-        logger.Error(ex, "EPPlus license configuration failed");
-    }
-
-    // Database Context
-    logger.Info("Configuring database connection");
-    try
-    {
-        builder.Services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-    }
-    catch (Exception ex)
-    {
-        logger.Error(ex, "Failed to configure database");
-        throw;
-    }
-
-    // Identity
-    logger.Info("Configuring Identity");
-    builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
-    {
-        // Настройки пароля
-        options.Password.RequireDigit = true;
-        options.Password.RequireLowercase = true;
-        options.Password.RequireUppercase = true;
-        options.Password.RequireNonAlphanumeric = false;
-        options.Password.RequiredLength = 6;
-
-        // Настройки пользователя
-        options.User.RequireUniqueEmail = true;
-
-        // Настройки подтверждения email
-        options.SignIn.RequireConfirmedEmail = true;
-
-        // Настройки подтверждения phoneNumber
-        options.SignIn.RequireConfirmedPhoneNumber = false;
-
-        // Настройки блокировки
-        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
-        options.Lockout.MaxFailedAccessAttempts = 10;
-    })
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
-
-    // Настройка времени жизни токенов
-    builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
-    {
-        options.TokenLifespan = TimeSpan.FromHours(24);
-    });
+    builder.ConfigureLogging()
+           .ConfigureEPPlus()
+           .ConfigureDatabase()
+           .ConfigureIdentity()
+           .ConfigureApplicationServices();
 
     builder.Services.AddLogging(logging =>
     {
@@ -84,70 +21,36 @@ try
         logging.AddDebug();
     });
 
-    builder.Services.ConfigureApplicationCookie(options =>
-    {
-        options.LoginPath = "/Account/Login";
-        options.LogoutPath = "/Account/Logout";
-        options.AccessDeniedPath = "/Account/AccessDenied";
-        options.ExpireTimeSpan = TimeSpan.FromHours(24);
-        options.SlidingExpiration = true;
-    });
-
-    // Services
-    logger.Info("Configuring application services");
-    builder.Services.AddScoped<IStudentImportService, StudentImportService>();
-    builder.Services.AddScoped<ISpellingQuestionImportService, SpellingQuestionImportService>();
-    builder.Services.AddScoped<IPunctuationQuestionImportService, PunctuationQuestionImportService>();
-    builder.Services.AddScoped<IOrthoeopyQuestionImportService, OrthoeopyQuestionImportService>();
-    builder.Services.AddScoped<IAuditLogService, AuditLogService>();
-    builder.Services.AddHttpContextAccessor();
-    builder.Services.AddScoped<IExportService, ExportService>();
-    builder.Services.AddTransient<IEmailSender, EmailSender>();
-    builder.Services.AddSignalR();
-
-    builder.Services.AddSession(options =>
-    {
-        options.IdleTimeout = TimeSpan.FromMinutes(30);
-        options.Cookie.HttpOnly = true;
-        options.Cookie.IsEssential = true;
-    });
-
-    builder.Services.AddControllersWithViews();
-
-    logger.Info("Building application");
+    logger.Info("Р”РёР°РіРЅРѕСЃС‚РёРєР° РѕРєСЂСѓР¶РµРЅРёСЏ: {Diagnostics}", EnvironmentHelper.GetEnvironmentDiagnostics());
+    
+    logger.Info("Building application. Environment: {Environment}", builder.Environment.EnvironmentName);
     var app = builder.Build();
+    
+    logger.Info("Application environment: {Environment}, IsDevelopment: {IsDev}, IsProduction: {IsProd}", 
+        app.Environment.EnvironmentName, 
+        app.Environment.IsDevelopment(), 
+        app.Environment.IsProduction());
+    
+    if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")) &&
+        string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")))
+    {
+        logger.Warn("Р’РќРРњРђРќРР•: РџРµСЂРµРјРµРЅРЅР°СЏ РѕРєСЂСѓР¶РµРЅРёСЏ ASPNETCORE_ENVIRONMENT РЅРµ СѓСЃС‚Р°РЅРѕРІР»РµРЅР°! " +
+                    "РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ Р·РЅР°С‡РµРЅРёРµ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ. Р”Р»СЏ Production СѓСЃС‚Р°РЅРѕРІРёС‚Рµ РїРµСЂРµРјРµРЅРЅСѓСЋ РІ web.config РёР»Рё СЃРёСЃС‚РµРјРЅС‹С… РЅР°СЃС‚СЂРѕР№РєР°С….");
+    }
 
     using (var scope = app.Services.CreateScope())
     {
-        var serviceProvider = scope.ServiceProvider;
         await DbInitializer.Initialize(scope.ServiceProvider);
     }
 
-    // Middleware
-    if (!app.Environment.IsDevelopment())
-    {
-        app.UseExceptionHandler("/Home/Error");
-        app.UseHsts();
-    }
+    app.ConfigureMiddleware();
 
-    app.UseHttpsRedirection();
-    app.UseStaticFiles();
-    app.UseRouting();
-    app.UseAuthentication();
-    app.UseSession();
-    app.UseAuthorization();
-    app.MapHub<TestAnalyticsHub>("/hubs/testAnalytics");
-
-    app.MapControllerRoute(
-        name: "default",
-        pattern: "{controller=Home}/{action=Index}/{id?}");
-
-    logger.Info("Приложение успешно запущено");
+    logger.Info("РџСЂРёР»РѕР¶РµРЅРёРµ РіРѕС‚РѕРІРѕ Рє Р·Р°РїСѓСЃРєСѓ");
     app.Run();
 }
 catch (Exception ex)
 {
-    logger.Error(ex, "Приложение остановлено из-за критической ошибки");
+    logger.Error(ex, "РџСЂРёР»РѕР¶РµРЅРёРµ Р·Р°РІРµСЂС€РёР»РѕСЃСЊ СЃ РѕС€РёР±РєРѕР№");
     if (ex.InnerException != null)
     {
         logger.Error(ex.InnerException, "Inner exception details");

@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using OnlineTutor2.Data;
+using OnlineTutor2.Data.Repositories;
 using OnlineTutor2.Models;
 using OnlineTutor2.ViewModels;
 
@@ -14,7 +14,17 @@ namespace OnlineTutor2.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly ApplicationDbContext _context;
+        private readonly IStudentRepository _studentRepository;
+        private readonly ITeacherRepository _teacherRepository;
+        private readonly IClassRepository _classRepository;
+        private readonly ISpellingTestResultRepository _spellingTestResultRepository;
+        private readonly IPunctuationTestResultRepository _punctuationTestResultRepository;
+        private readonly IRegularTestResultRepository _regularTestResultRepository;
+        private readonly IOrthoeopyTestResultRepository _orthoeopyTestResultRepository;
+        private readonly ISpellingTestRepository _spellingTestRepository;
+        private readonly IRegularTestRepository _regularTestRepository;
+        private readonly IPunctuationTestRepository _punctuationTestRepository;
+        private readonly IOrthoeopyTestRepository _orthoeopyTestRepository;
         private readonly IEmailSender _emailSender;
         private readonly ILogger<AccountController> _logger;
 
@@ -22,14 +32,34 @@ namespace OnlineTutor2.Controllers
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             RoleManager<IdentityRole> roleManager,
-            ApplicationDbContext context,
+            IStudentRepository studentRepository,
+            ITeacherRepository teacherRepository,
+            IClassRepository classRepository,
+            ISpellingTestResultRepository spellingTestResultRepository,
+            IPunctuationTestResultRepository punctuationTestResultRepository,
+            IRegularTestResultRepository regularTestResultRepository,
+            IOrthoeopyTestResultRepository orthoeopyTestResultRepository,
+            ISpellingTestRepository spellingTestRepository,
+            IRegularTestRepository regularTestRepository,
+            IPunctuationTestRepository punctuationTestRepository,
+            IOrthoeopyTestRepository orthoeopyTestRepository,
             IEmailSender emailSender,
             ILogger<AccountController> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _roleManager = roleManager;
-            _context = context;
+            _studentRepository = studentRepository;
+            _teacherRepository = teacherRepository;
+            _classRepository = classRepository;
+            _spellingTestResultRepository = spellingTestResultRepository;
+            _punctuationTestResultRepository = punctuationTestResultRepository;
+            _regularTestResultRepository = regularTestResultRepository;
+            _orthoeopyTestResultRepository = orthoeopyTestResultRepository;
+            _spellingTestRepository = spellingTestRepository;
+            _regularTestRepository = regularTestRepository;
+            _punctuationTestRepository = punctuationTestRepository;
+            _orthoeopyTestRepository = orthoeopyTestRepository;
             _emailSender = emailSender;
             _logger = logger;
         }
@@ -87,7 +117,7 @@ namespace OnlineTutor2.Controllers
                         // Проверяем, если это учитель, одобрен ли он
                         if (await _userManager.IsInRoleAsync(user, ApplicationRoles.Teacher))
                         {
-                            var teacher = await _context.Teachers.FirstOrDefaultAsync(t => t.UserId == user.Id);
+                            var teacher = await _teacherRepository.GetByUserIdAsync(user.Id);
                             if (teacher != null && !teacher.IsApproved)
                             {
                                 await _signInManager.SignOutAsync();
@@ -183,8 +213,7 @@ namespace OnlineTutor2.Controllers
                                 Grade = model.Grade,
                                 CreatedAt = DateTime.Now
                             };
-                            _context.Students.Add(student);
-                            await _context.SaveChangesAsync();
+                            await _studentRepository.CreateAsync(student);
                             _logger.LogInformation("Профиль студента создан. UserId: {UserId}", user.Id);
                         }
                         else if (model.Role == ApplicationRoles.Teacher)
@@ -198,8 +227,7 @@ namespace OnlineTutor2.Controllers
                                 IsApproved = false,
                                 CreatedAt = DateTime.Now
                             };
-                            _context.Teachers.Add(teacher);
-                            await _context.SaveChangesAsync();
+                            await _teacherRepository.CreateAsync(teacher);
                             _logger.LogInformation("Профиль учителя создан. UserId: {UserId}", user.Id);
                         }
 
@@ -659,50 +687,36 @@ namespace OnlineTutor2.Controllers
             // Статистика для студентов
             if (User.IsInRole(ApplicationRoles.Student))
             {
-                var student = await _context.Students
-                    .FirstOrDefaultAsync(s => s.UserId == user.Id);
+                var student = await _studentRepository.GetByUserIdAsync(user.Id);
 
                 if (student != null)
                 {
-                    // Подсчитываем все пройденные тесты
-                    var spellingTests = await _context.SpellingTestResults
-                        .Where(r => r.StudentId == student.Id && r.CompletedAt.HasValue)
-                        .ToListAsync();
+                    // Получаем статистику через репозитории
+                    var spellingCount = await _spellingTestResultRepository.GetTotalCompletedCountByStudentIdAsync(student.Id);
+                    var punctuationCount = await _punctuationTestResultRepository.GetTotalCompletedCountByStudentIdAsync(student.Id);
+                    var orthoeopyCount = await _orthoeopyTestResultRepository.GetTotalCompletedCountByStudentIdAsync(student.Id);
+                    var regularCount = await _regularTestResultRepository.GetTotalCompletedCountByStudentIdAsync(student.Id);
 
-                    var punctuationTests = await _context.PunctuationTestResults
-                        .Where(r => r.StudentId == student.Id && r.CompletedAt.HasValue)
-                        .ToListAsync();
+                    viewModel.TotalTestsCompleted = spellingCount + punctuationCount + orthoeopyCount + regularCount;
 
-                    var orthoeopyTests = await _context.OrthoeopyTestResults
-                        .Where(r => r.StudentId == student.Id && r.CompletedAt.HasValue)
-                        .ToListAsync();
+                    var spellingScore = await _spellingTestResultRepository.GetTotalScoreByStudentIdAsync(student.Id);
+                    var punctuationScore = await _punctuationTestResultRepository.GetTotalScoreByStudentIdAsync(student.Id);
+                    var orthoeopyScore = await _orthoeopyTestResultRepository.GetTotalScoreByStudentIdAsync(student.Id);
+                    var regularScore = await _regularTestResultRepository.GetTotalScoreByStudentIdAsync(student.Id);
 
-                    var regularTests = await _context.RegularTestResults
-                        .Where(r => r.StudentId == student.Id && r.CompletedAt.HasValue)
-                        .ToListAsync();
-
-                    // Общее количество тестов
-                    viewModel.TotalTestsCompleted = spellingTests.Count +
-                                                   punctuationTests.Count +
-                                                   orthoeopyTests.Count +
-                                                   regularTests.Count;
-
-                    // Общая сумма баллов
-                    viewModel.TotalPointsEarned = spellingTests.Sum(r => r.Score) +
-                                                 punctuationTests.Sum(r => r.Score) +
-                                                 orthoeopyTests.Sum(r => r.Score) +
-                                                 regularTests.Sum(r => r.Score);
+                    viewModel.TotalPointsEarned = spellingScore + punctuationScore + orthoeopyScore + regularScore;
 
                     // Средний балл
                     if (viewModel.TotalTestsCompleted > 0)
                     {
-                        var allPercentages = new List<double>();
-                        allPercentages.AddRange(spellingTests.Select(r => r.Percentage));
-                        allPercentages.AddRange(punctuationTests.Select(r => r.Percentage));
-                        allPercentages.AddRange(orthoeopyTests.Select(r => r.Percentage));
-                        allPercentages.AddRange(regularTests.Select(r => r.Percentage));
+                        var spellingAvg = await _spellingTestResultRepository.GetAveragePercentageByStudentIdAsync(student.Id);
+                        var punctuationAvg = await _punctuationTestResultRepository.GetAveragePercentageByStudentIdAsync(student.Id);
+                        var orthoeopyAvg = await _orthoeopyTestResultRepository.GetAveragePercentageByStudentIdAsync(student.Id);
+                        var regularAvg = await _regularTestResultRepository.GetAveragePercentageByStudentIdAsync(student.Id);
 
-                        viewModel.AverageScore = allPercentages.Average();
+                        var totalAvg = (spellingAvg * spellingCount + punctuationAvg * punctuationCount + 
+                                       orthoeopyAvg * orthoeopyCount + regularAvg * regularCount) / viewModel.TotalTestsCompleted;
+                        viewModel.AverageScore = totalAvg;
                     }
                 }
             }
@@ -710,21 +724,10 @@ namespace OnlineTutor2.Controllers
             // Статистика для учителей
             if (User.IsInRole(ApplicationRoles.Teacher))
             {
-                var regularTestsCount = await _context.RegularTests
-                    .Where(t => t.TeacherId == user.Id)
-                    .CountAsync();
-
-                var spellingTestsCount = await _context.SpellingTests
-                    .Where(t => t.TeacherId == user.Id)
-                    .CountAsync();
-
-                var punctuationTestsCount = await _context.PunctuationTests
-                    .Where(t => t.TeacherId == user.Id)
-                    .CountAsync();
-
-                var orthoeopyTestsCount = await _context.OrthoeopyTests
-                    .Where(t => t.TeacherId == user.Id)
-                    .CountAsync();
+                var regularTestsCount = await _regularTestRepository.GetCountByTeacherIdAsync(user.Id);
+                var spellingTestsCount = await _spellingTestRepository.GetCountByTeacherIdAsync(user.Id);
+                var punctuationTestsCount = await _punctuationTestRepository.GetCountByTeacherIdAsync(user.Id);
+                var orthoeopyTestsCount = await _orthoeopyTestRepository.GetCountByTeacherIdAsync(user.Id);
 
                 // Сумма всех тестов
                 viewModel.TotalTests = regularTestsCount +
@@ -732,20 +735,12 @@ namespace OnlineTutor2.Controllers
                                       punctuationTestsCount +
                                       orthoeopyTestsCount;
 
-                // Загружаем классы учителя со студентами
-                var teacherClasses = await _context.Classes
-                    .Include(c => c.Students)
-                    .Where(c => c.TeacherId == user.Id)
-                    .ToListAsync();
-
+                // Загружаем классы учителя
+                var teacherClasses = await _classRepository.GetByTeacherIdAsync(user.Id);
                 viewModel.TotalClasses = teacherClasses.Count;
 
                 // Уникальные ученики во всех классах учителя
-                viewModel.TotalStudents = teacherClasses
-                    .SelectMany(c => c.Students)
-                    .Select(s => s.Id)
-                    .Distinct()
-                    .Count();
+                viewModel.TotalStudents = await _studentRepository.GetDistinctStudentCountByTeacherIdAsync(user.Id);
             }
 
             return View(viewModel);

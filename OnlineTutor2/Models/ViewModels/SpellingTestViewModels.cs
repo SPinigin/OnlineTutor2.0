@@ -17,6 +17,9 @@ namespace OnlineTutor2.ViewModels
         [Display(Name = "Назначить классу(ам)")]
         public List<int> SelectedClassIds { get; set; } = new List<int>();
 
+        [Display(Name = "Привязать к заданию")]
+        public int? TestAssignmentId { get; set; }
+
         [Range(5, 300, ErrorMessage = "Время должно быть от 5 до 300 минут")]
         [Display(Name = "Время на выполнение (минут)")]
         public int TimeLimit { get; set; } = 30;
@@ -67,12 +70,6 @@ namespace OnlineTutor2.ViewModels
         [StringLength(10)]
         public string? StudentAnswer { get; set; }
     }
-
-    //public class SpellingTestResultViewModel
-    //{
-    //    public SpellingTestResult TestResult { get; set; }
-    //    public List<SpellingQuestionResultViewModel> QuestionResults { get; set; } = new List<SpellingQuestionResultViewModel>();
-    //}
 
     public class SpellingQuestionResultViewModel
     {

@@ -54,16 +54,16 @@ namespace OnlineTutor2.Controllers
                             .Where(ot => ot.TeacherId == currentUser.Id && ot.TestCategoryId == category.Id)
                             .ToListAsync();
                         break;
-                    //case 5: // Свободные ответы
-                    //    category.RegularTests = await _context.RegularTests
-                    //        .Where(ot => ot.TeacherId == currentUser.Id && ot.TestCategoryId == category.Id)
-                    //        .ToListAsync();
-                    //    break;
-                    //case 6: // Средства выразительности
-                    //    category.RegularTests = await _context.RegularTests
-                    //        .Where(ot => ot.TeacherId == currentUser.Id && ot.TestCategoryId == category.Id)
-                    //        .ToListAsync();
-                    //    break;
+                        //case 5: // Свободные ответы
+                        //    category.RegularTests = await _context.RegularTests
+                        //        .Where(ot => ot.TeacherId == currentUser.Id && ot.TestCategoryId == category.Id)
+                        //        .ToListAsync();
+                        //    break;
+                        //case 6: // Средства выразительности
+                        //    category.RegularTests = await _context.RegularTests
+                        //        .Where(ot => ot.TeacherId == currentUser.Id && ot.TestCategoryId == category.Id)
+                        //        .ToListAsync();
+                        //    break;
                 }
             }
 
@@ -87,7 +87,9 @@ namespace OnlineTutor2.Controllers
                 case 1: // Тесты по орфографии
                     var spellingTests = await _context.SpellingTests
                         .Where(st => st.TeacherId == currentUser.Id && st.TestCategoryId == id)
-                        .Include(st => st.Class)
+                        // ✅ ИСПРАВЛЕНО: Загружаем классы через промежуточную таблицу
+                        .Include(st => st.TestClasses)
+                            .ThenInclude(tc => tc.Class)
                         .Include(st => st.SpellingQuestions)
                         .Include(st => st.SpellingTestResults)
                         .OrderByDescending(st => st.CreatedAt)
@@ -97,7 +99,9 @@ namespace OnlineTutor2.Controllers
                 case 2: // Тесты по пунктуации
                     var punctuationTests = await _context.PunctuationTests
                         .Where(pt => pt.TeacherId == currentUser.Id && pt.TestCategoryId == id)
-                        .Include(pt => pt.Class)
+                        // ✅ ИСПРАВЛЕНО: Загружаем классы через промежуточную таблицу
+                        .Include(pt => pt.TestClasses)
+                            .ThenInclude(tc => tc.Class)
                         .Include(pt => pt.PunctuationQuestions)
                         .Include(pt => pt.PunctuationTestResults)
                         .OrderByDescending(pt => pt.CreatedAt)
@@ -107,7 +111,9 @@ namespace OnlineTutor2.Controllers
                 case 3: // Тесты по орфоэпии
                     var orthoeopyTests = await _context.OrthoeopyTests
                         .Where(ot => ot.TeacherId == currentUser.Id && ot.TestCategoryId == id)
-                        .Include(ot => ot.Class)
+                        // ✅ ИСПРАВЛЕНО: Загружаем классы через промежуточную таблицу
+                        .Include(ot => ot.TestClasses)
+                            .ThenInclude(tc => tc.Class)
                         .Include(ot => ot.OrthoeopyQuestions)
                         .Include(ot => ot.OrthoeopyTestResults)
                         .OrderByDescending(ot => ot.CreatedAt)
@@ -117,7 +123,9 @@ namespace OnlineTutor2.Controllers
                 case 4: // Тесты классические
                     var regularTests = await _context.RegularTests
                         .Where(rt => rt.TeacherId == currentUser.Id && rt.TestCategoryId == id)
-                        .Include(rt => rt.Class)
+                        // ✅ ИСПРАВЛЕНО: Загружаем классы через промежуточную таблицу
+                        .Include(rt => rt.TestClasses)
+                            .ThenInclude(tc => tc.Class)
                         .Include(rt => rt.RegularQuestions)
                         .Include(rt => rt.RegularTestResults)
                         .OrderByDescending(rt => rt.CreatedAt)
@@ -127,7 +135,9 @@ namespace OnlineTutor2.Controllers
                 //case 5: // Тесты со свободными ответами
                 //    var regularTests = await _context.RegularTests
                 //        .Where(rt => rt.TeacherId == currentUser.Id && rt.TestCategoryId == id)
-                //        .Include(rt => rt.Class)
+                //        // ✅ ИСПРАВЛЕНО: Загружаем классы через промежуточную таблицу
+                //        .Include(rt => rt.TestClasses)
+                //            .ThenInclude(tc => tc.Class)
                 //        .Include(rt => rt.RegularQuestions)
                 //        .Include(rt => rt.RegularTestResults)
                 //        .OrderByDescending(rt => rt.CreatedAt)
@@ -137,7 +147,9 @@ namespace OnlineTutor2.Controllers
                 //case 6: // Тесты по средствам выразительности
                 //    var orthoeopyTests = await _context.OrthoeopyTests
                 //        .Where(ot => ot.TeacherId == currentUser.Id && ot.TestCategoryId == id)
-                //        .Include(ot => ot.Class)
+                //        // ✅ ИСПРАВЛЕНО: Загружаем классы через промежуточную таблицу
+                //        .Include(ot => ot.TestClasses)
+                //            .ThenInclude(tc => tc.Class)
                 //        .Include(ot => ot.OrthoeopyQuestions)
                 //        .Include(ot => ot.OrthoeopyTestResults)
                 //        .OrderByDescending(ot => ot.CreatedAt)

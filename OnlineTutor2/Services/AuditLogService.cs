@@ -1,19 +1,18 @@
-﻿using Microsoft.EntityFrameworkCore;
-using OnlineTutor2.Data;
+﻿using OnlineTutor2.Data.Repositories;
 using OnlineTutor2.Models;
 
 namespace OnlineTutor2.Services
 {
     public class AuditLogService : IAuditLogService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IAuditLogRepository _auditLogRepository;
         private readonly ILogger<AuditLogService> _logger;
 
         public AuditLogService(
-            ApplicationDbContext context,
+            IAuditLogRepository auditLogRepository,
             ILogger<AuditLogService> logger)
         {
-            _context = context;
+            _auditLogRepository = auditLogRepository;
             _logger = logger;
         }
 
@@ -40,8 +39,7 @@ namespace OnlineTutor2.Services
                     CreatedAt = DateTime.Now
                 };
 
-                _context.AuditLogs.Add(auditLog);
-                await _context.SaveChangesAsync();
+                await _auditLogRepository.CreateAsync(auditLog);
 
                 _logger.LogInformation(
                     "Audit log created: {Action} on {EntityType} by {UserName}",
@@ -62,46 +60,8 @@ namespace OnlineTutor2.Services
             int page = 1,
             int pageSize = 50)
         {
-            var query = _context.AuditLogs
-                .Include(al => al.User)
-                .AsQueryable();
-
-            // Применяем фильтры только если они указаны
-            if (fromDate.HasValue)
-            {
-                query = query.Where(al => al.CreatedAt >= fromDate.Value);
-            }
-
-            if (toDate.HasValue)
-            {
-                // Включаем весь день
-                var endOfDay = toDate.Value.Date.AddDays(1).AddTicks(-1);
-                query = query.Where(al => al.CreatedAt <= endOfDay);
-            }
-
-            if (!string.IsNullOrEmpty(userId))
-            {
-                query = query.Where(al => al.UserId == userId);
-            }
-
-            if (!string.IsNullOrEmpty(action))
-            {
-                query = query.Where(al => al.Action == action);
-            }
-
-            if (!string.IsNullOrEmpty(entityType))
-            {
-                query = query.Where(al => al.EntityType == entityType);
-            }
-
-            // Сортируем по дате (новые первыми) и применяем пагинацию
-            var logs = await query
-                .OrderByDescending(al => al.CreatedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            return logs;
+            return await _auditLogRepository.GetFilteredAsync(
+                fromDate, toDate, userId, action, entityType, page, pageSize);
         }
 
         public async Task<int> GetLogsCountAsync(
@@ -111,62 +71,24 @@ namespace OnlineTutor2.Services
             string? action = null,
             string? entityType = null)
         {
-            var query = _context.AuditLogs.AsQueryable();
-
-            if (fromDate.HasValue)
-            {
-                query = query.Where(al => al.CreatedAt >= fromDate.Value);
-            }
-
-            if (toDate.HasValue)
-            {
-                var endOfDay = toDate.Value.Date.AddDays(1).AddTicks(-1);
-                query = query.Where(al => al.CreatedAt <= endOfDay);
-            }
-
-            if (!string.IsNullOrEmpty(userId))
-            {
-                query = query.Where(al => al.UserId == userId);
-            }
-
-            if (!string.IsNullOrEmpty(action))
-            {
-                query = query.Where(al => al.Action == action);
-            }
-
-            if (!string.IsNullOrEmpty(entityType))
-            {
-                query = query.Where(al => al.EntityType == entityType);
-            }
-
-            return await query.CountAsync();
+            return await _auditLogRepository.GetFilteredCountAsync(
+                fromDate, toDate, userId, action, entityType);
         }
 
         public async Task<List<AuditLog>> GetUserLogsAsync(string userId, int count = 10)
         {
-            return await _context.AuditLogs
-                .Include(al => al.User)
-                .Where(al => al.UserId == userId)
-                .OrderByDescending(al => al.CreatedAt)
-                .Take(count)
-                .ToListAsync();
+            return await _auditLogRepository.GetUserLogsAsync(userId, count);
         }
 
         public async Task ClearOldLogsAsync(int daysToKeep = 90)
         {
-            var cutoffDate = DateTime.Now.AddDays(-daysToKeep);
-            var oldLogs = await _context.AuditLogs
-                .Where(al => al.CreatedAt < cutoffDate)
-                .ToListAsync();
+            var deletedCount = await _auditLogRepository.DeleteOldLogsAsync(daysToKeep);
 
-            if (oldLogs.Any())
+            if (deletedCount > 0)
             {
-                _context.AuditLogs.RemoveRange(oldLogs);
-                await _context.SaveChangesAsync();
-
                 _logger.LogInformation(
                     "Cleared {Count} audit logs older than {Days} days",
-                    oldLogs.Count, daysToKeep);
+                    deletedCount, daysToKeep);
             }
         }
     }

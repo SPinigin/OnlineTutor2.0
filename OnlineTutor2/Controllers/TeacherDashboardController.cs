@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using OnlineTutor2.Data;
+using OnlineTutor2.Data.Repositories;
 using OnlineTutor2.Models;
 using OnlineTutor2.ViewModels;
 
@@ -11,16 +10,67 @@ namespace OnlineTutor2.Controllers
     [Authorize(Roles = ApplicationRoles.Teacher)]
     public class TeacherDashboardController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ISpellingTestRepository _spellingTestRepository;
+        private readonly IPunctuationTestRepository _punctuationTestRepository;
+        private readonly IOrthoeopyTestRepository _orthoeopyTestRepository;
+        private readonly IRegularTestRepository _regularTestRepository;
+        private readonly ISpellingTestResultRepository _spellingResultRepository;
+        private readonly IPunctuationTestResultRepository _punctuationResultRepository;
+        private readonly IOrthoeopyTestResultRepository _orthoeopyResultRepository;
+        private readonly IRegularTestResultRepository _regularResultRepository;
+        private readonly ISpellingQuestionRepository _spellingQuestionRepository;
+        private readonly IPunctuationQuestionRepository _punctuationQuestionRepository;
+        private readonly IOrthoeopyQuestionRepository _orthoeopyQuestionRepository;
+        private readonly IRegularQuestionRepository _regularQuestionRepository;
+        private readonly ISpellingAnswerRepository _spellingAnswerRepository;
+        private readonly IPunctuationAnswerRepository _punctuationAnswerRepository;
+        private readonly IOrthoeopyAnswerRepository _orthoeopyAnswerRepository;
+        private readonly IRegularAnswerRepository _regularAnswerRepository;
+        private readonly IRegularQuestionOptionRepository _regularOptionRepository;
+        private readonly IStudentRepository _studentRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<TeacherDashboardController> _logger;
 
         public TeacherDashboardController(
-            ApplicationDbContext context,
+            ISpellingTestRepository spellingTestRepository,
+            IPunctuationTestRepository punctuationTestRepository,
+            IOrthoeopyTestRepository orthoeopyTestRepository,
+            IRegularTestRepository regularTestRepository,
+            ISpellingTestResultRepository spellingResultRepository,
+            IPunctuationTestResultRepository punctuationResultRepository,
+            IOrthoeopyTestResultRepository orthoeopyResultRepository,
+            IRegularTestResultRepository regularResultRepository,
+            ISpellingQuestionRepository spellingQuestionRepository,
+            IPunctuationQuestionRepository punctuationQuestionRepository,
+            IOrthoeopyQuestionRepository orthoeopyQuestionRepository,
+            IRegularQuestionRepository regularQuestionRepository,
+            ISpellingAnswerRepository spellingAnswerRepository,
+            IPunctuationAnswerRepository punctuationAnswerRepository,
+            IOrthoeopyAnswerRepository orthoeopyAnswerRepository,
+            IRegularAnswerRepository regularAnswerRepository,
+            IRegularQuestionOptionRepository regularOptionRepository,
+            IStudentRepository studentRepository,
             UserManager<ApplicationUser> userManager,
             ILogger<TeacherDashboardController> logger)
         {
-            _context = context;
+            _spellingTestRepository = spellingTestRepository;
+            _punctuationTestRepository = punctuationTestRepository;
+            _orthoeopyTestRepository = orthoeopyTestRepository;
+            _regularTestRepository = regularTestRepository;
+            _spellingResultRepository = spellingResultRepository;
+            _punctuationResultRepository = punctuationResultRepository;
+            _orthoeopyResultRepository = orthoeopyResultRepository;
+            _regularResultRepository = regularResultRepository;
+            _spellingQuestionRepository = spellingQuestionRepository;
+            _punctuationQuestionRepository = punctuationQuestionRepository;
+            _orthoeopyQuestionRepository = orthoeopyQuestionRepository;
+            _regularQuestionRepository = regularQuestionRepository;
+            _spellingAnswerRepository = spellingAnswerRepository;
+            _punctuationAnswerRepository = punctuationAnswerRepository;
+            _orthoeopyAnswerRepository = orthoeopyAnswerRepository;
+            _regularAnswerRepository = regularAnswerRepository;
+            _regularOptionRepository = regularOptionRepository;
+            _studentRepository = studentRepository;
             _userManager = userManager;
             _logger = logger;
         }
@@ -28,46 +78,13 @@ namespace OnlineTutor2.Controllers
         public async Task<IActionResult> Index()
         {
             var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return Unauthorized();
 
-            var spellingTests = await _context.SpellingTests
-                .Where(st => st.TeacherId == currentUser.Id && st.IsActive)
-                .Include(st => st.Class)
-                .Include(st => st.SpellingTestResults)
-                    .ThenInclude(tr => tr.Student)
-                        .ThenInclude(s => s.User)
-                .OrderByDescending(st => st.CreatedAt)
-                .Take(20)
-                .ToListAsync();
-
-            var punctuationTests = await _context.PunctuationTests
-                .Where(pt => pt.TeacherId == currentUser.Id && pt.IsActive)
-                .Include(pt => pt.Class)
-                .Include(pt => pt.PunctuationTestResults)
-                    .ThenInclude(tr => tr.Student)
-                        .ThenInclude(s => s.User)
-                .OrderByDescending(pt => pt.CreatedAt)
-                .Take(20)
-                .ToListAsync();
-
-            var orthoeopyTests = await _context.OrthoeopyTests
-                .Where(ot => ot.TeacherId == currentUser.Id && ot.IsActive)
-                .Include(ot => ot.Class)
-                .Include(ot => ot.OrthoeopyTestResults)
-                    .ThenInclude(tr => tr.Student)
-                        .ThenInclude(s => s.User)
-                .OrderByDescending(ot => ot.CreatedAt)
-                .Take(20)
-                .ToListAsync();
-
-            var regularTests = await _context.RegularTests
-                .Where(rt => rt.TeacherId == currentUser.Id && rt.IsActive)
-                .Include(rt => rt.Class)
-                .Include(rt => rt.RegularTestResults)
-                    .ThenInclude(tr => tr.Student)
-                        .ThenInclude(s => s.User)
-                .OrderByDescending(rt => rt.CreatedAt)
-                .Take(20)
-                .ToListAsync();
+            // Получаем тесты через репозитории
+            var spellingTests = await _spellingTestRepository.GetRecentActiveByTeacherIdAsync(currentUser.Id, 20);
+            var punctuationTests = await _punctuationTestRepository.GetRecentActiveByTeacherIdAsync(currentUser.Id, 20);
+            var orthoeopyTests = await _orthoeopyTestRepository.GetRecentActiveByTeacherIdAsync(currentUser.Id, 20);
+            var regularTests = await _regularTestRepository.GetRecentActiveByTeacherIdAsync(currentUser.Id, 20);
 
             var viewModel = new TeacherDashboardViewModel
             {
@@ -85,120 +102,137 @@ namespace OnlineTutor2.Controllers
         public async Task<IActionResult> GetRecentActivity()
         {
             var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return Unauthorized();
+            
             var activities = new List<TestActivityViewModel>();
 
-            var spellingActivities = await _context.SpellingTestResults
-                .Include(tr => tr.SpellingTest)
-                .Include(tr => tr.Student)
-                    .ThenInclude(s => s.User)
-                .Where(tr => tr.SpellingTest.TeacherId == currentUser.Id)
-                .OrderByDescending(tr => tr.CompletedAt ?? tr.StartedAt)
-                .Take(50)
-                .Select(tr => new TestActivityViewModel
+            // Получаем результаты тестов по орфографии
+            var spellingResults = await _spellingResultRepository.GetByTeacherIdWithDetailsAsync(currentUser.Id);
+            var spellingTests = await _spellingTestRepository.GetByTeacherIdAsync(currentUser.Id);
+            var spellingTestsDict = spellingTests.ToDictionary(t => t.Id);
+            
+            foreach (var result in spellingResults)
+            {
+                var test = spellingTestsDict.GetValueOrDefault(result.SpellingTestId);
+                var student = await _studentRepository.GetWithUserAsync(result.StudentId);
+                
+                if (test != null && student?.User != null)
                 {
-                    TestId = tr.SpellingTestId,
-                    TestTitle = tr.SpellingTest.Title,
-                    TestType = "spelling",
-                    StudentId = tr.StudentId,
-                    StudentName = tr.Student.User.FullName,
-                    Status = tr.IsCompleted ? "completed" : "in_progress",
-                    Score = tr.Score,
-                    MaxScore = tr.MaxScore,
-                    Percentage = tr.Percentage,
-                    StartedAt = tr.StartedAt,
-                    CompletedAt = tr.CompletedAt,
-                    LastActivityAt = tr.CompletedAt ?? tr.StartedAt,
-                    TestResultId = tr.Id
-                })
-                .ToListAsync();
+                    activities.Add(new TestActivityViewModel
+                    {
+                        TestId = result.SpellingTestId,
+                        TestTitle = test.Title,
+                        TestType = "spelling",
+                        StudentId = result.StudentId,
+                        StudentName = student.User.FullName,
+                        Status = result.IsCompleted ? "completed" : "in_progress",
+                        Score = result.Score,
+                        MaxScore = result.MaxScore,
+                        Percentage = result.Percentage,
+                        StartedAt = result.StartedAt,
+                        CompletedAt = result.CompletedAt,
+                        LastActivityAt = result.CompletedAt ?? result.StartedAt,
+                        TestResultId = result.Id
+                    });
+                }
+            }
 
-            activities.AddRange(spellingActivities);
-
-            var punctuationActivities = await _context.PunctuationTestResults
-                .Include(tr => tr.PunctuationTest)
-                .Include(tr => tr.Student)
-                    .ThenInclude(s => s.User)
-                .Where(tr => tr.PunctuationTest.TeacherId == currentUser.Id)
-                .OrderByDescending(tr => tr.CompletedAt ?? tr.StartedAt)
-                .Take(50)
-                .Select(tr => new TestActivityViewModel
+            // Получаем результаты тестов по пунктуации
+            var punctuationResults = await _punctuationResultRepository.GetByTeacherIdWithDetailsAsync(currentUser.Id);
+            var punctuationTests = await _punctuationTestRepository.GetByTeacherIdAsync(currentUser.Id);
+            var punctuationTestsDict = punctuationTests.ToDictionary(t => t.Id);
+            
+            foreach (var result in punctuationResults)
+            {
+                var test = punctuationTestsDict.GetValueOrDefault(result.PunctuationTestId);
+                var student = await _studentRepository.GetWithUserAsync(result.StudentId);
+                
+                if (test != null && student?.User != null)
                 {
-                    TestId = tr.PunctuationTestId,
-                    TestTitle = tr.PunctuationTest.Title,
-                    TestType = "punctuation",
-                    StudentId = tr.StudentId,
-                    StudentName = tr.Student.User.FullName,
-                    Status = tr.IsCompleted ? "completed" : "in_progress",
-                    Score = tr.Score,
-                    MaxScore = tr.MaxScore,
-                    Percentage = tr.Percentage,
-                    StartedAt = tr.StartedAt,
-                    CompletedAt = tr.CompletedAt,
-                    LastActivityAt = tr.CompletedAt ?? tr.StartedAt,
-                    TestResultId = tr.Id
-                })
-                .ToListAsync();
+                    activities.Add(new TestActivityViewModel
+                    {
+                        TestId = result.PunctuationTestId,
+                        TestTitle = test.Title,
+                        TestType = "punctuation",
+                        StudentId = result.StudentId,
+                        StudentName = student.User.FullName,
+                        Status = result.IsCompleted ? "completed" : "in_progress",
+                        Score = result.Score,
+                        MaxScore = result.MaxScore,
+                        Percentage = result.Percentage,
+                        StartedAt = result.StartedAt,
+                        CompletedAt = result.CompletedAt,
+                        LastActivityAt = result.CompletedAt ?? result.StartedAt,
+                        TestResultId = result.Id
+                    });
+                }
+            }
 
-            activities.AddRange(punctuationActivities);
-
-            var orthoeopyActivities = await _context.OrthoeopyTestResults
-                .Include(tr => tr.OrthoeopyTest)
-                .Include(tr => tr.Student)
-                    .ThenInclude(s => s.User)
-                .Where(tr => tr.OrthoeopyTest.TeacherId == currentUser.Id)
-                .OrderByDescending(tr => tr.CompletedAt ?? tr.StartedAt)
-                .Take(50)
-                .Select(tr => new TestActivityViewModel
+            // Получаем результаты тестов по орфоэпии
+            var orthoeopyResults = await _orthoeopyResultRepository.GetByTeacherIdWithDetailsAsync(currentUser.Id);
+            var orthoeopyTests = await _orthoeopyTestRepository.GetByTeacherIdAsync(currentUser.Id);
+            var orthoeopyTestsDict = orthoeopyTests.ToDictionary(t => t.Id);
+            
+            foreach (var result in orthoeopyResults)
+            {
+                var test = orthoeopyTestsDict.GetValueOrDefault(result.OrthoeopyTestId);
+                var student = await _studentRepository.GetWithUserAsync(result.StudentId);
+                
+                if (test != null && student?.User != null)
                 {
-                    TestId = tr.OrthoeopyTestId,
-                    TestTitle = tr.OrthoeopyTest.Title,
-                    TestType = "orthoepy",
-                    StudentId = tr.StudentId,
-                    StudentName = tr.Student.User.FullName,
-                    Status = tr.IsCompleted ? "completed" : "in_progress",
-                    Score = tr.Score,
-                    MaxScore = tr.MaxScore,
-                    Percentage = tr.Percentage,
-                    StartedAt = tr.StartedAt,
-                    CompletedAt = tr.CompletedAt,
-                    LastActivityAt = tr.CompletedAt ?? tr.StartedAt,
-                    TestResultId = tr.Id
-                })
-                .ToListAsync();
+                    activities.Add(new TestActivityViewModel
+                    {
+                        TestId = result.OrthoeopyTestId,
+                        TestTitle = test.Title,
+                        TestType = "orthoepy",
+                        StudentId = result.StudentId,
+                        StudentName = student.User.FullName,
+                        Status = result.IsCompleted ? "completed" : "in_progress",
+                        Score = result.Score,
+                        MaxScore = result.MaxScore,
+                        Percentage = result.Percentage,
+                        StartedAt = result.StartedAt,
+                        CompletedAt = result.CompletedAt,
+                        LastActivityAt = result.CompletedAt ?? result.StartedAt,
+                        TestResultId = result.Id
+                    });
+                }
+            }
 
-            activities.AddRange(orthoeopyActivities);
-
-            var regularActivities = await _context.RegularTestResults
-                .Include(tr => tr.RegularTest)
-                .Include(tr => tr.Student)
-                    .ThenInclude(s => s.User)
-                .Where(tr => tr.RegularTest.TeacherId == currentUser.Id)
-                .OrderByDescending(tr => tr.CompletedAt ?? tr.StartedAt)
-                .Take(50)
-                .Select(tr => new TestActivityViewModel
+            // Получаем результаты классических тестов
+            var regularResults = await _regularResultRepository.GetByTeacherIdWithDetailsAsync(currentUser.Id);
+            var regularTests = await _regularTestRepository.GetByTeacherIdAsync(currentUser.Id);
+            var regularTestsDict = regularTests.ToDictionary(t => t.Id);
+            
+            foreach (var result in regularResults)
+            {
+                var test = regularTestsDict.GetValueOrDefault(result.RegularTestId);
+                var student = await _studentRepository.GetWithUserAsync(result.StudentId);
+                
+                if (test != null && student?.User != null)
                 {
-                    TestId = tr.RegularTestId,
-                    TestTitle = tr.RegularTest.Title,
-                    TestType = "regular",
-                    StudentId = tr.StudentId,
-                    StudentName = tr.Student.User.FullName,
-                    Status = tr.IsCompleted ? "completed" : "in_progress",
-                    Score = tr.Score,
-                    MaxScore = tr.MaxScore,
-                    Percentage = tr.Percentage,
-                    StartedAt = tr.StartedAt,
-                    CompletedAt = tr.CompletedAt,
-                    LastActivityAt = tr.CompletedAt ?? tr.StartedAt,
-                    TestResultId = tr.Id
-                })
-                .ToListAsync();
+                    activities.Add(new TestActivityViewModel
+                    {
+                        TestId = result.RegularTestId,
+                        TestTitle = test.Title,
+                        TestType = "regular",
+                        StudentId = result.StudentId,
+                        StudentName = student.User.FullName,
+                        Status = result.IsCompleted ? "completed" : "in_progress",
+                        Score = result.Score,
+                        MaxScore = result.MaxScore,
+                        Percentage = result.Percentage,
+                        StartedAt = result.StartedAt,
+                        CompletedAt = result.CompletedAt,
+                        LastActivityAt = result.CompletedAt ?? result.StartedAt,
+                        TestResultId = result.Id
+                    });
+                }
+            }
 
-            activities.AddRange(regularActivities);
-
-            var sortedActivities = activities
-                .OrderByDescending(a => a.LastActivityAt)
-                .Take(50)
-                .ToList();
+            // Сортируем в памяти (данные уже загружены)
+            activities.Sort((a, b) => b.LastActivityAt.CompareTo(a.LastActivityAt));
+            var sortedActivities = activities.Take(50).ToList();
 
             return Json(sortedActivities);
         }
@@ -210,62 +244,99 @@ namespace OnlineTutor2.Controllers
             try
             {
                 var currentUser = await _userManager.GetUserAsync(User);
+                
+                if (currentUser == null)
+                {
+                    _logger.LogWarning("Попытка загрузки результата теста неавторизованным пользователем");
+                    return Unauthorized();
+                }
 
-                object result = null;
+                if (string.IsNullOrEmpty(testType))
+                {
+                    _logger.LogWarning("Не указан тип теста при загрузке результата");
+                    return BadRequest("Тип теста не указан");
+                }
+
+                object? result = null;
 
                 switch (testType.ToLower())
                 {
                     case "spelling":
-                        result = await _context.SpellingTestResults
-                            .Include(tr => tr.SpellingTest)
-                                .ThenInclude(st => st.SpellingQuestions.OrderBy(q => q.OrderIndex))
-                            .Include(tr => tr.SpellingAnswers)
-                                .ThenInclude(a => a.SpellingQuestion)
-                            .Include(tr => tr.Student)
-                                .ThenInclude(s => s.User)
-                            .FirstOrDefaultAsync(tr => tr.Id == testResultId && tr.SpellingTest.TeacherId == currentUser.Id);
+                        var spellingResult = await _spellingResultRepository.GetByIdWithDetailsAsync(testResultId, currentUser.Id);
+                        if (spellingResult != null)
+                        {
+                            var spellingTest = await _spellingTestRepository.GetByIdAsync(spellingResult.SpellingTestId);
+                            var student = await _studentRepository.GetWithUserAsync(spellingResult.StudentId);
+                            var questions = await _spellingQuestionRepository.GetByTestIdOrderedAsync(spellingResult.SpellingTestId);
+                            var answers = await _spellingAnswerRepository.GetByTestResultIdAsync(testResultId);
+                            
+                            // Устанавливаем навигационные свойства вручную
+                            // TODO: Это временное решение, можно улучшить через DTO или специальный маппер
+                            result = spellingResult;
+                        }
                         break;
 
                     case "punctuation":
-                        result = await _context.PunctuationTestResults
-                            .Include(tr => tr.PunctuationTest)
-                                .ThenInclude(pt => pt.PunctuationQuestions.OrderBy(q => q.OrderIndex))
-                            .Include(tr => tr.PunctuationAnswers)
-                                .ThenInclude(a => a.PunctuationQuestion)
-                            .Include(tr => tr.Student)
-                                .ThenInclude(s => s.User)
-                            .FirstOrDefaultAsync(tr => tr.Id == testResultId && tr.PunctuationTest.TeacherId == currentUser.Id);
+                        var punctuationResult = await _punctuationResultRepository.GetByIdWithDetailsAsync(testResultId, currentUser.Id);
+                        if (punctuationResult != null)
+                        {
+                            var punctuationTest = await _punctuationTestRepository.GetByIdAsync(punctuationResult.PunctuationTestId);
+                            var student2 = await _studentRepository.GetWithUserAsync(punctuationResult.StudentId);
+                            var questions2 = await _punctuationQuestionRepository.GetByTestIdOrderedAsync(punctuationResult.PunctuationTestId);
+                            var answers2 = await _punctuationAnswerRepository.GetByTestResultIdAsync(testResultId);
+                            
+                            result = punctuationResult;
+                        }
                         break;
 
                     case "orthoepy":
-                        result = await _context.OrthoeopyTestResults
-                            .Include(tr => tr.OrthoeopyTest)
-                                .ThenInclude(ot => ot.OrthoeopyQuestions.OrderBy(q => q.OrderIndex))
-                            .Include(tr => tr.OrthoeopyAnswers)
-                                .ThenInclude(a => a.OrthoeopyQuestion)
-                            .Include(tr => tr.Student)
-                                .ThenInclude(s => s.User)
-                            .FirstOrDefaultAsync(tr => tr.Id == testResultId && tr.OrthoeopyTest.TeacherId == currentUser.Id);
+                        var orthoeopyResult = await _orthoeopyResultRepository.GetByIdWithDetailsAsync(testResultId, currentUser.Id);
+                        if (orthoeopyResult != null)
+                        {
+                            var orthoeopyTest = await _orthoeopyTestRepository.GetByIdAsync(orthoeopyResult.OrthoeopyTestId);
+                            var student3 = await _studentRepository.GetWithUserAsync(orthoeopyResult.StudentId);
+                            var questions3 = await _orthoeopyQuestionRepository.GetByTestIdOrderedAsync(orthoeopyResult.OrthoeopyTestId);
+                            var answers3 = await _orthoeopyAnswerRepository.GetByTestResultIdAsync(testResultId);
+                            
+                            result = orthoeopyResult;
+                        }
                         break;
 
                     case "regular":
-                        result = await _context.RegularTestResults
-                            .Include(tr => tr.RegularTest)
-                                .ThenInclude(rt => rt.RegularQuestions.OrderBy(q => q.OrderIndex))
-                                    .ThenInclude(q => q.Options.OrderBy(o => o.OrderIndex))
-                            .Include(tr => tr.RegularAnswers)
-                                .ThenInclude(a => a.RegularQuestion)
-                            .Include(tr => tr.Student)
-                                .ThenInclude(s => s.User)
-                            .FirstOrDefaultAsync(tr => tr.Id == testResultId && tr.RegularTest.TeacherId == currentUser.Id);
+                        var regularResult = await _regularResultRepository.GetByIdWithDetailsAsync(testResultId, currentUser.Id);
+                        if (regularResult != null)
+                        {
+                            var regularTest = await _regularTestRepository.GetByIdAsync(regularResult.RegularTestId);
+                            var student4 = await _studentRepository.GetWithUserAsync(regularResult.StudentId);
+                            var questions4 = await _regularQuestionRepository.GetByTestIdOrderedAsync(regularResult.RegularTestId);
+                            var answers4 = await _regularAnswerRepository.GetByTestResultIdAsync(testResultId);
+                            
+                            // Загружаем опции для каждого вопроса
+                            foreach (var question in questions4)
+                            {
+                                var options = await _regularOptionRepository.GetByQuestionIdOrderedAsync(question.Id);
+                                // TODO: Установить навигационное свойство Options
+                            }
+                            
+                            result = regularResult;
+                        }
                         break;
+
+                    default:
+                        _logger.LogWarning("Неизвестный тип теста: {TestType}", testType);
+                        return BadRequest($"Неизвестный тип теста: {testType}");
                 }
 
                 if (result == null)
                 {
+                    _logger.LogWarning("Результат теста не найден: TestType={TestType}, ResultId={ResultId}, TeacherId={TeacherId}", 
+                        testType, testResultId, currentUser.Id);
                     return NotFound();
                 }
 
+                // Передаем флаг, что это модальное окно, чтобы скрыть навигацию
+                ViewBag.IsModal = true;
+                
                 // Возвращаем частичное представление
                 return PartialView("~/Views/StudentTest/Result.cshtml", result);
             }

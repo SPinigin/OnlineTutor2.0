@@ -41,6 +41,16 @@
                                       placeholder="Краткое описание теста, его цели и содержания..."></textarea>
                             <span asp-validation-for="Description" class="text-danger"></span>
                         </div>
+
+                        <div class="mb-3">
+                            <label asp-for="TestAssignmentId" class="form-label">
+                                <i class="fas fa-folder"></i> Привязать к заданию
+                            </label>
+                            <select asp-for="TestAssignmentId" class="form-select" asp-items="ViewBag.TestAssignments">
+                            </select>
+                            <small class="text-muted">Выберите задание, к которому будет привязан этот тест (необязательно)</small>
+                            <span asp-validation-for="TestAssignmentId" class="text-danger"></span>
+                        </div>
                     </fieldset>
 
                     <fieldset class="mb-4">

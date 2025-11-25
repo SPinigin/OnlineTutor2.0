@@ -2,6 +2,9 @@
 @{
     ViewData["Title"] = $"Тесты:{ViewBag.Category.Name}";
     var category = ViewBag.Category as OnlineTutor2.Models.TestCategory;
+    var assignments = ViewBag.Assignments as List<OnlineTutor2.Models.TestAssignment> ?? new List<OnlineTutor2.Models.TestAssignment>();
+    var testsByAssignment = ViewBag.TestsByAssignment as Dictionary<int, List<OnlineTutor2.Models.OrthoeopyTest>> ?? new Dictionary<int, List<OnlineTutor2.Models.OrthoeopyTest>>();
+    var testsWithoutAssignment = ViewBag.TestsWithoutAssignment as List<OnlineTutor2.Models.OrthoeopyTest> ?? new List<OnlineTutor2.Models.OrthoeopyTest>();
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -23,6 +26,12 @@
         }
     </div>
     <div>
+        <a asp-controller="TestAssignment"
+           asp-action="Create"
+           asp-route-testCategoryId="@category.Id"
+           class="btn btn-info me-2">
+            <i class="fas fa-folder-plus"></i> Создать задание
+        </a>
         <a asp-controller="OrthoeopyTest" asp-action="Create" class="btn btn-success">
             <i class="fas fa-plus"></i> Создать тест
         </a>
@@ -42,9 +51,35 @@
 }
 else
 {
-    <div class="row">
-        @foreach (var test in Model)
+    @* Отображение тестов по заданиям *@
+    @foreach (var assignment in assignments)
+    {
+        @if (testsByAssignment.ContainsKey(assignment.Id) && testsByAssignment[assignment.Id].Any())
         {
+            var assignmentTests = testsByAssignment[assignment.Id];
+            <div class="card mb-4 assignment-group" data-assignment-id="@assignment.Id">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-folder"></i> Задание @assignment.AssignmentNumber: @assignment.Title
+                        </h5>
+                        <div>
+                            <a asp-controller="TestAssignment" asp-action="Edit" asp-route-id="@assignment.Id" 
+                               class="btn btn-sm btn-light me-2" title="Редактировать задание">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <span class="badge bg-light text-dark">@assignmentTests.Count тест(ов)</span>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(assignment.Description))
+                    {
+                        <small class="d-block mt-2">@assignment.Description</small>
+                    }
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @foreach (var test in assignmentTests)
+                        {
             <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card h-100 @(test.IsActive ? "" : "opacity-75")">
                     <div class="card-header d-flex justify-content-between align-items-center">
@@ -55,9 +90,17 @@ else
                             <span class="badge bg-@(test.IsActive ? "success" : "secondary")">
                                 @(test.IsActive ? "Активный" : "Неактивный")
                             </span>
-                            @if (test.Class != null)
+                            @* ✅ ИСПРАВЛЕНО: Отображение классов через many-to-many *@
+                            @if (test.TestClasses != null && test.TestClasses.Any())
                             {
-                                <span class="badge bg-info">@test.Class.Name</span>
+                                @foreach (var testClass in test.TestClasses)
+                                {
+                                    <span class="badge bg-info">@testClass.Class.Name</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Все классы</span>
                             }
                         </div>
                     </div>
@@ -145,8 +188,138 @@ else
                     </div>
                 </div>
             </div>
+                        }
+                    </div>
+                </div>
+            </div>
         }
-    </div>
+    }
+
+    @* Тесты без задания *@
+    @if (testsWithoutAssignment.Any())
+    {
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-list"></i> Тесты без задания (@testsWithoutAssignment.Count)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    @foreach (var test in testsWithoutAssignment)
+                    {
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100 @(test.IsActive ? "" : "opacity-75")">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="card-title mb-0">
+                                        <i class="fas fa-volume-up text-success"></i> @test.Title
+                                    </h6>
+                                    <div>
+                                        <span class="badge bg-@(test.IsActive ? "success" : "secondary")">
+                                            @(test.IsActive ? "Активный" : "Неактивный")
+                                        </span>
+                                        @if (test.TestClasses != null && test.TestClasses.Any())
+                                        {
+                                            @foreach (var testClass in test.TestClasses)
+                                            {
+                                                <span class="badge bg-info">@testClass.Class.Name</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Все классы</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="card-body d-flex flex-column">
+                                    @if (!string.IsNullOrEmpty(test.Description))
+                                    {
+                                        <p class="card-text text-muted small">@test.Description</p>
+                                    }
+
+                                    <div class="row text-center mb-3">
+                                        <div class="col-4">
+                                            <div class="d-flex flex-column">
+                                                <span class="h6 text-success mb-0">@test.OrthoeopyQuestions.Count</span>
+                                                <small class="text-muted">вопросов</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="d-flex flex-column">
+                                                <span class="h6 text-info mb-0">@test.TimeLimit</span>
+                                                <small class="text-muted">минут</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="d-flex flex-column">
+                                                <span class="h6 text-warning mb-0">@test.OrthoeopyTestResults.Count</span>
+                                                <small class="text-muted">прохождений</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-auto">
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-calendar"></i> Создан: @test.CreatedAt.ToString("dd.MM.yyyy")
+                                        </small>
+                                        @if (test.StartDate.HasValue)
+                                        {
+                                            <small class="text-muted d-block">
+                                                <i class="fas fa-play"></i> Начало: @test.StartDate.Value.ToString("dd.MM.yyyy HH:mm")
+                                            </small>
+                                        }
+                                        @if (test.EndDate.HasValue)
+                                        {
+                                            <small class="text-muted d-block">
+                                                <i class="fas fa-stop"></i> Окончание: @test.EndDate.Value.ToString("dd.MM.yyyy HH:mm")
+                                            </small>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="btn-group w-100" role="group">
+                                        <a asp-controller="OrthoeopyTest" asp-action="Details" asp-route-id="@test.Id" class="btn btn-outline-info btn-sm">
+                                            <i class="fas fa-eye"></i> Детали
+                                        </a>
+                                        <a asp-controller="OrthoeopyTest" asp-action="Edit" asp-route-id="@test.Id" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-edit"></i> Изменить
+                                        </a>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle"
+                                                    data-bs-toggle="dropdown">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                @if (test.OrthoeopyQuestions.Any())
+                                                {
+                                                    <li>
+                                                        <a class="dropdown-item" href="#">
+                                                            <i class="fas fa-play"></i> Предварительный просмотр
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="#">
+                                                            <i class="fas fa-copy"></i> Дублировать
+                                                        </a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                }
+                                                <li>
+                                                    <a asp-controller="OrthoeopyTest" asp-action="Delete" asp-route-id="@test.Id" class="dropdown-item text-danger">
+                                                        <i class="fas fa-trash"></i> Удалить
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
 }
 
 @section Scripts {

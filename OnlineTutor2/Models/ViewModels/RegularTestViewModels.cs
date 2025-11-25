@@ -18,6 +18,9 @@ namespace OnlineTutor2.ViewModels
         [Display(Name = "Назначить классу(ам)")]
         public List<int> SelectedClassIds { get; set; } = new List<int>();
 
+        [Display(Name = "Привязать к заданию")]
+        public int? TestAssignmentId { get; set; }
+
         [Range(5, 300)]
         [Display(Name = "Время на выполнение (минут)")]
         public int TimeLimit { get; set; } = 30;

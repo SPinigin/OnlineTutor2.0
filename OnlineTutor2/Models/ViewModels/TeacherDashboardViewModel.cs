@@ -25,10 +25,41 @@ namespace OnlineTutor2.ViewModels
         {
             get
             {
-                var spellingInProgress = SpellingTests.Sum(t => t.SpellingTestResults.Count(r => !r.IsCompleted));
-                var punctuationInProgress = PunctuationTests.Sum(t => t.PunctuationTestResults.Count(r => !r.IsCompleted));
-                var orthoeopyInProgress = OrthoeopyTests.Sum(t => t.OrthoeopyTestResults.Count(r => !r.IsCompleted));
-                var regularInProgress = RegularTests.Sum(t => t.RegularTestResults.Count(r => !r.IsCompleted));
+                int spellingInProgress = 0;
+                foreach (var test in SpellingTests)
+                {
+                    foreach (var result in test.SpellingTestResults)
+                    {
+                        if (!result.IsCompleted) spellingInProgress++;
+                    }
+                }
+                
+                int punctuationInProgress = 0;
+                foreach (var test in PunctuationTests)
+                {
+                    foreach (var result in test.PunctuationTestResults)
+                    {
+                        if (!result.IsCompleted) punctuationInProgress++;
+                    }
+                }
+                
+                int orthoeopyInProgress = 0;
+                foreach (var test in OrthoeopyTests)
+                {
+                    foreach (var result in test.OrthoeopyTestResults)
+                    {
+                        if (!result.IsCompleted) orthoeopyInProgress++;
+                    }
+                }
+                
+                int regularInProgress = 0;
+                foreach (var test in RegularTests)
+                {
+                    foreach (var result in test.RegularTestResults)
+                    {
+                        if (!result.IsCompleted) regularInProgress++;
+                    }
+                }
 
                 return spellingInProgress + punctuationInProgress + orthoeopyInProgress + regularInProgress;
             }
@@ -40,29 +71,53 @@ namespace OnlineTutor2.ViewModels
             {
                 var today = DateTime.Today;
 
-                var spellingCompleted = SpellingTests.Sum(t =>
-                    t.SpellingTestResults.Count(r =>
-                        r.IsCompleted &&
-                        r.CompletedAt.HasValue &&
-                        r.CompletedAt.Value.Date == today));
+                int spellingCompleted = 0;
+                foreach (var test in SpellingTests)
+                {
+                    foreach (var result in test.SpellingTestResults)
+                    {
+                        if (result.IsCompleted && result.CompletedAt.HasValue && result.CompletedAt.Value.Date == today)
+                        {
+                            spellingCompleted++;
+                        }
+                    }
+                }
 
-                var punctuationCompleted = PunctuationTests.Sum(t =>
-                    t.PunctuationTestResults.Count(r =>
-                        r.IsCompleted &&
-                        r.CompletedAt.HasValue &&
-                        r.CompletedAt.Value.Date == today));
+                int punctuationCompleted = 0;
+                foreach (var test in PunctuationTests)
+                {
+                    foreach (var result in test.PunctuationTestResults)
+                    {
+                        if (result.IsCompleted && result.CompletedAt.HasValue && result.CompletedAt.Value.Date == today)
+                        {
+                            punctuationCompleted++;
+                        }
+                    }
+                }
 
-                var orthoeopyCompleted = OrthoeopyTests.Sum(t =>
-                    t.OrthoeopyTestResults.Count(r =>
-                        r.IsCompleted &&
-                        r.CompletedAt.HasValue &&
-                        r.CompletedAt.Value.Date == today));
+                int orthoeopyCompleted = 0;
+                foreach (var test in OrthoeopyTests)
+                {
+                    foreach (var result in test.OrthoeopyTestResults)
+                    {
+                        if (result.IsCompleted && result.CompletedAt.HasValue && result.CompletedAt.Value.Date == today)
+                        {
+                            orthoeopyCompleted++;
+                        }
+                    }
+                }
 
-                var regularCompleted = RegularTests.Sum(t =>
-                    t.RegularTestResults.Count(r =>
-                        r.IsCompleted &&
-                        r.CompletedAt.HasValue &&
-                        r.CompletedAt.Value.Date == today));
+                int regularCompleted = 0;
+                foreach (var test in RegularTests)
+                {
+                    foreach (var result in test.RegularTestResults)
+                    {
+                        if (result.IsCompleted && result.CompletedAt.HasValue && result.CompletedAt.Value.Date == today)
+                        {
+                            regularCompleted++;
+                        }
+                    }
+                }
 
                 return spellingCompleted + punctuationCompleted + orthoeopyCompleted + regularCompleted;
             }

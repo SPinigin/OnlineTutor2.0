@@ -1,0 +1,80 @@
+@model OnlineTutor2.ViewModels.CreateTestAssignmentViewModel
+@{
+    ViewData["Title"] = "Редактировать задание";
+}
+
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="Index"><i class="fas fa-folder"></i> Задания</a>
+            </li>
+            <li class="breadcrumb-item active">Редактировать</li>
+        </ol>
+    </nav>
+    <h2><i class="fas fa-edit text-primary"></i> Редактировать задание</h2>
+</div>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Id" />
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Основная информация</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="TestCategoryId" class="form-label"></label>
+                    <select asp-for="TestCategoryId" class="form-select" asp-items="ViewBag.TestCategories">
+                        <option value="">Выберите категорию тестов</option>
+                    </select>
+                    <span asp-validation-for="TestCategoryId" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="AssignmentNumber" class="form-label"></label>
+                    <input asp-for="AssignmentNumber" class="form-control" type="number" min="1" />
+                    <span asp-validation-for="AssignmentNumber" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <label asp-for="Title" class="form-label"></label>
+                    <input asp-for="Title" class="form-control" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <label asp-for="Description" class="form-label"></label>
+                    <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <div class="form-check">
+                        <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                        <label asp-for="IsActive" class="form-check-label"></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between">
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-times"></i> Отмена
+        </a>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Сохранить изменения
+        </button>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+
+
+

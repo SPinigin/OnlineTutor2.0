@@ -2,6 +2,9 @@
 @{
     ViewData["Title"] = $"Тесты:{ViewBag.Category.Name}";
     var category = ViewBag.Category as OnlineTutor2.Models.TestCategory;
+    var assignments = ViewBag.Assignments as List<OnlineTutor2.Models.TestAssignment> ?? new List<OnlineTutor2.Models.TestAssignment>();
+    var testsByAssignment = ViewBag.TestsByAssignment as Dictionary<int, List<OnlineTutor2.Models.PunctuationTest>> ?? new Dictionary<int, List<OnlineTutor2.Models.PunctuationTest>>();
+    var testsWithoutAssignment = ViewBag.TestsWithoutAssignment as List<OnlineTutor2.Models.PunctuationTest> ?? new List<OnlineTutor2.Models.PunctuationTest>();
     var activeTests = Model.Count(t => t.IsActive);
     var inactiveTests = Model.Count(t => !t.IsActive);
 }
@@ -18,6 +21,12 @@
         </nav>
     </div>
     <div>
+        <a asp-controller="TestAssignment"
+           asp-action="Create"
+           asp-route-testCategoryId="@category.Id"
+           class="btn btn-info me-2">
+            <i class="fas fa-folder-plus"></i> Создать задание
+        </a>
         <a asp-controller="PunctuationTest"
            asp-action="Create"
            class="btn btn-success">
@@ -38,29 +47,29 @@
 }
 else
 {
-    
+
     <div class="row mb-3 align-items-center">
-        
+
         <div class="col-12 col-md-4 mb-2 mb-md-0">
             <h6 class="mb-0">
-                <i class="@category.IconClass"></i> 
+                <i class="@category.IconClass"></i>
                 <span id="testsCount">Всего тестов: @Model.Count()</span>
             </h6>
         </div>
 
-        
+
         <div class="col-12 col-md-4 mb-2 mb-md-0">
             <div class="input-group input-group-sm">
                 <span class="input-group-text bg-white">
                     <i class="fas fa-search text-muted"></i>
                 </span>
-                <input type="text" 
-                       id="searchInput" 
-                       class="form-control" 
+                <input type="text"
+                       id="searchInput"
+                       class="form-control"
                        placeholder="Поиск по названию или описанию..."
                        autocomplete="off">
-                <button class="btn btn-outline-secondary" 
-                        type="button" 
+                <button class="btn btn-outline-secondary"
+                        type="button"
                         id="clearSearch"
                         style="display: none;">
                     <i class="fas fa-times"></i>
@@ -68,23 +77,23 @@ else
             </div>
         </div>
 
-        
+
         <div class="col-12 col-md-4">
             <div class="btn-group btn-group-sm w-100" role="group">
-                <button type="button" 
-                        class="btn btn-outline-primary active" 
+                <button type="button"
+                        class="btn btn-outline-primary active"
                         data-filter="all"
                         onclick="filterTestsByStatus('all')">
                     Все (@Model.Count())
                 </button>
-                <button type="button" 
-                        class="btn btn-outline-success" 
+                <button type="button"
+                        class="btn btn-outline-success"
                         data-filter="active"
                         onclick="filterTestsByStatus('active')">
                     Активные (@activeTests)
                 </button>
-                <button type="button" 
-                        class="btn btn-outline-secondary" 
+                <button type="button"
+                        class="btn btn-outline-secondary"
                         data-filter="inactive"
                         onclick="filterTestsByStatus('inactive')">
                     Неактивные (@inactiveTests)
@@ -93,184 +102,394 @@ else
         </div>
     </div>
 
-    
+
     <div id="noResultsMessage" class="alert alert-info" style="display: none;">
-        <i class="fas fa-info-circle"></i> 
+        <i class="fas fa-info-circle"></i>
         По вашему запросу ничего не найдено. Попробуйте изменить критерии поиска.
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-hover table-striped align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th class="mobile-visible text-center" style="width: 5%;">
-                        <i class="fas fa-check-circle"></i>
-                    </th>
-                    <th class="mobile-visible" style="width: 25%;">Название</th>
-                    <th class="mobile-visible" style="width: 25%;">Описание</th>
-                    <th class="d-none d-md-table-cell" style="width: 5%;">Класс</th>
-                    <th class="mobile-visible text-center" style="width: 10%;">
-                        <i class="fas fa-question-circle d-none d-md-inline"></i>
-                        <span class="d-md-none">Вопросы</span>
-                        <span class="d-none d-md-inline">Вопросы</span>
-                    </th>
-                    <th class="d-none d-md-table-cell text-center" style="width: 8%;">
-                        <i class="fas fa-clock"></i> Время
-                    </th>
-                    <th class="d-none d-md-table-cell text-center" style="width: 8%;">
-                        <i class="fas fa-chart-bar"></i> Результаты
-                    </th>
-                    <th class="d-none d-md-table-cell" style="width: 10%;">Даты</th>
-                    <th class="mobile-visible text-center" style="width: 15%;">Действия</th>
-                </tr>
-            </thead>
-            <tbody>
-    @foreach (var test in Model)
+    @* Отображение тестов по заданиям *@
+    @foreach (var assignment in assignments)
     {
-        <tr class="test-row @(test.IsActive ? "" : "table-secondary")" 
-            data-status="@(test.IsActive ? "active" : "inactive")"
-            data-test-id="@test.Id">
-            
-            
-            <td class="text-center mobile-visible">
-                <span class="badge bg-@(test.IsActive ? "success" : "secondary")" 
-                      title="@(test.IsActive ? "Активный" : "Неактивный")">
-                    <i class="fas fa-@(test.IsActive ? "check-circle" : "times-circle")"></i>
-                </span>
-            </td>
+        if (testsByAssignment.ContainsKey(assignment.Id) && testsByAssignment[assignment.Id].Any())
+        {
+            var assignmentTests = testsByAssignment[assignment.Id];
+            <div class="card mb-4 assignment-group" data-assignment-id="@assignment.Id">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-folder"></i> Задание @assignment.AssignmentNumber: @assignment.Title
+                        </h5>
+                        <div>
+                            <a asp-controller="TestAssignment" asp-action="Edit" asp-route-id="@assignment.Id" 
+                               class="btn btn-sm btn-light me-2" title="Редактировать задание">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <span class="badge bg-light text-dark">@assignmentTests.Count тест(ов)</span>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(assignment.Description))
+                    {
+                        <small class="d-block mt-2">@assignment.Description</small>
+                    }
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="mobile-visible text-center" style="width: 5%;">
+                                        <i class="fas fa-check-circle"></i>
+                                    </th>
+                                    <th class="mobile-visible" style="width: 25%;">Название</th>
+                                    <th class="mobile-visible" style="width: 25%;">Описание</th>
+                                    <th class="d-none d-md-table-cell" style="width: 5%;">Классы</th>
+                                    <th class="mobile-visible text-center" style="width: 10%;">
+                                        <i class="fas fa-question-circle d-none d-md-inline"></i>
+                                        <span class="d-md-none">Вопросы</span>
+                                        <span class="d-none d-md-inline">Вопросы</span>
+                                    </th>
+                                    <th class="d-none d-md-table-cell text-center" style="width: 8%;">
+                                        <i class="fas fa-clock"></i> Время
+                                    </th>
+                                    <th class="d-none d-md-table-cell text-center" style="width: 8%;">
+                                        <i class="fas fa-chart-bar"></i> Результаты
+                                    </th>
+                                    <th class="d-none d-md-table-cell" style="width: 10%;">Даты</th>
+                                    <th class="mobile-visible text-center" style="width: 15%;">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var test in assignmentTests)
+                                {
+                    <tr class="test-row @(test.IsActive ? "" : "table-secondary")"
+                        data-status="@(test.IsActive ? "active" : "inactive")"
+                        data-test-id="@test.Id">
 
-            
-            <td class="mobile-visible">
-                <div class="d-flex align-items-center">
-                    <i class="@category.IconClass text-primary me-2 d-none d-md-inline"></i>
-                    <div>
-                        <strong class="d-block">@test.Title</strong>
-                        <small class="text-muted d-block">
-                            <i class="fas fa-calendar"></i> @test.CreatedAt.ToString("dd.MM.yyyy")
-                        </small>
+
+                        <td class="text-center mobile-visible">
+                            <span class="badge bg-@(test.IsActive ? "success" : "secondary")"
+                                  title="@(test.IsActive ? "Активный" : "Неактивный")">
+                                <i class="fas fa-@(test.IsActive ? "check-circle" : "times-circle")"></i>
+                            </span>
+                        </td>
+
+
+                        <td class="mobile-visible">
+                            <div class="d-flex align-items-center">
+                                <i class="@category.IconClass text-primary me-2 d-none d-md-inline"></i>
+                                <div>
+                                    <strong class="d-block">@test.Title</strong>
+                                    <small class="text-muted d-block">
+                                        <i class="fas fa-calendar"></i> @test.CreatedAt.ToString("dd.MM.yyyy")
+                                    </small>
+                                </div>
+                            </div>
+                        </td>
+
+
+                        <td class="mobile-visible">
+                            @if (!string.IsNullOrEmpty(test.Description))
+                            {
+                                <small class="text-muted">@test.Description</small>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+
+                        @* ✅ ИСПРАВЛЕНО: Отображение классов через many-to-many *@
+                        <td class="d-none d-md-table-cell">
+                            @if (test.TestClasses != null && test.TestClasses.Any())
+                            {
+                                @foreach (var testClass in test.TestClasses)
+                                {
+                                    <span class="badge bg-info me-1 mb-1">@testClass.Class.Name</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Все классы</span>
+                            }
+                        </td>
+
+
+                        <td class="text-center mobile-visible">
+                            <span class="badge bg-primary rounded-pill">
+                                @test.PunctuationQuestions.Count
+                            </span>
+                        </td>
+
+
+                        <td class="text-center d-none d-md-table-cell">
+                            <span class="badge bg-info rounded-pill">
+                                @test.TimeLimit
+                            </span>
+                        </td>
+
+
+                        <td class="text-center d-none d-md-table-cell">
+                            <span class="badge bg-success rounded-pill">
+                                @test.PunctuationTestResults.Count
+                            </span>
+                        </td>
+
+
+                        <td class="d-none d-md-table-cell">
+                            <small class="d-block">
+                                @if (test.StartDate.HasValue)
+                                {
+                                    <div class="mb-1">
+                                        <i class="fas fa-play text-success"></i>
+                                        @test.StartDate.Value.ToString("dd.MM.yyyy HH:mm")
+                                    </div>
+                                }
+                                @if (test.EndDate.HasValue)
+                                {
+                                    <div>
+                                        <i class="fas fa-stop text-danger"></i>
+                                        @test.EndDate.Value.ToString("dd.MM.yyyy HH:mm")
+                                    </div>
+                                }
+                                @if (!test.StartDate.HasValue && !test.EndDate.HasValue)
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </small>
+                        </td>
+
+
+                        <td class="text-center mobile-visible">
+
+                            <div class="btn-group btn-group-sm gap-1 d-none d-md-flex" role="group">
+                                <a asp-controller="PunctuationTest"
+                                   asp-action="Details"
+                                   asp-route-id="@test.Id"
+                                   class="btn btn-outline-info rounded"
+                                   title="Просмотр">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a asp-controller="PunctuationTest"
+                                   asp-action="Edit"
+                                   asp-route-id="@test.Id"
+                                   class="btn btn-outline-primary rounded"
+                                   title="Редактировать">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a asp-controller="PunctuationTest"
+                                   asp-action="Delete"
+                                   asp-route-id="@test.Id"
+                                   class="btn btn-outline-danger rounded"
+                                   title="Удалить">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+
+
+                            <div class="d-flex d-md-none gap-1 justify-content-center">
+                                <a asp-controller="PunctuationTest"
+                                   asp-action="Edit"
+                                   asp-route-id="@test.Id"
+                                   class="btn btn-outline-primary mobile-actions-btn"
+                                   title="Редактировать">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a asp-controller="PunctuationTest"
+                                   asp-action="Delete"
+                                   asp-route-id="@test.Id"
+                                   class="btn btn-outline-danger mobile-actions-btn"
+                                   title="Удалить">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            </td>
-
-            
-            <td class="mobile-visible"> 
-                @if (!string.IsNullOrEmpty(test.Description))
-                {
-                    <small class="text-muted">@test.Description</small>
-                }
-                else
-                {
-                    <span class="text-muted">—</span>
-                }
-            </td>
-
-            
-            <td class="d-none d-md-table-cell">
-                @if (test.Class != null)
-                {
-                    <span class="badge bg-info">@test.Class.Name</span>
-                }
-                else
-                {
-                    <span class="text-muted">—</span>
-                }
-            </td>
-
-            
-            <td class="text-center mobile-visible">
-                <span class="badge bg-primary rounded-pill">
-                    @test.PunctuationQuestions.Count
-                </span>
-            </td>
-
-            
-            <td class="text-center d-none d-md-table-cell">
-                <span class="badge bg-info rounded-pill">
-                    @test.TimeLimit
-                </span>
-            </td>
-
-            
-            <td class="text-center d-none d-md-table-cell">
-                <span class="badge bg-success rounded-pill">
-                    @test.PunctuationTestResults.Count
-                </span>
-            </td>
-
-            
-            <td class="d-none d-md-table-cell">
-                <small class="d-block">
-                    @if (test.StartDate.HasValue)
-                    {
-                        <div class="mb-1">
-                            <i class="fas fa-play text-success"></i>
-                            @test.StartDate.Value.ToString("dd.MM.yyyy HH:mm")
-                        </div>
-                    }
-                    @if (test.EndDate.HasValue)
-                    {
-                        <div>
-                            <i class="fas fa-stop text-danger"></i>
-                            @test.EndDate.Value.ToString("dd.MM.yyyy HH:mm")
-                        </div>
-                    }
-                    @if (!test.StartDate.HasValue && !test.EndDate.HasValue)
-                    {
-                        <span class="text-muted">—</span>
-                    }
-                </small>
-            </td>
-
-            
-            <td class="text-center mobile-visible">
-                
-                <div class="btn-group btn-group-sm gap-1 d-none d-md-flex" role="group">
-                    <a asp-controller="PunctuationTest"
-                        asp-action="Details"
-                        asp-route-id="@test.Id"
-                        class="btn btn-outline-info rounded"
-                        title="Просмотр">
-                        <i class="fas fa-eye"></i>
-                    </a>
-                    <a asp-controller="PunctuationTest"
-                       asp-action="Edit"
-                       asp-route-id="@test.Id"
-                       class="btn btn-outline-primary rounded"
-                       title="Редактировать">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                    <a asp-controller="PunctuationTest"
-                       asp-action="Delete"
-                       asp-route-id="@test.Id"
-                       class="btn btn-outline-danger rounded"
-                       title="Удалить">
-                        <i class="fas fa-trash"></i>
-                    </a>
-                </div>
-
-                
-                <div class="d-flex d-md-none gap-1 justify-content-center">
-                    <a asp-controller="PunctuationTest"
-                       asp-action="Edit"
-                       asp-route-id="@test.Id"
-                       class="btn btn-outline-primary mobile-actions-btn"
-                       title="Редактировать">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                    <a asp-controller="PunctuationTest"
-                       asp-action="Delete"
-                       asp-route-id="@test.Id"
-                       class="btn btn-outline-danger mobile-actions-btn"
-                       title="Удалить">
-                        <i class="fas fa-trash"></i>
-                    </a>
-                </div>
-            </td>
-        </tr>
+            </div>
+        }
     }
-</tbody>
-        </table>
-    </div>
+
+    @* Тесты без задания *@
+    @if (testsWithoutAssignment.Any())
+    {
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-list"></i> Тесты без задания (@testsWithoutAssignment.Count)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="mobile-visible text-center" style="width: 5%;">
+                                    <i class="fas fa-check-circle"></i>
+                                </th>
+                                <th class="mobile-visible" style="width: 25%;">Название</th>
+                                <th class="mobile-visible" style="width: 25%;">Описание</th>
+                                <th class="d-none d-md-table-cell" style="width: 5%;">Классы</th>
+                                <th class="mobile-visible text-center" style="width: 10%;">
+                                    <i class="fas fa-question-circle d-none d-md-inline"></i>
+                                    <span class="d-md-none">Вопросы</span>
+                                    <span class="d-none d-md-inline">Вопросы</span>
+                                </th>
+                                <th class="d-none d-md-table-cell text-center" style="width: 8%;">
+                                    <i class="fas fa-clock"></i> Время
+                                </th>
+                                <th class="d-none d-md-table-cell text-center" style="width: 8%;">
+                                    <i class="fas fa-chart-bar"></i> Результаты
+                                </th>
+                                <th class="d-none d-md-table-cell" style="width: 10%;">Даты</th>
+                                <th class="mobile-visible text-center" style="width: 15%;">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var test in testsWithoutAssignment)
+                            {
+                                <tr class="test-row @(test.IsActive ? "" : "table-secondary")"
+                                    data-status="@(test.IsActive ? "active" : "inactive")"
+                                    data-test-id="@test.Id">
+
+                                    <td class="text-center mobile-visible">
+                                        <span class="badge bg-@(test.IsActive ? "success" : "secondary")"
+                                              title="@(test.IsActive ? "Активный" : "Неактивный")">
+                                            <i class="fas fa-@(test.IsActive ? "check-circle" : "times-circle")"></i>
+                                        </span>
+                                    </td>
+
+                                    <td class="mobile-visible">
+                                        <div class="d-flex align-items-center">
+                                            <i class="@category.IconClass text-primary me-2 d-none d-md-inline"></i>
+                                            <div>
+                                                <strong class="d-block">@test.Title</strong>
+                                                <small class="text-muted d-block">
+                                                    <i class="fas fa-calendar"></i> @test.CreatedAt.ToString("dd.MM.yyyy")
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td class="mobile-visible">
+                                        @if (!string.IsNullOrEmpty(test.Description))
+                                        {
+                                            <small class="text-muted">@test.Description</small>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+
+                                    <td class="d-none d-md-table-cell">
+                                        @if (test.TestClasses != null && test.TestClasses.Any())
+                                        {
+                                            @foreach (var testClass in test.TestClasses)
+                                            {
+                                                <span class="badge bg-info me-1 mb-1">@testClass.Class.Name</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Все классы</span>
+                                        }
+                                    </td>
+
+                                    <td class="text-center mobile-visible">
+                                        <span class="badge bg-primary rounded-pill">
+                                            @test.PunctuationQuestions.Count
+                                        </span>
+                                    </td>
+
+                                    <td class="text-center d-none d-md-table-cell">
+                                        <span class="badge bg-info rounded-pill">
+                                            @test.TimeLimit
+                                        </span>
+                                    </td>
+
+                                    <td class="text-center d-none d-md-table-cell">
+                                        <span class="badge bg-success rounded-pill">
+                                            @test.PunctuationTestResults.Count
+                                        </span>
+                                    </td>
+
+                                    <td class="d-none d-md-table-cell">
+                                        <small class="d-block">
+                                            @if (test.StartDate.HasValue)
+                                            {
+                                                <div class="mb-1">
+                                                    <i class="fas fa-play text-success"></i>
+                                                    @test.StartDate.Value.ToString("dd.MM.yyyy HH:mm")
+                                                </div>
+                                            }
+                                            @if (test.EndDate.HasValue)
+                                            {
+                                                <div>
+                                                    <i class="fas fa-stop text-danger"></i>
+                                                    @test.EndDate.Value.ToString("dd.MM.yyyy HH:mm")
+                                                </div>
+                                            }
+                                            @if (!test.StartDate.HasValue && !test.EndDate.HasValue)
+                                            {
+                                                <span class="text-muted">—</span>
+                                            }
+                                        </small>
+                                    </td>
+
+                                    <td class="text-center mobile-visible">
+                                        <div class="btn-group btn-group-sm gap-1 d-none d-md-flex" role="group">
+                                            <a asp-controller="PunctuationTest"
+                                               asp-action="Details"
+                                               asp-route-id="@test.Id"
+                                               class="btn btn-outline-info rounded"
+                                               title="Просмотр">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a asp-controller="PunctuationTest"
+                                               asp-action="Edit"
+                                               asp-route-id="@test.Id"
+                                               class="btn btn-outline-primary rounded"
+                                               title="Редактировать">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a asp-controller="PunctuationTest"
+                                               asp-action="Delete"
+                                               asp-route-id="@test.Id"
+                                               class="btn btn-outline-danger rounded"
+                                               title="Удалить">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                        <div class="d-flex d-md-none gap-1 justify-content-center">
+                                            <a asp-controller="PunctuationTest"
+                                               asp-action="Edit"
+                                               asp-route-id="@test.Id"
+                                               class="btn btn-outline-primary mobile-actions-btn"
+                                               title="Редактировать">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a asp-controller="PunctuationTest"
+                                               asp-action="Delete"
+                                               asp-route-id="@test.Id"
+                                               class="btn btn-outline-danger mobile-actions-btn"
+                                               title="Удалить">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
 }
 
 @section Scripts {
@@ -307,9 +526,9 @@ else
             let visibleCount = 0;
 
             rows.forEach(row => {
-                const matchesStatus = currentStatusFilter === 'all' || 
+                const matchesStatus = currentStatusFilter === 'all' ||
                                     row.dataset.status === currentStatusFilter;
-                
+
                 let matchesSearch = true;
                 if (currentSearchQuery) {
                     const testData = row.dataset.searchText || '';
@@ -340,7 +559,7 @@ else
         function updateTestsCount(count) {
             const countsElement = document.getElementById('testsCount');
             const totalTests = document.querySelectorAll('.test-row').length;
-            
+
             if (count === totalTests) {
                 countsElement.textContent = `Всего тестов: ${totalTests}`;
             } else {
@@ -353,7 +572,7 @@ else
             const testRows = document.querySelectorAll('.test-row');
             const searchInput = document.getElementById('searchInput');
             const clearSearchBtn = document.getElementById('clearSearch');
-            
+
             // Добавляем данные для поиска к каждой строке
             testRows.forEach(row => {
                 // Собираем текст для поиска из всех ячеек
@@ -376,7 +595,7 @@ else
                         window.location.href = `/PunctuationTest/Details/${testId}`;
                     }
                 });
-                
+
                 // Добавляем курсор pointer
                 row.style.cursor = 'pointer';
             });

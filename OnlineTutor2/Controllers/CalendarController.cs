@@ -2,8 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using OnlineTutor2.Data;
+using OnlineTutor2.Data.Repositories;
 using OnlineTutor2.Models;
 using OnlineTutor2.ViewModels;
 
@@ -12,13 +11,22 @@ namespace OnlineTutor2.Controllers
     [Authorize(Roles = ApplicationRoles.Teacher)]
     public class CalendarController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ICalendarEventRepository _calendarEventRepository;
+        private readonly IClassRepository _classRepository;
+        private readonly IStudentRepository _studentRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<CalendarController> _logger;
 
-        public CalendarController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, ILogger<CalendarController> logger)
+        public CalendarController(
+            ICalendarEventRepository calendarEventRepository,
+            IClassRepository classRepository,
+            IStudentRepository studentRepository,
+            UserManager<ApplicationUser> userManager,
+            ILogger<CalendarController> logger)
         {
-            _context = context;
+            _calendarEventRepository = calendarEventRepository;
+            _classRepository = classRepository;
+            _studentRepository = studentRepository;
             _userManager = userManager;
             _logger = logger;
         }
@@ -30,23 +38,9 @@ namespace OnlineTutor2.Controllers
 
             // Получаем статистику
             var now = DateTime.Now;
-            var upcomingEvents = await _context.CalendarEvents
-                .Where(e => e.TeacherId == currentUser.Id &&
-                           e.StartDateTime >= now &&
-                           !e.IsCompleted)
-                .CountAsync();
-
-            var todayEvents = await _context.CalendarEvents
-                .Where(e => e.TeacherId == currentUser.Id &&
-                           e.StartDateTime.Date == now.Date)
-                .CountAsync();
-
-            var completedThisMonth = await _context.CalendarEvents
-                .Where(e => e.TeacherId == currentUser.Id &&
-                           e.IsCompleted &&
-                           e.StartDateTime.Month == now.Month &&
-                           e.StartDateTime.Year == now.Year)
-                .CountAsync();
+            var upcomingEvents = await _calendarEventRepository.GetUpcomingCountAsync(currentUser.Id, now);
+            var todayEvents = await _calendarEventRepository.GetTodayCountAsync(currentUser.Id, now);
+            var completedThisMonth = await _calendarEventRepository.GetCompletedThisMonthCountAsync(currentUser.Id, now);
 
             ViewBag.UpcomingEvents = upcomingEvents;
             ViewBag.TodayEvents = todayEvents;
@@ -108,10 +102,8 @@ namespace OnlineTutor2.Controllers
                 // Проверяем, что класс или ученик принадлежит текущему учителю
                 if (model.ClassId.HasValue)
                 {
-                    var classExists = await _context.Classes
-                        .AnyAsync(c => c.Id == model.ClassId.Value && c.TeacherId == currentUser.Id);
-
-                    if (!classExists)
+                    var @class = await _classRepository.GetByIdAsync(model.ClassId.Value);
+                    if (@class == null || @class.TeacherId != currentUser.Id)
                     {
                         TempData["ErrorMessage"] = "Указанный класс не найден";
                         return RedirectToAction(nameof(Index));
@@ -120,13 +112,14 @@ namespace OnlineTutor2.Controllers
 
                 if (model.StudentId.HasValue)
                 {
-                    var studentExists = await _context.Students
-                        .Include(s => s.Class)
-                        .AnyAsync(s => s.Id == model.StudentId.Value &&
-                                      s.Class != null &&
-                                      s.Class.TeacherId == currentUser.Id);
-
-                    if (!studentExists)
+                    var student = await _studentRepository.GetByIdAsync(model.StudentId.Value);
+                    if (student == null || !student.ClassId.HasValue)
+                    {
+                        TempData["ErrorMessage"] = "Указанный ученик не найден или не состоит в вашем классе";
+                        return RedirectToAction(nameof(Index));
+                    }
+                    var studentClass = await _classRepository.GetByIdAsync(student.ClassId.Value);
+                    if (studentClass == null || studentClass.TeacherId != currentUser.Id)
                     {
                         TempData["ErrorMessage"] = "Указанный ученик не найден или не состоит в вашем классе";
                         return RedirectToAction(nameof(Index));
@@ -173,8 +166,7 @@ namespace OnlineTutor2.Controllers
                     CreatedAt = DateTime.Now
                 };
 
-                _context.CalendarEvents.Add(calendarEvent);
-                await _context.SaveChangesAsync();
+                await _calendarEventRepository.CreateAsync(calendarEvent);
 
                 _logger.LogInformation("Учитель {TeacherId} создал событие {EventId}: {Title}, Дата: {StartDateTime}, ClassId: {ClassId}, StudentId: {StudentId}, IsRecurring: {IsRecurring}",
                     currentUser.Id, calendarEvent.Id, model.Title, model.StartDateTime, model.ClassId, model.StudentId, model.IsRecurring);
@@ -195,8 +187,7 @@ namespace OnlineTutor2.Controllers
             if (id == null) return NotFound();
 
             var currentUser = await _userManager.GetUserAsync(User);
-            var calendarEvent = await _context.CalendarEvents
-                .FirstOrDefaultAsync(e => e.Id == id && e.TeacherId == currentUser.Id);
+            var calendarEvent = await _calendarEventRepository.GetByIdWithRelationsAsync(id.Value, currentUser.Id);
 
             if (calendarEvent == null) return NotFound();
 
@@ -279,8 +270,7 @@ namespace OnlineTutor2.Controllers
 
                 try
                 {
-                    var calendarEvent = await _context.CalendarEvents
-                        .FirstOrDefaultAsync(e => e.Id == id && e.TeacherId == currentUser.Id);
+                    var calendarEvent = await _calendarEventRepository.GetByIdWithRelationsAsync(id, currentUser.Id);
 
                     if (calendarEvent == null) return NotFound();
 
@@ -298,8 +288,7 @@ namespace OnlineTutor2.Controllers
                     calendarEvent.Notes = model.Notes;
                     calendarEvent.UpdatedAt = DateTime.Now;
 
-                    _context.Update(calendarEvent);
-                    await _context.SaveChangesAsync();
+                    await _calendarEventRepository.UpdateAsync(calendarEvent);
 
                     _logger.LogInformation("Учитель {TeacherId} обновил событие {EventId}: {Title}, ClassId: {ClassId}, StudentId: {StudentId}",
                        currentUser.Id, id, model.Title, model.ClassId, model.StudentId);
@@ -307,9 +296,9 @@ namespace OnlineTutor2.Controllers
                     TempData["SuccessMessage"] = "Занятие успешно обновлено!";
                     return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateConcurrencyException ex)
+                catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Ошибка конкурентности при обновлении события {EventId} учителем {TeacherId}", id, currentUser.Id);
+                    _logger.LogError(ex, "Ошибка при обновлении события {EventId} учителем {TeacherId}", id, currentUser.Id);
                     ModelState.AddModelError("", "Ошибка при сохранении. Попробуйте еще раз.");
                 }
             }
@@ -324,13 +313,13 @@ namespace OnlineTutor2.Controllers
             if (id == null) return NotFound();
 
             var currentUser = await _userManager.GetUserAsync(User);
-            var calendarEvent = await _context.CalendarEvents
-                .Include(e => e.Class)
-                .Include(e => e.Student)
-                    .ThenInclude(s => s.User)
-                .FirstOrDefaultAsync(e => e.Id == id && e.TeacherId == currentUser.Id);
+            var calendarEvent = await _calendarEventRepository.GetByIdWithRelationsAsync(id.Value, currentUser.Id);
 
             if (calendarEvent == null) return NotFound();
+
+            // Загружаем связанные данные отдельно
+            var @class = calendarEvent.ClassId.HasValue ? await _classRepository.GetByIdAsync(calendarEvent.ClassId.Value) : null;
+            var student = calendarEvent.StudentId.HasValue ? await _studentRepository.GetWithUserAsync(calendarEvent.StudentId.Value) : null;
 
             var model = new CalendarEventDetailsViewModel
             {
@@ -339,8 +328,8 @@ namespace OnlineTutor2.Controllers
                 Description = calendarEvent.Description,
                 StartDateTime = calendarEvent.StartDateTime,
                 EndDateTime = calendarEvent.EndDateTime,
-                ClassName = calendarEvent.Class?.Name,
-                StudentName = calendarEvent.Student?.User.FullName,
+                ClassName = @class?.Name,
+                StudentName = student?.User?.FullName,
                 Location = calendarEvent.Location,
                 Color = calendarEvent.Color,
                 IsCompleted = calendarEvent.IsCompleted,
@@ -359,13 +348,13 @@ namespace OnlineTutor2.Controllers
             if (id == null) return NotFound();
 
             var currentUser = await _userManager.GetUserAsync(User);
-            var calendarEvent = await _context.CalendarEvents
-                .Include(e => e.Class)
-                .Include(e => e.Student)
-                    .ThenInclude(s => s.User)
-                .FirstOrDefaultAsync(e => e.Id == id && e.TeacherId == currentUser.Id);
+            var calendarEvent = await _calendarEventRepository.GetByIdWithRelationsAsync(id.Value, currentUser.Id);
 
             if (calendarEvent == null) return NotFound();
+
+            // Загружаем связанные данные отдельно для отображения
+            var @class = calendarEvent.ClassId.HasValue ? await _classRepository.GetByIdAsync(calendarEvent.ClassId.Value) : null;
+            var student = calendarEvent.StudentId.HasValue ? await _studentRepository.GetWithUserAsync(calendarEvent.StudentId.Value) : null;
 
             return View(calendarEvent);
         }
@@ -376,14 +365,12 @@ namespace OnlineTutor2.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            var calendarEvent = await _context.CalendarEvents
-                .FirstOrDefaultAsync(e => e.Id == id && e.TeacherId == currentUser.Id);
+            var calendarEvent = await _calendarEventRepository.GetByIdWithRelationsAsync(id, currentUser.Id);
 
             if (calendarEvent == null) return NotFound();
 
             var eventTitle = calendarEvent.Title;
-            _context.CalendarEvents.Remove(calendarEvent);
-            await _context.SaveChangesAsync();
+            await _calendarEventRepository.DeleteAsync(id);
 
             _logger.LogInformation("Учитель {TeacherId} удалил событие {EventId}: {Title}", currentUser.Id, id, eventTitle);
 
@@ -397,22 +384,12 @@ namespace OnlineTutor2.Controllers
         {
             var currentUser = await _userManager.GetUserAsync(User);
 
-            var query = _context.CalendarEvents
-                .Where(e => e.TeacherId == currentUser.Id)
-                .Include(e => e.Class)
-                .Include(e => e.Student)
-                    .ThenInclude(s => s.User)
-                .AsQueryable();
-
             // Расширяем диапазон поиска для повторяющихся событий
             var searchStart = start ?? DateTime.Now.AddMonths(-3);
             var searchEnd = end ?? DateTime.Now.AddMonths(6);
 
             // Получаем события, которые попадают в диапазон или повторяются
-            var events = await query
-                .Where(e => e.EndDateTime >= searchStart || e.IsRecurring)
-                .Where(e => e.StartDateTime <= searchEnd)
-                .ToListAsync();
+            var events = await _calendarEventRepository.GetByTeacherIdInDateRangeAsync(currentUser.Id, searchStart, searchEnd);
 
             var result = new List<object>();
 
@@ -421,13 +398,13 @@ namespace OnlineTutor2.Controllers
                 if (e.IsRecurring && !string.IsNullOrEmpty(e.RecurrencePattern))
                 {
                     // Генерируем повторяющиеся события
-                    var recurringEvents = GenerateRecurringEvents(e, searchStart, searchEnd);
+                    var recurringEvents = await GenerateRecurringEventsAsync(e, searchStart, searchEnd);
                     result.AddRange(recurringEvents);
                 }
                 else
                 {
                     // Обычное событие
-                    result.Add(CreateEventObject(e));
+                    result.Add(await CreateEventObjectAsync(e));
                 }
             }
 
@@ -435,20 +412,24 @@ namespace OnlineTutor2.Controllers
         }
 
         // Метод для создания объекта события
-        private object CreateEventObject(CalendarEvent e, DateTime? overrideStart = null, DateTime? overrideEnd = null)
+        private async Task<object> CreateEventObjectAsync(CalendarEvent e, DateTime? overrideStart = null, DateTime? overrideEnd = null)
         {
             var startTime = overrideStart ?? e.StartDateTime;
             var endTime = overrideEnd ?? e.EndDateTime;
 
+            // Загружаем связанные данные
+            var @class = e.ClassId.HasValue ? await _classRepository.GetByIdAsync(e.ClassId.Value) : null;
+            var student = e.StudentId.HasValue ? await _studentRepository.GetWithUserAsync(e.StudentId.Value) : null;
+
             return new
             {
                 id = e.Id,
-                title = GetEventTitle(e),
+                title = await GetEventTitleAsync(e),
                 start = startTime.ToString("yyyy-MM-ddTHH:mm:ss"),
                 end = endTime.ToString("yyyy-MM-ddTHH:mm:ss"),
                 description = e.Description,
-                className = e.Class?.Name,
-                studentName = e.Student?.User.FullName,
+                className = @class?.Name,
+                studentName = student?.User?.FullName,
                 location = e.Location,
                 color = e.Color,
                 backgroundColor = e.Color,
@@ -469,7 +450,7 @@ namespace OnlineTutor2.Controllers
         }
 
         // Генерация повторяющихся событий
-        private List<object> GenerateRecurringEvents(CalendarEvent calendarEvent, DateTime rangeStart, DateTime rangeEnd)
+        private async Task<List<object>> GenerateRecurringEventsAsync(CalendarEvent calendarEvent, DateTime rangeStart, DateTime rangeEnd)
         {
             var events = new List<object>();
             var duration = calendarEvent.EndDateTime - calendarEvent.StartDateTime;
@@ -488,7 +469,7 @@ namespace OnlineTutor2.Controllers
                 if (currentDate >= rangeStart && currentDate <= rangeEnd)
                 {
                     var eventEnd = currentDate.Add(duration);
-                    events.Add(CreateEventObject(calendarEvent, currentDate, eventEnd));
+                    events.Add(await CreateEventObjectAsync(calendarEvent, currentDate, eventEnd));
                 }
 
                 // Вычисляем следующую дату на основе паттерна
@@ -518,21 +499,29 @@ namespace OnlineTutor2.Controllers
         }
 
         // Вспомогательный метод для формирования названия события
-        private string GetEventTitle(CalendarEvent calendarEvent)
+        private async Task<string> GetEventTitleAsync(CalendarEvent calendarEvent)
         {
             var title = calendarEvent.Title;
 
-            if (calendarEvent.Class != null)
+            if (calendarEvent.ClassId.HasValue)
             {
-                // Для класса только название класса: "5А"
-                return $"{calendarEvent.Class.Name}";
+                var @class = await _classRepository.GetByIdAsync(calendarEvent.ClassId.Value);
+                if (@class != null)
+                {
+                    // Для класса только название класса: "5А"
+                    return @class.Name;
+                }
             }
-            else if (calendarEvent.Student != null)
+            else if (calendarEvent.StudentId.HasValue)
             {
-                // Для ученика только фамилия: Пинигин С."
-                var lastName = calendarEvent.Student.User.LastName;
-                var firstNameInitial = calendarEvent.Student.User.FirstName?.FirstOrDefault();
-                return $"{lastName} {firstNameInitial}.";
+                var student = await _studentRepository.GetWithUserAsync(calendarEvent.StudentId.Value);
+                if (student?.User != null)
+                {
+                    // Для ученика только фамилия: Пинигин С."
+                    var lastName = student.User.LastName;
+                    var firstNameInitial = student.User.FirstName?.FirstOrDefault();
+                    return $"{lastName} {firstNameInitial}.";
+                }
             }
 
             return title;
@@ -543,8 +532,7 @@ namespace OnlineTutor2.Controllers
         public async Task<IActionResult> ToggleComplete(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            var calendarEvent = await _context.CalendarEvents
-                .FirstOrDefaultAsync(e => e.Id == id && e.TeacherId == currentUser.Id);
+            var calendarEvent = await _calendarEventRepository.GetByIdWithRelationsAsync(id, currentUser.Id);
 
             if (calendarEvent == null) return NotFound();
 
@@ -552,7 +540,7 @@ namespace OnlineTutor2.Controllers
             calendarEvent.IsCompleted = !calendarEvent.IsCompleted;
             calendarEvent.UpdatedAt = DateTime.Now;
 
-            await _context.SaveChangesAsync();
+            await _calendarEventRepository.UpdateAsync(calendarEvent);
 
             _logger.LogInformation("Учитель {TeacherId} изменил статус события {EventId} с {OldStatus} на {NewStatus}",
                 currentUser.Id, id, oldStatus, calendarEvent.IsCompleted);
@@ -567,25 +555,26 @@ namespace OnlineTutor2.Controllers
         {
             var currentUser = await _userManager.GetUserAsync(User);
 
-            var classes = await _context.Classes
-                .Where(c => c.TeacherId == currentUser.Id && c.IsActive)
+            var classes = (await _classRepository.GetByTeacherIdAsync(currentUser.Id))
+                .Where(c => c.IsActive)
                 .OrderBy(c => c.Name)
-                .ToListAsync();
+                .ToList();
 
-            var students = await _context.Students
-                .Include(s => s.User)
-                .Include(s => s.Class)
-                .Where(s => s.ClassId.HasValue &&
-                           _context.Classes.Any(c => c.Id == s.ClassId && c.TeacherId == currentUser.Id))
-                .OrderBy(s => s.User.LastName)
-                .ToListAsync();
+            var allStudents = await _studentRepository.GetAllWithUserAsync();
+            var teacherClasses = await _classRepository.GetByTeacherIdAsync(currentUser.Id);
+            var teacherClassIds = teacherClasses.Select(c => c.Id).ToHashSet();
+            
+            var students = allStudents
+                .Where(s => s.ClassId.HasValue && teacherClassIds.Contains(s.ClassId.Value))
+                .OrderBy(s => s.User?.LastName ?? "")
+                .ToList();
 
             ViewBag.Classes = new SelectList(classes, "Id", "Name");
             ViewBag.Students = new SelectList(
                 students.Select(s => new
                 {
                     Id = s.Id,
-                    Name = $"{s.User.FullName} ({s.Class.Name})"
+                    Name = $"{s.User?.FullName ?? "Unknown"} ({teacherClasses.FirstOrDefault(c => c.Id == s.ClassId)?.Name ?? "Unknown"})"
                 }), "Id", "Name");
 
             ViewBag.RecurrencePatterns = new SelectList(new[]

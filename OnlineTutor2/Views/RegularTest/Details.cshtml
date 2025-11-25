@@ -121,13 +121,18 @@
             <div class="col-md-3 mb-3">
                 <label class="text-muted small">Класс</label>
                 <div>
-                    @if (Model.Class != null)
+                    @if (Model.TestClasses.Any())
                     {
-                        <span class="badge bg-info">@Model.Class.Name</span>
+                        <div class="d-flex flex-wrap gap-1">
+                            @foreach (var testClass in Model.TestClasses)
+                            {
+                                <span class="badge bg-info">@testClass.Class.Name</span>
+                            }
+                        </div>
                     }
                     else
                     {
-                        <span class="text-muted">Все ученики</span>
+                        <span class="text-muted">Доступен всем ученикам</span>
                     }
                 </div>
             </div>

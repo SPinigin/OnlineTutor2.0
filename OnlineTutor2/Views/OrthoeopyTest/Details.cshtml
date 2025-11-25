@@ -78,17 +78,18 @@
         <div class="row">
             <div class="col-md-6">
                 <dl class="row">
-                    @if (Model.Class != null)
+                    @if (Model.TestClasses.Any())
                     {
-                        <dt class="col-sm-4">Назначен классу:</dt>
-                        <dd class="col-sm-8">
-                            <span class="badge bg-info">@Model.Class.Name</span>
-                        </dd>
+                        <small class="text-muted d-block">
+                            <i class="fas fa-users"></i> Классы:
+                            @string.Join(", ", Model.TestClasses.Select(tc => tc.Class.Name))
+                        </small>
                     }
                     else
                     {
-                        <dt class="col-sm-4">Доступность:</dt>
-                        <dd class="col-sm-8">Всем ученикам</dd>
+                        <small class="text-muted d-block">
+                            <i class="fas fa-globe"></i> Доступен всем
+                        </small>
                     }
 
                     <dt class="col-sm-4">Подсказки:</dt>

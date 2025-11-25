@@ -460,10 +460,30 @@ window.showTestResultModal = function(testType, testResultId, studentName) {
 function loadTestResult(testType, testResultId) {
     console.log('📡 Загрузка результата теста:', testType, testResultId);
 
-    fetch('/TeacherDashboard/GetTestResult?testType=' + testType + '&testResultId=' + testResultId)
-        .then(response => {
+    fetch('/TeacherDashboard/GetTestResult?testType=' + encodeURIComponent(testType) + '&testResultId=' + testResultId)
+        .then(async response => {
             if (!response.ok) {
-                throw new Error('HTTP ' + response.status);
+                // Пытаемся получить текст ошибки от сервера
+                let errorMessage = 'HTTP ' + response.status;
+                try {
+                    const errorText = await response.text();
+                    if (errorText) {
+                        errorMessage = errorText;
+                    }
+                } catch (e) {
+                    // Игнорируем ошибку парсинга
+                }
+                
+                // Определяем более понятное сообщение об ошибке
+                if (response.status === 404) {
+                    errorMessage = 'Результат теста не найден';
+                } else if (response.status === 401) {
+                    errorMessage = 'Недостаточно прав для просмотра результата';
+                } else if (response.status === 500) {
+                    errorMessage = 'Внутренняя ошибка сервера. Попробуйте позже';
+                }
+                
+                throw new Error(errorMessage);
             }
             return response.text();
         })
@@ -483,9 +503,9 @@ function loadTestResult(testType, testResultId) {
             if (modalBody) {
                 modalBody.innerHTML = 
                     '<div class="text-center py-5">' +
-                    '<i class="fas fa-exclamation-triangle text-warning fs-1 mb-3"></i>' +
-                    '<h5 class="text-muted">Ошибка загрузки результата</h5>' +
-                    '<p class="text-muted">' + error.message + '</p>' +
+                    '<i class="fas fa-exclamation-triangle text-danger fs-1 mb-3"></i>' +
+                    '<h5 class="text-danger mb-3">Ошибка загрузки результата</h5>' +
+                    '<p class="text-muted mb-4">' + error.message + '</p>' +
                     '<button class="btn btn-primary" onclick="loadTestResult(\'' + testType + '\', ' + testResultId + ')">' +
                     '<i class="fas fa-redo"></i> Попробовать снова' +
                     '</button>' +

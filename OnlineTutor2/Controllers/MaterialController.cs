@@ -2,8 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using OnlineTutor2.Data;
+using OnlineTutor2.Data.Repositories;
 using OnlineTutor2.Models;
 using OnlineTutor2.ViewModels;
 
@@ -12,7 +11,8 @@ namespace OnlineTutor2.Controllers
     [Authorize(Roles = ApplicationRoles.Teacher)]
     public class MaterialController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IMaterialRepository _materialRepository;
+        private readonly IClassRepository _classRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWebHostEnvironment _environment;
         private readonly ILogger<MaterialController> _logger;
@@ -56,12 +56,14 @@ namespace OnlineTutor2.Controllers
         };
 
         public MaterialController(
-            ApplicationDbContext context,
+            IMaterialRepository materialRepository,
+            IClassRepository classRepository,
             UserManager<ApplicationUser> userManager,
             IWebHostEnvironment environment,
             ILogger<MaterialController> logger)
         {
-            _context = context;
+            _materialRepository = materialRepository;
+            _classRepository = classRepository;
             _userManager = userManager;
             _environment = environment;
             _logger = logger;
@@ -81,64 +83,22 @@ namespace OnlineTutor2.Controllers
             ViewBag.SizeSortParm = sortOrder == "Size" ? "size_desc" : "Size";
 
             // Получаем классы для фильтра
-            var teacherClasses = await _context.Classes
-                .Where(c => c.TeacherId == currentUser.Id)
-                .ToListAsync();
+            var teacherClasses = await _classRepository.GetByTeacherIdAsync(currentUser.Id);
             ViewBag.Classes = new SelectList(teacherClasses, "Id", "Name");
 
-            // Получаем материалы текущего учителя
-            var materials = _context.Materials
-                .Include(m => m.Class)
-                .Where(m => m.UploadedById == currentUser.Id)
-                .AsQueryable();
-
-            // Фильтрация по поиску
-            if (!string.IsNullOrEmpty(searchString))
+            // Получаем материалы текущего учителя с фильтрацией
+            MaterialType? typeFilterEnum = null;
+            if (!string.IsNullOrEmpty(typeFilter) && Enum.TryParse<MaterialType>(typeFilter, out var materialType))
             {
-                materials = materials.Where(m => m.Title.Contains(searchString) ||
-                                               (m.Description != null && m.Description.Contains(searchString)) ||
-                                               (m.FileName != null && m.FileName.Contains(searchString)));
+                typeFilterEnum = materialType;
             }
 
-            // Фильтрация по классу
-            if (classFilter.HasValue)
-            {
-                materials = materials.Where(m => m.ClassId == classFilter.Value);
-            }
-
-            // Фильтрация по типу
-            if (!string.IsNullOrEmpty(typeFilter))
-            {
-                if (Enum.TryParse<MaterialType>(typeFilter, out var materialType))
-                {
-                    materials = materials.Where(m => m.Type == materialType);
-                }
-            }
-
-            // Сортировка
-            switch (sortOrder)
-            {
-                case "title_desc":
-                    materials = materials.OrderByDescending(m => m.Title);
-                    break;
-                case "Date":
-                    materials = materials.OrderBy(m => m.UploadedAt);
-                    break;
-                case "date_desc":
-                    materials = materials.OrderByDescending(m => m.UploadedAt);
-                    break;
-                case "Size":
-                    materials = materials.OrderBy(m => m.FileSize);
-                    break;
-                case "size_desc":
-                    materials = materials.OrderByDescending(m => m.FileSize);
-                    break;
-                default:
-                    materials = materials.OrderBy(m => m.Title);
-                    break;
-            }
-
-            var materialsList = await materials.ToListAsync();
+            var materialsList = await _materialRepository.GetFilteredAsync(
+                currentUser.Id,
+                searchString,
+                classFilter,
+                typeFilterEnum,
+                sortOrder);
 
             // Добавляем типы материалов для фильтра
             ViewBag.MaterialTypes = Enum.GetValues<MaterialType>()
@@ -158,10 +118,7 @@ namespace OnlineTutor2.Controllers
             if (id == null) return NotFound();
 
             var currentUser = await _userManager.GetUserAsync(User);
-            var material = await _context.Materials
-                .Include(m => m.Class)
-                .Include(m => m.UploadedBy)
-                .FirstOrDefaultAsync(m => m.Id == id && m.UploadedById == currentUser.Id);
+            var material = await _materialRepository.GetByIdWithClassAsync(id.Value, currentUser.Id);
 
             if (material == null) return NotFound();
 
@@ -212,11 +169,11 @@ namespace OnlineTutor2.Controllers
                         Type = DetermineMaterialType(model.File.FileName),
                         ClassId = (int)model.ClassId,
                         UploadedById = currentUser.Id,
+                        UploadedAt = DateTime.Now,
                         IsActive = model.IsActive
                     };
 
-                    _context.Materials.Add(material);
-                    await _context.SaveChangesAsync();
+                    await _materialRepository.CreateAsync(material);
 
                     _logger.LogInformation("Учитель {TeacherId} загрузил материал {MaterialId}: {Title}, Файл: {FileName}, Размер: {FileSize} байт, ClassId: {ClassId}",
                         currentUser.Id, material.Id, material.Title, material.FileName, material.FileSize, material.ClassId);
@@ -246,8 +203,7 @@ namespace OnlineTutor2.Controllers
             if (id == null) return NotFound();
 
             var currentUser = await _userManager.GetUserAsync(User);
-            var material = await _context.Materials
-                .FirstOrDefaultAsync(m => m.Id == id && m.UploadedById == currentUser.Id);
+            var material = await _materialRepository.GetByIdWithClassAsync(id.Value, currentUser.Id);
 
             if (material == null) return NotFound();
 
@@ -278,8 +234,7 @@ namespace OnlineTutor2.Controllers
             {
                 try
                 {
-                    var material = await _context.Materials
-                        .FirstOrDefaultAsync(m => m.Id == id && m.UploadedById == currentUser.Id);
+                    var material = await _materialRepository.GetByIdWithClassAsync(id, currentUser.Id);
 
                     if (material == null) return NotFound();
 
@@ -318,8 +273,7 @@ namespace OnlineTutor2.Controllers
                             currentUser.Id, id, oldFileName, model.NewFile.FileName);
                     }
 
-                    _context.Update(material);
-                    await _context.SaveChangesAsync();
+                    await _materialRepository.UpdateAsync(material);
 
                     _logger.LogInformation("Учитель {TeacherId} обновил материал {MaterialId}: {Title}, ClassId: {ClassId}",
                         currentUser.Id, id, material.Title, material.ClassId);
@@ -327,15 +281,10 @@ namespace OnlineTutor2.Controllers
                     TempData["SuccessMessage"] = $"Материал \"{material.Title}\" успешно обновлен!";
                     return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateConcurrencyException ex)
-                {
-                    _logger.LogError(ex, "Ошибка конкурентности при обновлении материала {MaterialId} учителем {TeacherId}", id, currentUser.Id);
-                    ModelState.AddModelError("", "Произошла ошибка при сохранении. Попробуйте еще раз.");
-                }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Ошибка обновления материала {MaterialId} учителем {TeacherId}", id, currentUser.Id);
-                    ModelState.AddModelError("", "Произошла ошибка при обновлении материала.");
+                    _logger.LogError(ex, "Ошибка при обновлении материала {MaterialId} учителем {TeacherId}", id, currentUser.Id);
+                    ModelState.AddModelError("", "Произошла ошибка при сохранении. Попробуйте еще раз.");
                 }
             }
             else
@@ -353,9 +302,7 @@ namespace OnlineTutor2.Controllers
             if (id == null) return NotFound();
 
             var currentUser = await _userManager.GetUserAsync(User);
-            var material = await _context.Materials
-                .Include(m => m.Class)
-                .FirstOrDefaultAsync(m => m.Id == id && m.UploadedById == currentUser.Id);
+            var material = await _materialRepository.GetByIdWithClassAsync(id.Value, currentUser.Id);
 
             if (material == null) return NotFound();
 
@@ -368,8 +315,7 @@ namespace OnlineTutor2.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            var material = await _context.Materials
-                .FirstOrDefaultAsync(m => m.Id == id && m.UploadedById == currentUser.Id);
+            var material = await _materialRepository.GetByIdWithClassAsync(id, currentUser.Id);
 
             if (material == null) return NotFound();
 
@@ -381,8 +327,7 @@ namespace OnlineTutor2.Controllers
                 DeleteFile(material.FilePath); // Удаляем файл
 
                 // Удаляем запись из БД
-                _context.Materials.Remove(material);
-                await _context.SaveChangesAsync();
+                await _materialRepository.DeleteAsync(id);
 
                 _logger.LogInformation("Учитель {TeacherId} удалил материал {MaterialId}: {Title}, Файл: {FileName}",
                     currentUser.Id, id, materialTitle, materialFileName);
@@ -404,13 +349,25 @@ namespace OnlineTutor2.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
 
             // Проверяем права доступа (учитель может скачивать свои материалы или материалы своих классов)
-            var material = await _context.Materials
-                .Include(m => m.Class)
-                .FirstOrDefaultAsync(m => m.Id == id &&
-                    (m.UploadedById == currentUser.Id ||
-                     (m.Class != null && m.Class.TeacherId == currentUser.Id)));
-
+            var material = await _materialRepository.GetByIdAsync(id);
             if (material == null) return NotFound();
+
+            // Проверяем права: либо материал загружен учителем, либо класс принадлежит учителю
+            if (material.UploadedById != currentUser.Id)
+            {
+                if (material.ClassId.HasValue)
+                {
+                    var @class = await _classRepository.GetByIdAsync(material.ClassId.Value);
+                    if (@class == null || @class.TeacherId != currentUser.Id)
+                    {
+                        return NotFound();
+                    }
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
 
             var filePath = Path.Combine(_environment.WebRootPath, material.FilePath.TrimStart('/'));
 
@@ -434,14 +391,13 @@ namespace OnlineTutor2.Controllers
         public async Task<IActionResult> ToggleStatus(int id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            var material = await _context.Materials
-                .FirstOrDefaultAsync(m => m.Id == id && m.UploadedById == currentUser.Id);
+            var material = await _materialRepository.GetByIdWithClassAsync(id, currentUser.Id);
 
             if (material == null) return NotFound();
 
             var oldStatus = material.IsActive;
             material.IsActive = !material.IsActive;
-            await _context.SaveChangesAsync();
+            await _materialRepository.UpdateAsync(material);
 
             _logger.LogInformation("Учитель {TeacherId} изменил статус материала {MaterialId}: {Title} с {OldStatus} на {NewStatus}",
                 currentUser.Id, id, material.Title, oldStatus, material.IsActive);
@@ -457,10 +413,10 @@ namespace OnlineTutor2.Controllers
         private async Task LoadClasses()
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            var classes = await _context.Classes
-                .Where(c => c.TeacherId == currentUser.Id && c.IsActive)
+            var classes = (await _classRepository.GetByTeacherIdAsync(currentUser.Id))
+                .Where(c => c.IsActive)
                 .OrderBy(c => c.Name)
-                .ToListAsync();
+                .ToList();
             ViewBag.Classes = new SelectList(classes, "Id", "Name");
         }
 

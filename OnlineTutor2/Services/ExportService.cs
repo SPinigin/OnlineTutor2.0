@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using OnlineTutor2.Data;
+using OnlineTutor2.Data.Repositories;
 using OnlineTutor2.Models;
 using System.Text;
 
@@ -10,17 +10,38 @@ namespace OnlineTutor2.Services
 {
     public class ExportService : IExportService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IDatabaseConnection _db;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IStudentRepository _studentRepository;
+        private readonly ITeacherRepository _teacherRepository;
+        private readonly IClassRepository _classRepository;
+        private readonly IRegularTestResultRepository _regularTestResultRepository;
+        private readonly ISpellingTestResultRepository _spellingTestResultRepository;
+        private readonly IPunctuationTestResultRepository _punctuationTestResultRepository;
+        private readonly IOrthoeopyTestResultRepository _orthoeopyTestResultRepository;
         private readonly ILogger<ExportService> _logger;
 
         public ExportService(
-            ApplicationDbContext context,
+            IDatabaseConnection db,
             UserManager<ApplicationUser> userManager,
+            IStudentRepository studentRepository,
+            ITeacherRepository teacherRepository,
+            IClassRepository classRepository,
+            IRegularTestResultRepository regularTestResultRepository,
+            ISpellingTestResultRepository spellingTestResultRepository,
+            IPunctuationTestResultRepository punctuationTestResultRepository,
+            IOrthoeopyTestResultRepository orthoeopyTestResultRepository,
             ILogger<ExportService> logger)
         {
-            _context = context;
+            _db = db;
             _userManager = userManager;
+            _studentRepository = studentRepository;
+            _teacherRepository = teacherRepository;
+            _classRepository = classRepository;
+            _regularTestResultRepository = regularTestResultRepository;
+            _spellingTestResultRepository = spellingTestResultRepository;
+            _punctuationTestResultRepository = punctuationTestResultRepository;
+            _orthoeopyTestResultRepository = orthoeopyTestResultRepository;
             _logger = logger;
         }
 
@@ -28,11 +49,8 @@ namespace OnlineTutor2.Services
 
         public async Task<byte[]> ExportUsersToExcelAsync()
         {
-            var users = await _userManager.Users
-                .Include(u => u.StudentProfile)
-                .Include(u => u.TeacherProfile)
-                .OrderBy(u => u.LastName)
-                .ToListAsync();
+            var usersSql = "SELECT * FROM AspNetUsers ORDER BY LastName";
+            var users = await _db.QueryAsync<ApplicationUser>(usersSql);
 
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Пользователи");
@@ -86,9 +104,8 @@ namespace OnlineTutor2.Services
 
         public async Task<byte[]> ExportUsersToCSVAsync()
         {
-            var users = await _userManager.Users
-                .OrderBy(u => u.LastName)
-                .ToListAsync();
+            var usersSql = "SELECT * FROM AspNetUsers ORDER BY LastName";
+            var users = await _db.QueryAsync<ApplicationUser>(usersSql);
 
             var csv = new StringBuilder();
             csv.AppendLine("ID;Фамилия;Имя;Email;Телефон;Дата рождения;Возраст;Роли;Статус;Дата регистрации");
@@ -110,12 +127,7 @@ namespace OnlineTutor2.Services
 
         public async Task<byte[]> ExportTeachersToExcelAsync()
         {
-            var teachers = await _context.Teachers
-                .Include(t => t.User)
-                .Include(t => t.User.TeacherClasses)
-                .Include(t => t.User.CreatedTests)
-                .OrderBy(t => t.User.LastName)
-                .ToListAsync();
+            var teachers = await _teacherRepository.GetAllWithUserAsync();
 
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Учителя");
@@ -143,16 +155,25 @@ namespace OnlineTutor2.Services
             int row = 2;
             foreach (var teacher in teachers)
             {
+                var user = await _userManager.FindByIdAsync(teacher.UserId);
+                var classesCount = await _db.QueryScalarAsync<int>("SELECT COUNT(*) FROM Classes WHERE TeacherId = @TeacherId", new { TeacherId = teacher.UserId });
+                var testsCount = await _db.QueryScalarAsync<int>(
+                    "(SELECT COUNT(*) FROM RegularTests WHERE TeacherId = @TeacherId) + " +
+                    "(SELECT COUNT(*) FROM SpellingTests WHERE TeacherId = @TeacherId) + " +
+                    "(SELECT COUNT(*) FROM PunctuationTests WHERE TeacherId = @TeacherId) + " +
+                    "(SELECT COUNT(*) FROM OrthoeopyTests WHERE TeacherId = @TeacherId)",
+                    new { TeacherId = teacher.UserId });
+
                 worksheet.Cells[row, 1].Value = teacher.Id;
-                worksheet.Cells[row, 2].Value = teacher.User.FullName;
-                worksheet.Cells[row, 3].Value = teacher.User.Email;
+                worksheet.Cells[row, 2].Value = user != null ? $"{user.FirstName} {user.LastName}" : "Unknown";
+                worksheet.Cells[row, 3].Value = user?.Email ?? "-";
                 worksheet.Cells[row, 4].Value = teacher.Subject ?? "-";
                 worksheet.Cells[row, 5].Value = teacher.Education ?? "-";
                 worksheet.Cells[row, 6].Value = teacher.Experience?.ToString() ?? "-";
-                worksheet.Cells[row, 7].Value = teacher.User.TeacherClasses.Count;
-                worksheet.Cells[row, 8].Value = teacher.User.CreatedTests.Count;
+                worksheet.Cells[row, 7].Value = classesCount;
+                worksheet.Cells[row, 8].Value = testsCount;
                 worksheet.Cells[row, 9].Value = teacher.IsApproved ? "Одобрен" : "На модерации";
-                worksheet.Cells[row, 10].Value = teacher.User.IsActive ? "Активен" : "Заблокирован";
+                worksheet.Cells[row, 10].Value = user?.IsActive == true ? "Активен" : "Заблокирован";
 
                 row++;
             }
@@ -163,23 +184,27 @@ namespace OnlineTutor2.Services
 
         public async Task<byte[]> ExportTeachersToCSVAsync()
         {
-            var teachers = await _context.Teachers
-                .Include(t => t.User)
-                .Include(t => t.User.TeacherClasses)
-                .Include(t => t.User.CreatedTests)
-                .OrderBy(t => t.User.LastName)
-                .ToListAsync();
+            var teachers = await _teacherRepository.GetAllWithUserAsync();
 
             var csv = new StringBuilder();
             csv.AppendLine("ID;ФИО;Email;Предмет;Образование;Опыт;Классов;Тестов;Модерация;Статус");
 
             foreach (var teacher in teachers)
             {
-                csv.AppendLine($"{teacher.Id};{teacher.User.FullName};{teacher.User.Email};" +
+                var user = await _userManager.FindByIdAsync(teacher.UserId);
+                var classesCount = await _db.QueryScalarAsync<int>("SELECT COUNT(*) FROM Classes WHERE TeacherId = @TeacherId", new { TeacherId = teacher.UserId });
+                var testsCount = await _db.QueryScalarAsync<int>(
+                    "(SELECT COUNT(*) FROM RegularTests WHERE TeacherId = @TeacherId) + " +
+                    "(SELECT COUNT(*) FROM SpellingTests WHERE TeacherId = @TeacherId) + " +
+                    "(SELECT COUNT(*) FROM PunctuationTests WHERE TeacherId = @TeacherId) + " +
+                    "(SELECT COUNT(*) FROM OrthoeopyTests WHERE TeacherId = @TeacherId)",
+                    new { TeacherId = teacher.UserId });
+
+                csv.AppendLine($"{teacher.Id};{(user != null ? $"{user.FirstName} {user.LastName}" : "Unknown")};{user?.Email ?? "-"};" +
                     $"{teacher.Subject ?? "-"};{teacher.Education ?? "-"};{teacher.Experience?.ToString() ?? "-"};" +
-                    $"{teacher.User.TeacherClasses.Count};{teacher.User.CreatedTests.Count};" +
+                    $"{classesCount};{testsCount};" +
                     $"{(teacher.IsApproved ? "Одобрен" : "На модерации")};" +
-                    $"{(teacher.User.IsActive ? "Активен" : "Заблокирован")}");
+                    $"{(user?.IsActive == true ? "Активен" : "Заблокирован")}");
             }
 
             return Encoding.UTF8.GetBytes(csv.ToString());
@@ -191,15 +216,7 @@ namespace OnlineTutor2.Services
 
         public async Task<byte[]> ExportStudentsToExcelAsync()
         {
-            var students = await _context.Students
-                .Include(s => s.User)
-                .Include(s => s.Class)
-                .Include(s => s.RegularTestResults)
-                .Include(s => s.SpellingTestResults)
-                .Include(s => s.PunctuationTestResults)
-                .Include(s => s.OrthoeopyTestResults)
-                .OrderBy(s => s.User.LastName)
-                .ToListAsync();
+            var students = await _studentRepository.GetAllWithUserAsync();
 
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Студенты");
@@ -226,28 +243,41 @@ namespace OnlineTutor2.Services
             int row = 2;
             foreach (var student in students)
             {
-                var completedTests = student.RegularTestResults.Count(r => r.IsCompleted) +
-                                   student.SpellingTestResults.Count(r => r.IsCompleted) +
-                                   student.PunctuationTestResults.Count(r => r.IsCompleted) +
-                                   student.OrthoeopyTestResults.Count(r => r.IsCompleted);
+                var user = await _userManager.FindByIdAsync(student.UserId);
+                var @class = student.ClassId.HasValue ? await _classRepository.GetByIdAsync(student.ClassId.Value) : null;
+                
+                // Получаем статистику через SQL
+                var completedTestsSql = @"
+                    SELECT 
+                        (SELECT COUNT(*) FROM RegularTestResults WHERE StudentId = @StudentId AND IsCompleted = 1) +
+                        (SELECT COUNT(*) FROM SpellingTestResults WHERE StudentId = @StudentId AND IsCompleted = 1) +
+                        (SELECT COUNT(*) FROM PunctuationTestResults WHERE StudentId = @StudentId AND IsCompleted = 1) +
+                        (SELECT COUNT(*) FROM OrthoeopyTestResults WHERE StudentId = @StudentId AND IsCompleted = 1)";
+                var completedTests = await _db.QueryScalarAsync<int>(completedTestsSql, new { StudentId = student.Id });
 
-                var allResults = new List<double>();
-                allResults.AddRange(student.RegularTestResults.Where(r => r.IsCompleted).Select(r => r.Percentage));
-                allResults.AddRange(student.SpellingTestResults.Where(r => r.IsCompleted).Select(r => r.Percentage));
-                allResults.AddRange(student.PunctuationTestResults.Where(r => r.IsCompleted).Select(r => r.Percentage));
-                allResults.AddRange(student.OrthoeopyTestResults.Where(r => r.IsCompleted).Select(r => r.Percentage));
-
-                var avgScore = allResults.Any() ? allResults.Average() : 0;
+                // Получаем средний балл через SQL
+                var avgScoreSql = @"
+                    SELECT AVG(CAST(Percentage AS FLOAT))
+                    FROM (
+                        SELECT Percentage FROM RegularTestResults WHERE StudentId = @StudentId AND IsCompleted = 1
+                        UNION ALL
+                        SELECT Percentage FROM SpellingTestResults WHERE StudentId = @StudentId AND IsCompleted = 1
+                        UNION ALL
+                        SELECT Percentage FROM PunctuationTestResults WHERE StudentId = @StudentId AND IsCompleted = 1
+                        UNION ALL
+                        SELECT Percentage FROM OrthoeopyTestResults WHERE StudentId = @StudentId AND IsCompleted = 1
+                    ) AS AllResults";
+                var avgScore = await _db.QueryScalarAsync<double?>(avgScoreSql, new { StudentId = student.Id }) ?? 0;
 
                 worksheet.Cells[row, 1].Value = student.Id;
-                worksheet.Cells[row, 2].Value = student.User.FullName;
-                worksheet.Cells[row, 3].Value = student.User.Email;
+                worksheet.Cells[row, 2].Value = user != null ? $"{user.FirstName} {user.LastName}" : "Unknown";
+                worksheet.Cells[row, 3].Value = user?.Email ?? "-";
                 worksheet.Cells[row, 4].Value = student.School ?? "-";
                 worksheet.Cells[row, 5].Value = student.Grade?.ToString() ?? "-";
-                worksheet.Cells[row, 6].Value = student.Class?.Name ?? "-";
+                worksheet.Cells[row, 6].Value = @class?.Name ?? "-";
                 worksheet.Cells[row, 7].Value = completedTests;
                 worksheet.Cells[row, 8].Value = $"{avgScore:F1}%";
-                worksheet.Cells[row, 9].Value = student.User.IsActive ? "Активен" : "Заблокирован";
+                worksheet.Cells[row, 9].Value = user?.IsActive == true ? "Активен" : "Заблокирован";
 
                 row++;
             }
@@ -258,37 +288,42 @@ namespace OnlineTutor2.Services
 
         public async Task<byte[]> ExportStudentsToCSVAsync()
         {
-            var students = await _context.Students
-                .Include(s => s.User)
-                .Include(s => s.Class)
-                .Include(s => s.RegularTestResults)
-                .Include(s => s.SpellingTestResults)
-                .Include(s => s.PunctuationTestResults)
-                .Include(s => s.OrthoeopyTestResults)
-                .OrderBy(s => s.User.LastName)
-                .ToListAsync();
+            var students = await _studentRepository.GetAllWithUserAsync();
 
             var csv = new StringBuilder();
             csv.AppendLine("ID;ФИО;Email;Школа;Класс в школе;Класс на платформе;Тестов пройдено;Средний балл;Статус");
 
             foreach (var student in students)
             {
-                var completedTests = student.RegularTestResults.Count(r => r.IsCompleted) +
-                                   student.SpellingTestResults.Count(r => r.IsCompleted) +
-                                   student.PunctuationTestResults.Count(r => r.IsCompleted) +
-                                   student.OrthoeopyTestResults.Count(r => r.IsCompleted);
+                var user = await _userManager.FindByIdAsync(student.UserId);
+                var @class = student.ClassId.HasValue ? await _classRepository.GetByIdAsync(student.ClassId.Value) : null;
+                
+                // Получаем статистику через SQL
+                var completedTestsSql = @"
+                    SELECT 
+                        (SELECT COUNT(*) FROM RegularTestResults WHERE StudentId = @StudentId AND IsCompleted = 1) +
+                        (SELECT COUNT(*) FROM SpellingTestResults WHERE StudentId = @StudentId AND IsCompleted = 1) +
+                        (SELECT COUNT(*) FROM PunctuationTestResults WHERE StudentId = @StudentId AND IsCompleted = 1) +
+                        (SELECT COUNT(*) FROM OrthoeopyTestResults WHERE StudentId = @StudentId AND IsCompleted = 1)";
+                var completedTests = await _db.QueryScalarAsync<int>(completedTestsSql, new { StudentId = student.Id });
 
-                var allResults = new List<double>();
-                allResults.AddRange(student.RegularTestResults.Where(r => r.IsCompleted).Select(r => r.Percentage));
-                allResults.AddRange(student.SpellingTestResults.Where(r => r.IsCompleted).Select(r => r.Percentage));
-                allResults.AddRange(student.PunctuationTestResults.Where(r => r.IsCompleted).Select(r => r.Percentage));
-                allResults.AddRange(student.OrthoeopyTestResults.Where(r => r.IsCompleted).Select(r => r.Percentage));
+                // Получаем средний балл через SQL
+                var avgScoreSql = @"
+                    SELECT AVG(CAST(Percentage AS FLOAT))
+                    FROM (
+                        SELECT Percentage FROM RegularTestResults WHERE StudentId = @StudentId AND IsCompleted = 1
+                        UNION ALL
+                        SELECT Percentage FROM SpellingTestResults WHERE StudentId = @StudentId AND IsCompleted = 1
+                        UNION ALL
+                        SELECT Percentage FROM PunctuationTestResults WHERE StudentId = @StudentId AND IsCompleted = 1
+                        UNION ALL
+                        SELECT Percentage FROM OrthoeopyTestResults WHERE StudentId = @StudentId AND IsCompleted = 1
+                    ) AS AllResults";
+                var avgScore = await _db.QueryScalarAsync<double?>(avgScoreSql, new { StudentId = student.Id }) ?? 0;
 
-                var avgScore = allResults.Any() ? allResults.Average() : 0;
-
-                csv.AppendLine($"{student.Id};{student.User.FullName};{student.User.Email};" +
-                    $"{student.School ?? "-"};{student.Grade?.ToString() ?? "-"};{student.Class?.Name ?? "-"};" +
-                    $"{completedTests};{avgScore:F1}%;{(student.User.IsActive ? "Активен" : "Заблокирован")}");
+                csv.AppendLine($"{student.Id};{(user != null ? $"{user.FirstName} {user.LastName}" : "Unknown")};{user?.Email ?? "-"};" +
+                    $"{student.School ?? "-"};{student.Grade?.ToString() ?? "-"};{@class?.Name ?? "-"};" +
+                    $"{completedTests};{avgScore:F1}%;{(user?.IsActive == true ? "Активен" : "Заблокирован")}");
             }
 
             return Encoding.UTF8.GetBytes(csv.ToString());
@@ -300,15 +335,7 @@ namespace OnlineTutor2.Services
 
         public async Task<byte[]> ExportClassesToExcelAsync()
         {
-            var classes = await _context.Classes
-                .Include(c => c.Teacher)
-                .Include(c => c.Students)
-                .Include(c => c.RegularTests)
-                .Include(c => c.SpellingTests)
-                .Include(c => c.PunctuationTests)
-                .Include(c => c.OrthoeopyTests)
-                .OrderBy(c => c.Name)
-                .ToListAsync();
+            var classes = await _classRepository.GetAllAsync();
 
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Классы");
@@ -336,18 +363,25 @@ namespace OnlineTutor2.Services
             int row = 2;
             foreach (var classItem in classes)
             {
-                var totalTests = classItem.RegularTests.Count + classItem.SpellingTests.Count +
-                               classItem.PunctuationTests.Count + classItem.OrthoeopyTests.Count;
+                var teacher = await _teacherRepository.GetByUserIdAsync(classItem.TeacherId);
+                var teacherUser = teacher != null ? await _userManager.FindByIdAsync(classItem.TeacherId) : null;
+                var students = await _studentRepository.GetByClassIdAsync(classItem.Id);
+                
+                var regularTestsCount = await _db.QueryScalarAsync<int>("SELECT COUNT(*) FROM RegularTestClasses WHERE ClassId = @ClassId", new { ClassId = classItem.Id });
+                var spellingTestsCount = await _db.QueryScalarAsync<int>("SELECT COUNT(*) FROM SpellingTestClasses WHERE ClassId = @ClassId", new { ClassId = classItem.Id });
+                var punctuationTestsCount = await _db.QueryScalarAsync<int>("SELECT COUNT(*) FROM PunctuationTestClasses WHERE ClassId = @ClassId", new { ClassId = classItem.Id });
+                var orthoeopyTestsCount = await _db.QueryScalarAsync<int>("SELECT COUNT(*) FROM OrthoeopyTestClasses WHERE ClassId = @ClassId", new { ClassId = classItem.Id });
+                var totalTests = regularTestsCount + spellingTestsCount + punctuationTestsCount + orthoeopyTestsCount;
 
                 worksheet.Cells[row, 1].Value = classItem.Id;
                 worksheet.Cells[row, 2].Value = classItem.Name;
                 worksheet.Cells[row, 3].Value = classItem.Description ?? "-";
-                worksheet.Cells[row, 4].Value = classItem.Teacher.FullName;
-                worksheet.Cells[row, 5].Value = classItem.Students.Count;
-                worksheet.Cells[row, 6].Value = classItem.SpellingTests.Count;
-                worksheet.Cells[row, 7].Value = classItem.RegularTests.Count;
-                worksheet.Cells[row, 8].Value = classItem.PunctuationTests.Count;
-                worksheet.Cells[row, 9].Value = classItem.OrthoeopyTests.Count;
+                worksheet.Cells[row, 4].Value = teacherUser != null ? $"{teacherUser.FirstName} {teacherUser.LastName}" : "Unknown";
+                worksheet.Cells[row, 5].Value = students.Count;
+                worksheet.Cells[row, 6].Value = spellingTestsCount;
+                worksheet.Cells[row, 7].Value = regularTestsCount;
+                worksheet.Cells[row, 8].Value = punctuationTestsCount;
+                worksheet.Cells[row, 9].Value = orthoeopyTestsCount;
                 worksheet.Cells[row, 10].Value = totalTests;
                 worksheet.Cells[row, 11].Value = classItem.CreatedAt.ToString("dd.MM.yyyy");
 
@@ -360,28 +394,27 @@ namespace OnlineTutor2.Services
 
         public async Task<byte[]> ExportClassesToCSVAsync()
         {
-            var classes = await _context.Classes
-                .Include(c => c.Teacher)
-                .Include(c => c.Students)
-                .Include(c => c.RegularTests)
-                .Include(c => c.SpellingTests)
-                .Include(c => c.PunctuationTests)
-                .Include(c => c.OrthoeopyTests)
-                .OrderBy(c => c.Name)
-                .ToListAsync();
+            var classes = await _classRepository.GetAllAsync();
 
             var csv = new StringBuilder();
             csv.AppendLine("ID;Название;Описание;Учитель;Студентов;Орфография;Классические;Пунктуация;Орфоэпия;Всего тестов;Дата создания");
 
             foreach (var classItem in classes)
             {
-                var totalTests = classItem.RegularTests.Count + classItem.SpellingTests.Count +
-                               classItem.PunctuationTests.Count + classItem.OrthoeopyTests.Count;
+                var teacher = await _teacherRepository.GetByUserIdAsync(classItem.TeacherId);
+                var teacherUser = teacher != null ? await _userManager.FindByIdAsync(classItem.TeacherId) : null;
+                var students = await _studentRepository.GetByClassIdAsync(classItem.Id);
+                
+                var regularTestsCount = await _db.QueryScalarAsync<int>("SELECT COUNT(*) FROM RegularTestClasses WHERE ClassId = @ClassId", new { ClassId = classItem.Id });
+                var spellingTestsCount = await _db.QueryScalarAsync<int>("SELECT COUNT(*) FROM SpellingTestClasses WHERE ClassId = @ClassId", new { ClassId = classItem.Id });
+                var punctuationTestsCount = await _db.QueryScalarAsync<int>("SELECT COUNT(*) FROM PunctuationTestClasses WHERE ClassId = @ClassId", new { ClassId = classItem.Id });
+                var orthoeopyTestsCount = await _db.QueryScalarAsync<int>("SELECT COUNT(*) FROM OrthoeopyTestClasses WHERE ClassId = @ClassId", new { ClassId = classItem.Id });
+                var totalTests = regularTestsCount + spellingTestsCount + punctuationTestsCount + orthoeopyTestsCount;
 
                 csv.AppendLine($"{classItem.Id};{classItem.Name};{classItem.Description ?? "-"};" +
-                    $"{classItem.Teacher.FullName};{classItem.Students.Count};" +
-                    $"{classItem.SpellingTests.Count};{classItem.RegularTests.Count};" +
-                    $"{classItem.PunctuationTests.Count};{classItem.OrthoeopyTests.Count};" +
+                    $"{(teacherUser != null ? $"{teacherUser.FirstName} {teacherUser.LastName}" : "Unknown")};{students.Count};" +
+                    $"{spellingTestsCount};{regularTestsCount};" +
+                    $"{punctuationTestsCount};{orthoeopyTestsCount};" +
                     $"{totalTests};{classItem.CreatedAt:dd.MM.yyyy}");
             }
 
@@ -394,14 +427,17 @@ namespace OnlineTutor2.Services
 
         public async Task<byte[]> ExportTestsToExcelAsync()
         {
+            var tests = await TestExportHelper.GetAllTestsForExportAsync(_db);
+
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Тесты");
 
+            // Заголовки
             worksheet.Cells[1, 1].Value = "ID";
             worksheet.Cells[1, 2].Value = "Название";
             worksheet.Cells[1, 3].Value = "Тип";
             worksheet.Cells[1, 4].Value = "Учитель";
-            worksheet.Cells[1, 5].Value = "Класс";
+            worksheet.Cells[1, 5].Value = "Классы";
             worksheet.Cells[1, 6].Value = "Вопросов";
             worksheet.Cells[1, 7].Value = "Результатов";
             worksheet.Cells[1, 8].Value = "Статус";
@@ -415,91 +451,17 @@ namespace OnlineTutor2.Services
                 range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
             }
 
+            // Данные
             int row = 2;
-
-            // Орфография
-            var spellingTests = await _context.SpellingTests
-                .Include(st => st.Teacher)
-                .Include(st => st.Class)
-                .Include(st => st.SpellingQuestions)
-                .Include(st => st.SpellingTestResults)
-                .ToListAsync();
-
-            foreach (var test in spellingTests)
+            foreach (var test in tests)
             {
                 worksheet.Cells[row, 1].Value = test.Id;
                 worksheet.Cells[row, 2].Value = test.Title;
-                worksheet.Cells[row, 3].Value = "Орфография";
-                worksheet.Cells[row, 4].Value = test.Teacher.FullName;
-                worksheet.Cells[row, 5].Value = test.Class?.Name ?? "Все ученики";
-                worksheet.Cells[row, 6].Value = test.SpellingQuestions.Count;
-                worksheet.Cells[row, 7].Value = test.SpellingTestResults.Count;
-                worksheet.Cells[row, 8].Value = test.IsActive ? "Активен" : "Неактивен";
-                worksheet.Cells[row, 9].Value = test.CreatedAt.ToString("dd.MM.yyyy");
-                row++;
-            }
-
-            // Классические
-            var regularTests = await _context.RegularTests
-                .Include(t => t.Teacher)
-                .Include(t => t.Class)
-                .Include(t => t.RegularQuestions)
-                .Include(t => t.RegularTestResults)
-                .ToListAsync();
-
-            foreach (var test in regularTests)
-            {
-                worksheet.Cells[row, 1].Value = test.Id;
-                worksheet.Cells[row, 2].Value = test.Title;
-                worksheet.Cells[row, 3].Value = "Классический";
-                worksheet.Cells[row, 4].Value = test.Teacher.FullName;
-                worksheet.Cells[row, 5].Value = test.Class?.Name ?? "Все ученики";
-                worksheet.Cells[row, 6].Value = test.RegularQuestions.Count;
-                worksheet.Cells[row, 7].Value = test.RegularTestResults.Count;
-                worksheet.Cells[row, 8].Value = test.IsActive ? "Активен" : "Неактивен";
-                worksheet.Cells[row, 9].Value = test.CreatedAt.ToString("dd.MM.yyyy");
-                row++;
-            }
-
-            // Пунктуация
-            var punctuationTests = await _context.PunctuationTests
-                .Include(t => t.Teacher)
-                .Include(t => t.Class)
-                .Include(t => t.PunctuationQuestions)
-                .Include(t => t.PunctuationTestResults)
-                .ToListAsync();
-
-            foreach (var test in punctuationTests)
-            {
-                worksheet.Cells[row, 1].Value = test.Id;
-                worksheet.Cells[row, 2].Value = test.Title;
-                worksheet.Cells[row, 3].Value = "Пунктуация";
-                worksheet.Cells[row, 4].Value = test.Teacher.FullName;
-                worksheet.Cells[row, 5].Value = test.Class?.Name ?? "Все ученики";
-                worksheet.Cells[row, 6].Value = test.PunctuationQuestions.Count;
-                worksheet.Cells[row, 7].Value = test.PunctuationTestResults.Count;
-                worksheet.Cells[row, 8].Value = test.IsActive ? "Активен" : "Неактивен";
-                worksheet.Cells[row, 9].Value = test.CreatedAt.ToString("dd.MM.yyyy");
-                row++;
-            }
-
-            // Орфоэпия
-            var orthoeopyTests = await _context.OrthoeopyTests
-                .Include(t => t.Teacher)
-                .Include(t => t.Class)
-                .Include(t => t.OrthoeopyQuestions)
-                .Include(t => t.OrthoeopyTestResults)
-                .ToListAsync();
-
-            foreach (var test in orthoeopyTests)
-            {
-                worksheet.Cells[row, 1].Value = test.Id;
-                worksheet.Cells[row, 2].Value = test.Title;
-                worksheet.Cells[row, 3].Value = "Орфоэпия";
-                worksheet.Cells[row, 4].Value = test.Teacher.FullName;
-                worksheet.Cells[row, 5].Value = test.Class?.Name ?? "Все ученики";
-                worksheet.Cells[row, 6].Value = test.OrthoeopyQuestions.Count;
-                worksheet.Cells[row, 7].Value = test.OrthoeopyTestResults.Count;
+                worksheet.Cells[row, 3].Value = test.Type;
+                worksheet.Cells[row, 4].Value = test.TeacherName;
+                worksheet.Cells[row, 5].Value = test.ClassNames;
+                worksheet.Cells[row, 6].Value = test.QuestionsCount;
+                worksheet.Cells[row, 7].Value = test.ResultsCount;
                 worksheet.Cells[row, 8].Value = test.IsActive ? "Активен" : "Неактивен";
                 worksheet.Cells[row, 9].Value = test.CreatedAt.ToString("dd.MM.yyyy");
                 row++;
@@ -511,26 +473,18 @@ namespace OnlineTutor2.Services
 
         public async Task<byte[]> ExportTestsToCSVAsync()
         {
+            var tests = await TestExportHelper.GetAllTestsForExportAsync(_db);
+
             var csv = new StringBuilder();
-            csv.AppendLine("ID;Название;Тип;Учитель;Класс;Вопросов;Результатов;Статус;Дата создания");
+            csv.AppendLine("ID;Название;Тип;Учитель;Классы;Вопросов;Результатов;Статус;Дата создания");
 
-            // Аналогично Excel, но в CSV формате
-            var spellingTests = await _context.SpellingTests
-                .Include(st => st.Teacher)
-                .Include(st => st.Class)
-                .Include(st => st.SpellingQuestions)
-                .Include(st => st.SpellingTestResults)
-                .ToListAsync();
-
-            foreach (var test in spellingTests)
+            foreach (var test in tests)
             {
-                csv.AppendLine($"{test.Id};{test.Title};Орфография;{test.Teacher.FullName};" +
-                    $"{test.Class?.Name ?? "Все ученики"};{test.SpellingQuestions.Count};" +
-                    $"{test.SpellingTestResults.Count};{(test.IsActive ? "Активен" : "Неактивен")};" +
+                csv.AppendLine($"{test.Id};{test.Title};{test.Type};{test.TeacherName};" +
+                    $"{test.ClassNames};{test.QuestionsCount};" +
+                    $"{test.ResultsCount};{(test.IsActive ? "Активен" : "Неактивен")};" +
                     $"{test.CreatedAt:dd.MM.yyyy}");
             }
-
-            // Добавьте аналогично для других типов тестов...
 
             return Encoding.UTF8.GetBytes(csv.ToString());
         }
@@ -541,9 +495,12 @@ namespace OnlineTutor2.Services
 
         public async Task<byte[]> ExportTestResultsToExcelAsync()
         {
+            var results = await TestExportHelper.GetAllTestResultsForExportAsync(_db);
+
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Результаты тестов");
 
+            // Заголовки
             worksheet.Cells[1, 1].Value = "ID";
             worksheet.Cells[1, 2].Value = "Тест";
             worksheet.Cells[1, 3].Value = "Тип";
@@ -563,20 +520,14 @@ namespace OnlineTutor2.Services
                 range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
             }
 
+            // Данные
             int row = 2;
-
-            // Орфография
-            var spellingResults = await _context.SpellingTestResults
-                .Include(r => r.SpellingTest)
-                .Include(r => r.Student).ThenInclude(s => s.User)
-                .ToListAsync();
-
-            foreach (var result in spellingResults)
+            foreach (var result in results)
             {
                 worksheet.Cells[row, 1].Value = result.Id;
-                worksheet.Cells[row, 2].Value = result.SpellingTest.Title;
-                worksheet.Cells[row, 3].Value = "Орфография";
-                worksheet.Cells[row, 4].Value = result.Student.User.FullName;
+                worksheet.Cells[row, 2].Value = result.TestTitle;
+                worksheet.Cells[row, 3].Value = result.TestType;
+                worksheet.Cells[row, 4].Value = result.StudentName;
                 worksheet.Cells[row, 5].Value = result.Score;
                 worksheet.Cells[row, 6].Value = result.MaxScore;
                 worksheet.Cells[row, 7].Value = $"{result.Percentage:F1}%";
@@ -586,32 +537,25 @@ namespace OnlineTutor2.Services
                 row++;
             }
 
-            // Добавьте аналогично для других типов...
-
             worksheet.Cells.AutoFitColumns();
             return package.GetAsByteArray();
         }
 
         public async Task<byte[]> ExportTestResultsToCSVAsync()
         {
+            var results = await TestExportHelper.GetAllTestResultsForExportAsync(_db);
+
             var csv = new StringBuilder();
             csv.AppendLine("ID;Тест;Тип;Студент;Баллов;Макс. баллов;Процент;Начало;Завершение;Статус");
 
-            var spellingResults = await _context.SpellingTestResults
-                .Include(r => r.SpellingTest)
-                .Include(r => r.Student).ThenInclude(s => s.User)
-                .ToListAsync();
-
-            foreach (var result in spellingResults)
+            foreach (var result in results)
             {
-                csv.AppendLine($"{result.Id};{result.SpellingTest.Title};Орфография;" +
-                    $"{result.Student.User.FullName};{result.Score};{result.MaxScore};" +
+                csv.AppendLine($"{result.Id};{result.TestTitle};{result.TestType};" +
+                    $"{result.StudentName};{result.Score};{result.MaxScore};" +
                     $"{result.Percentage:F1}%;{result.StartedAt:dd.MM.yyyy HH:mm};" +
                     $"{result.CompletedAt?.ToString("dd.MM.yyyy HH:mm") ?? "-"};" +
                     $"{(result.IsCompleted ? "Завершен" : "В процессе")}");
             }
-
-            // Добавьте аналогично для других типов...
 
             return Encoding.UTF8.GetBytes(csv.ToString());
         }
@@ -622,11 +566,13 @@ namespace OnlineTutor2.Services
 
         public async Task<byte[]> ExportAuditLogsToExcelAsync()
         {
-            var logs = await _context.AuditLogs
-                .Include(al => al.User)
-                .OrderByDescending(al => al.CreatedAt)
-                .Take(10000) // Ограничим 10000 записями
-                .ToListAsync();
+            var logsSql = @"
+                SELECT TOP 10000 al.*, 
+                       u.Id as User_Id, u.Email as User_Email, u.FirstName as User_FirstName, u.LastName as User_LastName
+                FROM AuditLogs al
+                LEFT JOIN AspNetUsers u ON al.UserId = u.Id
+                ORDER BY al.CreatedAt DESC";
+            var logs = await _db.QueryAsync<AuditLog>(logsSql);
 
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Журнал действий");
@@ -652,10 +598,11 @@ namespace OnlineTutor2.Services
             int row = 2;
             foreach (var log in logs)
             {
+                var user = await _userManager.FindByIdAsync(log.UserId ?? "");
                 worksheet.Cells[row, 1].Value = log.Id;
                 worksheet.Cells[row, 2].Value = log.CreatedAt.ToString("dd.MM.yyyy HH:mm:ss");
                 worksheet.Cells[row, 3].Value = log.UserName;
-                worksheet.Cells[row, 4].Value = log.User?.Email ?? "-";
+                worksheet.Cells[row, 4].Value = user?.Email ?? "-";
                 worksheet.Cells[row, 5].Value = log.Action;
                 worksheet.Cells[row, 6].Value = log.EntityType;
                 worksheet.Cells[row, 7].Value = log.EntityId ?? "-";
@@ -670,19 +617,20 @@ namespace OnlineTutor2.Services
 
         public async Task<byte[]> ExportAuditLogsToCSVAsync()
         {
-            var logs = await _context.AuditLogs
-                .Include(al => al.User)
-                .OrderByDescending(al => al.CreatedAt)
-                .Take(10000)
-                .ToListAsync();
+            var logsSql = @"
+                SELECT TOP 10000 *
+                FROM AuditLogs
+                ORDER BY CreatedAt DESC";
+            var logs = await _db.QueryAsync<AuditLog>(logsSql);
 
             var csv = new StringBuilder();
             csv.AppendLine("ID;Дата и время;Администратор;Email;Действие;Тип сущности;ID сущности;Детали;IP адрес");
 
             foreach (var log in logs)
             {
+                var user = await _userManager.FindByIdAsync(log.UserId ?? "");
                 csv.AppendLine($"{log.Id};{log.CreatedAt:dd.MM.yyyy HH:mm:ss};{log.UserName};" +
-                    $"{log.User?.Email ?? "-"};{log.Action};{log.EntityType};" +
+                    $"{user?.Email ?? "-"};{log.Action};{log.EntityType};" +
                     $"{log.EntityId ?? "-"};{log.Details ?? "-"};{log.IpAddress ?? "-"}");
             }
 
